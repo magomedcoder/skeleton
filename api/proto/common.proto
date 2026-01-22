@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package assist.common;
+
+option go_package = "github.com/magomedcoder/assist/api/pb";
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
