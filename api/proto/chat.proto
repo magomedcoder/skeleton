@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package aichat;
+
+option go_package = "aichat/api/pb/chatpb;chatpb";
+
+service ChatService {
+  rpc CheckConnection(Empty) returns (ConnectionResponse);
+
+  rpc SendMessage(SendMessageRequest) returns (stream ChatResponse);
+
+  rpc CreateSession(CreateSessionRequest) returns (ChatSession);
+
+  rpc GetSession(GetSessionRequest) returns (ChatSession);
+
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+
+  rpc GetSessionMessages(GetSessionMessagesRequest) returns (GetSessionMessagesResponse);
+
+  rpc DeleteSession(DeleteSessionRequest) returns (Empty);
+
+  rpc UpdateSessionTitle(UpdateSessionTitleRequest) returns (ChatSession);
+}
+
+message Empty {}
+
+message ConnectionResponse {
+  bool is_connected = 1;
+}
+
+message ChatMessage {
+  string id = 1;
+  string content = 2;
+  string role = 3;
+  int64 created_at = 4;
+}
+
+message ChatResponse {
+  string id = 1;
+  string content = 2;
+  string role = 3;
+  int64 created_at = 4;
+  bool done = 5;
+}
+
+message SendMessageRequest {
+  string session_id = 1;
+  repeated ChatMessage messages = 2;
+}
+
+message ChatSession {
+  string id = 1;
+  string title = 2;
+  int64 created_at = 3;
+  int64 updated_at = 4;
+}
+
+message CreateSessionRequest {
+  string title = 1;
+}
+
+message GetSessionRequest {
+  string session_id = 1;
+}
+
+message ListSessionsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListSessionsResponse {
+  repeated ChatSession sessions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message GetSessionMessagesRequest {
+  string session_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message GetSessionMessagesResponse {
+  repeated ChatMessage messages = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message DeleteSessionRequest {
+  string session_id = 1;
+}
+
+message UpdateSessionTitleRequest {
+  string session_id = 1;
+  string title = 2;
+}

@@ -1,0 +1,443 @@
+import 'dart:async';
+
+import 'package:legion/domain/entities/message.dart';
+import 'package:legion/domain/usecases/chat/connect_usecase.dart';
+import 'package:legion/domain/usecases/chat/create_session_usecase.dart';
+import 'package:legion/domain/usecases/chat/delete_session_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_session_messages_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_sessions_usecase.dart';
+import 'package:legion/domain/usecases/chat/send_message_usecase.dart';
+import 'package:legion/domain/usecases/chat/update_session_title_usecase.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
+
+class ChatBloc extends Bloc<ChatEvent, ChatState> {
+  final ConnectUseCase connectUseCase;
+  final SendMessageUseCase sendMessageUseCase;
+  final CreateSessionUseCase createSessionUseCase;
+  final GetSessionsUseCase getSessionsUseCase;
+  final GetSessionMessagesUseCase getSessionMessagesUseCase;
+  final DeleteSessionUseCase deleteSessionUseCase;
+  final UpdateSessionTitleUseCase updateSessionTitleUseCase;
+
+  final _uuid = const Uuid();
+  StreamSubscription<String>? _streamSubscription;
+
+  ChatBloc({
+    required this.connectUseCase,
+    required this.sendMessageUseCase,
+    required this.createSessionUseCase,
+    required this.getSessionsUseCase,
+    required this.getSessionMessagesUseCase,
+    required this.deleteSessionUseCase,
+    required this.updateSessionTitleUseCase,
+  }) : super(const ChatState()) {
+    on<ChatStarted>(_onChatStarted);
+    on<ChatCreateSession>(_onCreateSession);
+    on<ChatLoadSessions>(_onLoadSessions);
+    on<ChatSelectSession>(_onSelectSession);
+    on<ChatLoadSessionMessages>(_onLoadSessionMessages);
+    on<ChatSendMessage>(_onChatSendMessage, transformer: droppable());
+    on<ChatClearError>(_onChatClearError);
+    on<ChatStopGeneration>(_onChatStopGeneration);
+    on<ChatDeleteSession>(_onDeleteSession);
+    on<ChatUpdateSessionTitle>(_onUpdateSessionTitle);
+  }
+
+  Future<void> _onChatStarted(
+    ChatStarted event,
+    Emitter<ChatState> emit,
+) async {
+    emit(state.copyWith(isLoading: true));
+
+    try {
+      final isConnected = await connectUseCase();
+
+      if (isConnected) {
+        try {
+          final sessions = await getSessionsUseCase(
+            page: 1,
+            pageSize: 20,
+          );
+
+          String? currentSessionId;
+          List<Message> messages = const [];
+
+          if (sessions.isNotEmpty) {
+            currentSessionId = sessions.first.id;
+
+            final sessionMessages = await getSessionMessagesUseCase(
+              currentSessionId,
+              page: 1,
+              pageSize: 50,
+            );
+            messages = sessionMessages;
+          }
+
+          emit(
+            state.copyWith(
+              isConnected: isConnected,
+              isLoading: false,
+              sessions: sessions,
+              currentSessionId: currentSessionId,
+              messages: messages,
+              error: null,
+            ),
+          );
+        } catch (e) {
+          emit(
+            state.copyWith(
+              isConnected: isConnected,
+              isLoading: false,
+              error: 'Ошибка загрузки сессий',
+            ),
+          );
+        }
+      } else {
+        emit(
+          state.copyWith(
+            isConnected: isConnected,
+            isLoading: false,
+            error: isConnected ? null : 'Не удалось подключиться к серверу',
+          ),
+        );
+      }
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isConnected: false,
+          isLoading: false,
+          error: 'Ошибка подключения',
+        ),
+      );
+    }
+  }
+
+  Future<void> _onCreateSession(
+    ChatCreateSession event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      final session = await createSessionUseCase(title: event.title);
+
+      final updatedSessions = [session, ...state.sessions];
+
+      emit(
+        state.copyWith(
+          sessions: updatedSessions,
+          currentSessionId: session.id,
+          isLoading: false,
+          messages: const [],
+          error: null,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(isLoading: false, error: 'Ошибка создания сессии'),
+      );
+    }
+  }
+
+  Future<void> _onLoadSessions(
+    ChatLoadSessions event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      final sessions = await getSessionsUseCase(
+        page: event.page,
+        pageSize: event.pageSize,
+      );
+
+      emit(state.copyWith(sessions: sessions, isLoading: false, error: null));
+    } catch (e) {
+      emit(
+        state.copyWith(isLoading: false, error: 'Ошибка загрузки сессий'),
+      );
+    }
+  }
+
+  Future<void> _onSelectSession(
+    ChatSelectSession event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (state.currentSessionId == event.sessionId) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        currentSessionId: event.sessionId,
+        messages: const [],
+        isLoading: true,
+        error: null,
+      ),
+    );
+
+    try {
+      final messages = await getSessionMessagesUseCase(
+        event.sessionId,
+        page: 1,
+        pageSize: 50,
+      );
+
+      emit(state.copyWith(messages: messages, isLoading: false));
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Ошибка загрузки сообщений',
+        ),
+      );
+    }
+  }
+
+  Future<void> _onLoadSessionMessages(
+    ChatLoadSessionMessages event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      final messages = await getSessionMessagesUseCase(
+        event.sessionId,
+        page: event.page,
+        pageSize: event.pageSize,
+      );
+
+      final allMessages = [...state.messages, ...messages];
+
+      emit(
+        state.copyWith(messages: allMessages, isLoading: false, error: null),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Ошибка загрузки сообщений',
+        ),
+      );
+    }
+  }
+
+  Future<void> _onChatSendMessage(
+    ChatSendMessage event,
+    Emitter<ChatState> emit,
+  ) async {
+    final text = event.text.trim();
+    if (text.isEmpty) return;
+
+    await _streamSubscription?.cancel();
+    _streamSubscription = null;
+
+    String sessionId = state.currentSessionId ?? '';
+    if (sessionId.isEmpty) {
+      try {
+        final session = await createSessionUseCase();
+        sessionId = session.id;
+
+        final updatedSessions = [session, ...state.sessions];
+
+        emit(
+          state.copyWith(
+            currentSessionId: sessionId,
+            sessions: updatedSessions,
+            messages: const [],
+          ),
+        );
+      } catch (e) {
+        emit(
+          state.copyWith(error: 'Ошибка создания сессии', isLoading: false),
+        );
+        return;
+      }
+    }
+
+    final userMessage = Message(
+      id: _uuid.v4(),
+      content: text,
+      role: MessageRole.user,
+      createdAt: DateTime.now(),
+    );
+
+    final updatedMessages = [...state.messages, userMessage];
+    String streamingText = '';
+
+    emit(
+      state.copyWith(
+        messages: updatedMessages,
+        isLoading: true,
+        isStreaming: true,
+        currentStreamingText: '',
+        error: null,
+      ),
+    );
+
+    try {
+      final stream = sendMessageUseCase(sessionId, updatedMessages);
+
+      await for (final chunk in stream) {
+        streamingText += chunk;
+        emit(state.copyWith(currentStreamingText: streamingText));
+      }
+
+      if (streamingText.isNotEmpty) {
+        final assistantMessage = Message(
+          id: _uuid.v4(),
+          content: streamingText,
+          role: MessageRole.assistant,
+          createdAt: DateTime.now(),
+        );
+
+        final allMessages = [...updatedMessages, assistantMessage];
+
+        emit(
+          state.copyWith(
+            messages: allMessages,
+            isLoading: false,
+            isStreaming: false,
+            currentStreamingText: null,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            isStreaming: false,
+            currentStreamingText: null,
+          ),
+        );
+      }
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isStreaming: false,
+          error: 'Ошибка отправки сообщения',
+        ),
+      );
+    } finally {
+      _streamSubscription = null;
+    }
+  }
+
+  Future<void> _onDeleteSession(
+    ChatDeleteSession event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      await deleteSessionUseCase(event.sessionId);
+
+      final updatedSessions = state.sessions
+          .where((session) => session.id != event.sessionId)
+          .toList();
+
+      final shouldClearCurrent = state.currentSessionId == event.sessionId;
+
+      emit(
+        state.copyWith(
+          sessions: updatedSessions,
+          currentSessionId: shouldClearCurrent ? null : state.currentSessionId,
+          messages: shouldClearCurrent ? const [] : state.messages,
+          isLoading: false,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(isLoading: false, error: 'Ошибка удаления сессии'),
+      );
+    }
+  }
+
+  Future<void> _onUpdateSessionTitle(
+    ChatUpdateSessionTitle event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      final updatedSession = await updateSessionTitleUseCase(
+        event.sessionId,
+        event.title,
+      );
+
+      final updatedSessions = state.sessions.map((session) {
+        if (session.id == event.sessionId) {
+          return updatedSession;
+        }
+        return session;
+      }).toList();
+
+      emit(
+        state.copyWith(
+          sessions: updatedSessions,
+          isLoading: false,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Ошибка обновления заголовка',
+        ),
+      );
+    }
+  }
+
+  void _onChatClearError(ChatClearError event, Emitter<ChatState> emit) {
+    emit(state.copyWith(error: null));
+  }
+
+  Future<void> _onChatStopGeneration(
+    ChatStopGeneration event,
+    Emitter<ChatState> emit,
+  ) async {
+    await _streamSubscription?.cancel();
+    _streamSubscription = null;
+
+    if (state.currentStreamingText != null &&
+        state.currentStreamingText!.isNotEmpty) {
+      final assistantMessage = Message(
+        id: _uuid.v4(),
+        content: state.currentStreamingText!,
+        role: MessageRole.assistant,
+        createdAt: DateTime.now(),
+      );
+
+      final allMessages = [...state.messages, assistantMessage];
+
+      emit(
+        state.copyWith(
+          messages: allMessages,
+          isLoading: false,
+          isStreaming: false,
+          currentStreamingText: null,
+        ),
+      );
+    } else {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isStreaming: false,
+          currentStreamingText: null,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _streamSubscription?.cancel();
+    return super.close();
+  }
+}

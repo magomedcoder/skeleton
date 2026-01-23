@@ -8,6 +8,7 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	Ollama   OllamaConfig
 }
 
 type ServerConfig struct {
@@ -26,21 +27,29 @@ type JWTConfig struct {
 	RefreshTTL    time.Duration
 }
 
-func Load() (*Config, error) {
+type OllamaConfig struct {
+	BaseURL string
+	Model   string
+}
 
+func Load() (*Config, error) {
 	config := &Config{
 		Server: ServerConfig{
 			Port: "50051",
 			Host: "0.0.0.0",
 		},
 		Database: DatabaseConfig{
-			DSN: "postgres://postgres:postgres@localhost:5432/assist?sslmode=disable",
+			DSN: "postgres://postgres:postgres@127.0.0.1:5432/legion",
 		},
 		JWT: JWTConfig{
-			AccessSecret:  "assist",
-			RefreshSecret: "assist",
+			AccessSecret:  "legion",
+			RefreshSecret: "legion",
 			AccessTTL:     15 * time.Minute,
 			RefreshTTL:    7 * 24 * time.Hour,
+		},
+		Ollama: OllamaConfig{
+			BaseURL: "http://localhost:11434",
+			Model:   "llama3.2",
 		},
 	}
 

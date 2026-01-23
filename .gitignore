@@ -1,3 +1,5 @@
 .idea
 build
 /api/pb/
+.docker-volumes
+/client/lib/generated/

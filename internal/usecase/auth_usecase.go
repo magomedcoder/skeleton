@@ -4,28 +4,25 @@ import (
 	"context"
 	"errors"
 
-	"github.com/magomedcoder/assist/internal/domain"
-	"github.com/magomedcoder/assist/internal/service"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/service"
 )
 
 type AuthUseCase struct {
-	userRepo        domain.UserRepository
-	tokenRepo       domain.TokenRepository
-	jwtService      *service.JWTService
-	passwordService *service.PasswordService
+	userRepo   domain.UserRepository
+	tokenRepo  domain.TokenRepository
+	jwtService *service.JWTService
 }
 
 func NewAuthUseCase(
 	userRepo domain.UserRepository,
 	tokenRepo domain.TokenRepository,
 	jwtService *service.JWTService,
-	passwordService *service.PasswordService,
 ) *AuthUseCase {
 	return &AuthUseCase{
-		userRepo:        userRepo,
-		tokenRepo:       tokenRepo,
-		jwtService:      jwtService,
-		passwordService: passwordService,
+		userRepo:   userRepo,
+		tokenRepo:  tokenRepo,
+		jwtService: jwtService,
 	}
 }
 
@@ -35,7 +32,7 @@ func (a *AuthUseCase) Login(ctx context.Context, email, password string) (*domai
 		return nil, "", "", errors.New("неверные учетные данные")
 	}
 
-	if !a.passwordService.CheckPassword(user.Password, password) {
+	if !a.jwtService.CheckPassword(user.Password, password) {
 		return nil, "", "", errors.New("неверные учетные данные")
 	}
 
@@ -49,11 +46,11 @@ func (a *AuthUseCase) Login(ctx context.Context, email, password string) (*domai
 		return nil, "", "", err
 	}
 
-	_ = a.tokenRepo.DeleteByUserID(ctx, user.ID, domain.TokenTypeAccess)
-	_ = a.tokenRepo.DeleteByUserID(ctx, user.ID, domain.TokenTypeRefresh)
+	_ = a.tokenRepo.DeleteByUserId(ctx, user.Id, domain.TokenTypeAccess)
+	_ = a.tokenRepo.DeleteByUserId(ctx, user.Id, domain.TokenTypeRefresh)
 
-	accessTokenEntity := domain.NewToken(user.ID, accessToken, domain.TokenTypeAccess, accessExpires)
-	refreshTokenEntity := domain.NewToken(user.ID, refreshToken, domain.TokenTypeRefresh, refreshExpires)
+	accessTokenEntity := domain.NewToken(user.Id, accessToken, domain.TokenTypeAccess, accessExpires)
+	refreshTokenEntity := domain.NewToken(user.Id, refreshToken, domain.TokenTypeRefresh, refreshExpires)
 
 	if err := a.tokenRepo.Create(ctx, accessTokenEntity); err != nil {
 		return nil, "", "", err
@@ -79,7 +76,7 @@ func (a *AuthUseCase) RefreshToken(ctx context.Context, refreshToken string) (st
 		return "", "", errors.New("неверный токен обновления")
 	}
 
-	user, err := a.userRepo.GetByID(ctx, claims.UserID)
+	user, err := a.userRepo.GetById(ctx, claims.UserID)
 	if err != nil {
 		return "", "", errors.New("пользователь не найден")
 	}
@@ -94,11 +91,11 @@ func (a *AuthUseCase) RefreshToken(ctx context.Context, refreshToken string) (st
 		return "", "", err
 	}
 
-	_ = a.tokenRepo.DeleteByUserID(ctx, user.ID, domain.TokenTypeAccess)
+	_ = a.tokenRepo.DeleteByUserId(ctx, user.Id, domain.TokenTypeAccess)
 	_ = a.tokenRepo.DeleteByToken(ctx, refreshToken)
 
-	accessTokenEntity := domain.NewToken(user.ID, accessToken, domain.TokenTypeAccess, accessExpires)
-	refreshTokenEntity := domain.NewToken(user.ID, newRefreshToken, domain.TokenTypeRefresh, refreshExpires)
+	accessTokenEntity := domain.NewToken(user.Id, accessToken, domain.TokenTypeAccess, accessExpires)
+	refreshTokenEntity := domain.NewToken(user.Id, newRefreshToken, domain.TokenTypeRefresh, refreshExpires)
 
 	if err := a.tokenRepo.Create(ctx, accessTokenEntity); err != nil {
 		return "", "", err
@@ -122,7 +119,7 @@ func (a *AuthUseCase) ValidateToken(ctx context.Context, token string) (*domain.
 		return nil, errors.New("неверный токен")
 	}
 
-	user, err := a.userRepo.GetByID(ctx, claims.UserID)
+	user, err := a.userRepo.GetById(ctx, claims.UserID)
 	if err != nil {
 		return nil, errors.New("пользователь не найден")
 	}
@@ -133,11 +130,11 @@ func (a *AuthUseCase) ValidateToken(ctx context.Context, token string) (*domain.
 }
 
 func (a *AuthUseCase) Logout(ctx context.Context, userID int) error {
-	if err := a.tokenRepo.DeleteByUserID(ctx, userID, domain.TokenTypeAccess); err != nil {
+	if err := a.tokenRepo.DeleteByUserId(ctx, userID, domain.TokenTypeAccess); err != nil {
 		return err
 	}
 
-	if err := a.tokenRepo.DeleteByUserID(ctx, userID, domain.TokenTypeRefresh); err != nil {
+	if err := a.tokenRepo.DeleteByUserId(ctx, userID, domain.TokenTypeRefresh); err != nil {
 		return err
 	}
 

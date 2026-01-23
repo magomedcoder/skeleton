@@ -12,18 +12,18 @@ const (
 )
 
 type Token struct {
-	ID        int
-	UserID    int
+	Id        int
+	UserId    int
 	Token     string
 	Type      TokenType
 	ExpiresAt time.Time
 	CreatedAt time.Time
 }
 
-func NewToken(userID int, token string, tokenType TokenType, expiresAt time.Time) *Token {
+func NewToken(userId int, token string, tokenType TokenType, expiresAt time.Time) *Token {
 	return &Token{
-		ID:        0,
-		UserID:    userID,
+		Id:        0,
+		UserId:    userId,
 		Token:     token,
 		Type:      tokenType,
 		ExpiresAt: expiresAt,
