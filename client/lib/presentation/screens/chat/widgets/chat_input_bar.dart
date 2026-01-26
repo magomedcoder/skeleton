@@ -67,10 +67,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
       onPressed: _isComposing && widget.isEnabled ? _sendMessage : null,
       backgroundColor: _isComposing && widget.isEnabled
           ? Theme.of(context).colorScheme.primary
-          : Theme.of(context).colorScheme.surfaceVariant,
+          : Theme.of(context).colorScheme.surfaceContainerHighest,
       foregroundColor: _isComposing && widget.isEnabled
           ? Theme.of(context).colorScheme.onPrimary
-          : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+          : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
       shape: const CircleBorder(),
       child: const Icon(Icons.send, size: 20),
     );
@@ -86,7 +86,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             color: Theme.of(context).colorScheme.surface,
             border: Border(
               top: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.1),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -96,7 +96,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: TextField(
@@ -122,21 +122,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      suffixIcon: _isComposing
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                size: 20,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                              onPressed: () {
-                                _textController.clear();
-                                _focusNode.unfocus();
-                              },
-                            )
-                          : null,
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/auth/login_screen.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/chat_screen.dart';
 
 Future<void> main() async {
@@ -35,19 +35,23 @@ class App extends StatelessWidget {
       home: MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (context) => di.sl<AuthBloc>(),
+            create: (context) => di.sl<AuthBloc>()..add(const AuthCheckRequested()),
           ),
           BlocProvider(
-            create: (context) => di.sl<ChatBloc>()..add(const ChatStarted()),
+            create: (context) => di.sl<ChatBloc>(),
           ),
         ],
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, authState) {
+            if (authState.isLoading && !authState.isAuthenticated) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
             if (authState.isAuthenticated) {
               return const ChatScreen();
-            } else {
-              return const LoginScreen();
             }
+            return const LoginScreen();
           },
         ),
       ),

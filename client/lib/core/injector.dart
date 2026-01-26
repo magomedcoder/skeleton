@@ -1,5 +1,7 @@
+import 'package:get_it/get_it.dart';
+import 'package:grpc/grpc.dart';
 import 'package:legion/core/auth_interceptor.dart';
-import 'package:legion/core/token_storage.dart';
+import 'package:legion/data/data_sources/local/auth_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
 import 'package:legion/data/repositories/auth_repository_impl.dart';
@@ -20,16 +22,15 @@ import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart';
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:get_it/get_it.dart';
-import 'package:grpc/grpc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  sl.registerLazySingleton<TokenStorage>(() => TokenStorage());
+  sl.registerLazySingleton<AuthLocalDataSourceImpl>(() => AuthLocalDataSourceImpl());
+  await sl<AuthLocalDataSourceImpl>().init();
 
   sl.registerLazySingleton<AuthInterceptor>(
-    () => AuthInterceptor(sl<TokenStorage>()),
+    () => AuthInterceptor(sl<AuthLocalDataSourceImpl>()),
   );
 
   sl.registerLazySingleton<ClientChannel>(() {

@@ -36,3 +36,7 @@ class AuthLogoutRequested extends AuthEvent {
 class AuthClearError extends AuthEvent {
   const AuthClearError();
 }
+
+class AuthCheckRequested extends AuthEvent {
+  const AuthCheckRequested();
+}

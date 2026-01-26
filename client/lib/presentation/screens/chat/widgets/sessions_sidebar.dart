@@ -54,7 +54,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
         borderRadius: BorderRadius.circular(12),
         border: isSelected
             ? Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 width: 1,
               )
             : null,
@@ -115,7 +115,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               spreadRadius: 2,
             ),
@@ -146,7 +146,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
 //                 widget.onCreateNewSession();
 //               },
 //             ),
-            const Divider(height: 1),
+//             const Divider(height: 1),
             ListTile(
               leading: Icon(
                 Icons.delete_outline,
@@ -216,7 +216,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
               size: 64,
               color: Theme.of(
                 context,
-              ).colorScheme.onSurfaceVariant.withOpacity(0.5),
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -292,7 +292,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
           ),
         ),
       ),

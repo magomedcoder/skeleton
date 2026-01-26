@@ -92,20 +92,21 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _deleteSession(String sessionId, String sessionTitle) {
-    showDialog(
+    final chatBloc = context.read<ChatBloc>();
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Удалить сессию?'),
         content: Text('Вы уверены, что хотите удалить сессию "$sessionTitle"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Отмена'),
           ),
           TextButton(
             onPressed: () {
-              context.read<ChatBloc>().add(ChatDeleteSession(sessionId));
-              Navigator.of(context).pop(true);
+              chatBloc.add(ChatDeleteSession(sessionId));
+              Navigator.of(dialogContext).pop();
             },
             child: const Text('Удалить', style: TextStyle(color: Colors.red)),
           ),
@@ -241,7 +242,7 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -360,20 +361,21 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: const Icon(Icons.logout),
               tooltip: 'Выйти',
               onPressed: () {
-                showDialog(
+                final authBloc = context.read<AuthBloc>();
+                showDialog<void>(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (dialogContext) => AlertDialog(
                     title: const Text('Выйти из аккаунта?'),
                     content: const Text('Вы уверены, что хотите выйти?'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => Navigator.of(dialogContext).pop(),
                         child: const Text('Отмена'),
                       ),
                       TextButton(
                         onPressed: () {
-                          context.read<AuthBloc>().add(const AuthLogoutRequested());
-                          Navigator.of(context).pop();
+                          authBloc.add(const AuthLogoutRequested());
+                          Navigator.of(dialogContext).pop();
                         },
                         child: const Text('Выйти', style: TextStyle(color: Colors.red)),
                       ),
@@ -393,7 +395,7 @@ class _ChatScreenState extends State<ChatScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
