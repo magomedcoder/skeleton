@@ -14,9 +14,9 @@ gen:
 			$$proto; \
 	done
 
-	mkdir -p ./client/lib/generated/grpc_pb
+	mkdir -p ./client-side/lib/generated/grpc_pb
 	protoc --proto_path=./api/proto \
-		--dart_out=grpc:./client/lib/generated/grpc_pb \
+		--dart_out=grpc:./client-side/lib/generated/grpc_pb \
 		./api/proto/*.proto
 
 .PHONY: run
@@ -25,4 +25,8 @@ run:
 
 .PHONY: run-ollama
 run-ollama:
+	#go generate ./...
+	#go build -tags cuda .
+	# OLLAMA_GPU=1
+	# CUDA_VISIBLE_DEVICES=0
 	OLLAMA_HOST=0.0.0.0:11434 go run ./third_party/ollama/main.go

@@ -2,4 +2,4 @@
 build
 /api/pb/
 .docker-volumes
-/client/lib/generated/
+/client-side/lib/generated/

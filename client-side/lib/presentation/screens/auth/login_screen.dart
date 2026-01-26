@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
@@ -56,9 +57,14 @@ class _LoginScreenState extends State<LoginScreen> {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: Breakpoints.isMobile(context) ? 20 : 32,
+                vertical: Breakpoints.isMobile(context) ? 16 : 24,
+              ),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
+                constraints: BoxConstraints(
+                  maxWidth: Breakpoints.isDesktop(context) ? 420 : 400,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(

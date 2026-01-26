@@ -1,20 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/session.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SessionsSidebar extends StatefulWidget {
   final VoidCallback onCreateNewSession;
   final Function(ChatSession) onSelectSession;
   final Function(String, String) onDeleteSession;
+  final bool isInDrawer;
 
   const SessionsSidebar({
     super.key,
     required this.onCreateNewSession,
     required this.onSelectSession,
     required this.onDeleteSession,
+    this.isInDrawer = false,
   });
 
   @override
@@ -213,7 +216,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
           children: [
             Icon(
               Icons.history,
-              size: 64,
+              size: 54,
               color: Theme.of(
                 context,
               ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -222,21 +225,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
             Text(
               'История пуста',
               style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Создайте первую сессию',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Создать сессию'),
-              onPressed: widget.onCreateNewSession,
-            ),
+            )
           ],
         ),
       ),
@@ -286,9 +275,47 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildDrawerHeader() {
+    if (!widget.isInDrawer) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        8,
+        12,
+      ),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            'Сессии',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'Закрыть',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    final padding = widget.isInDrawer && Breakpoints.isMobile(context)
+        ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+        : const EdgeInsets.all(16);
+    return Container(
+      padding: padding,
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -316,6 +343,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildDrawerHeader(),
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {

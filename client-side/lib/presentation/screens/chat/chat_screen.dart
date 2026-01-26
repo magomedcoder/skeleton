@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/session.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
@@ -20,10 +21,11 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _sessionTitleController = TextEditingController();
   bool _isEditingTitle = false;
   bool _isSidebarExpanded = true;
-  final double _sidebarWidth = 300;
+  double get _sidebarWidth => Breakpoints.sidebarDefaultWidth;
 
   @override
   void initState() {
@@ -89,6 +91,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _selectSession(ChatSession session) {
     context.read<ChatBloc>().add(ChatSelectSession(session.id));
+  }
+
+  void _selectSessionAndCloseDrawer(ChatSession session) {
+    _selectSession(session);
+    if (Breakpoints.useDrawerForSessions(context)) {
+      Navigator.of(context).pop();
+    }
   }
 
   void _deleteSession(String sessionId, String sessionTitle) {
@@ -159,6 +168,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildAppBarTitle(ChatState state) {
+    final useDrawer = Breakpoints.useDrawerForSessions(context);
     final currentSession = state.sessions.firstWhere(
       (session) => session.id == state.currentSessionId,
       orElse: () => ChatSession(
@@ -171,40 +181,29 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Row(
       children: [
-        IconButton(
-          icon: Icon(
-            _isSidebarExpanded ? Icons.menu_open : Icons.menu,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (!useDrawer)
+          IconButton(
+            icon: Icon(
+              _isSidebarExpanded ? Icons.menu_open : Icons.menu,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            onPressed: _toggleSidebar,
+            tooltip: _isSidebarExpanded ? 'Скрыть меню' : 'Показать меню',
           ),
-          onPressed: _toggleSidebar,
-        ),
-        const SizedBox(width: 8),
+        if (!useDrawer)
+          const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      currentSession.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  // if (state.currentSessionId != null &&
-                  //     state.currentSessionId!.isNotEmpty)
-                  //   IconButton(
-                  //     icon: const Icon(Icons.edit, size: 18),
-                  //     onPressed: () => _startEditingTitle(currentSession),
-                  //     tooltip: 'Редактировать название',
-                  //     padding: EdgeInsets.zero,
-                  //     constraints: const BoxConstraints(),
-                  //   ),
-                ],
+              Text(
+                currentSession.title,
+                style: TextStyle(
+                  fontSize: useDrawer ? 18 : 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
               if (!state.isConnected)
                 Row(
@@ -232,38 +231,36 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildEmptyChatState() {
+    final useDrawer = Breakpoints.useDrawerForSessions(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: Breakpoints.isMobile(context) ? 24 : 32,
+          vertical: 32,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            SizedBox(
               width: 120,
               height: 120,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
               child: Icon(
                 Icons.chat_bubble_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.primary,
+                size: 54,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              'Выберите сессию из списка слева или создайте новую',
+            Text(useDrawer
+              ? 'Нажмите ☰ чтобы выбрать сессию\nили создайте новую'
+              : 'Выберите сессию из списка слева\nили создайте новую',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Создать новый чат'),
-              onPressed: _createNewSession,
             ),
           ],
         ),
@@ -272,9 +269,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageList(ChatState state) {
+    final horizontalPadding =
+        Breakpoints.isMobile(context) ? 12.0 : 16.0;
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: horizontalPadding),
       itemCount: state.messages.length + (state.isStreaming ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < state.messages.length) {
@@ -336,104 +335,132 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: BlocBuilder<ChatBloc, ChatState>(
-            builder: (context, state) => _buildAppBarTitle(state),
-          ),
-          actions: [
-            BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                if (state.isLoading && !state.isStreaming) {
-                  return const Padding(
-                    padding: EdgeInsets.only(right: 16),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+      child: Builder(
+        builder: (context) {
+          final useDrawer = Breakpoints.useDrawerForSessions(context);
+          return Scaffold(
+            key: _scaffoldKey,
+            drawer: useDrawer
+                ? Drawer(
+                    child: SafeArea(
+                      child: SessionsSidebar(
+                        isInDrawer: true,
+                        onCreateNewSession: _createNewSession,
+                        onSelectSession: _selectSessionAndCloseDrawer,
+                        onDeleteSession: _deleteSession,
+                      ),
                     ),
-                  );
-                }
-                return const SizedBox();
-              },
+                  )
+                : null,
+            appBar: AppBar(
+              leading: useDrawer
+                ? IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                    tooltip: 'Меню сессий',
+                  )
+                : null,
+              title: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, state) => _buildAppBarTitle(state),
+              ),
+              actions: [
+                BlocBuilder<ChatBloc, ChatState>(
+                  builder: (context, state) {
+                    if (state.isLoading && !state.isStreaming) {
+                      return const Padding(
+                        padding: EdgeInsets.only(right: 16),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  tooltip: 'Выйти',
+                  onPressed: () {
+                    final authBloc = context.read<AuthBloc>();
+                    showDialog<void>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('Выйти из аккаунта?'),
+                        content: const Text('Вы уверены, что хотите выйти?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: const Text('Отмена'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              authBloc.add(const AuthLogoutRequested());
+                              Navigator.of(dialogContext).pop();
+                            },
+                            child: const Text(
+                              'Выйти',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.logout),
-              tooltip: 'Выйти',
-              onPressed: () {
-                final authBloc = context.read<AuthBloc>();
-                showDialog<void>(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    title: const Text('Выйти из аккаунта?'),
-                    content: const Text('Вы уверены, что хотите выйти?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(),
-                        child: const Text('Отмена'),
+            body: Row(
+              children: [
+                if (!useDrawer)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: _isSidebarExpanded ? _sidebarWidth : 0,
+                    curve: Curves.easeInOut,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(
+                          color: Theme.of(context)
+                              .dividerColor
+                              .withValues(alpha: 0.1),
+                          width: 1,
+                        ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          authBloc.add(const AuthLogoutRequested());
-                          Navigator.of(dialogContext).pop();
-                        },
-                        child: const Text('Выйти', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
+                    ),
+                    child: _isSidebarExpanded
+                        ? SessionsSidebar(
+                            onCreateNewSession: _createNewSession,
+                            onSelectSession: _selectSession,
+                            onDeleteSession: _deleteSession,
+                          )
+                        : const SizedBox.shrink(),
                   ),
-                );
-              },
-            ),
-          ],
-        ),
-        body: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: _isSidebarExpanded ? _sidebarWidth : 0,
-              curve: Curves.easeInOut,
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                    width: 1,
+                Expanded(
+                  child: BlocBuilder<ChatBloc, ChatState>(
+                    builder: (context, state) {
+                      if (state.isLoading && state.messages.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: state.messages.isEmpty
+                                ? _buildEmptyChatState()
+                                : _buildMessageList(state),
+                          ),
+                          const Divider(height: 1),
+                          ChatInputBar(isEnabled: state.isConnected && !state.isLoading),
+                        ],
+                      );
+                    },
                   ),
                 ),
-              ),
-              child: _isSidebarExpanded
-                  ? SessionsSidebar(
-                      onCreateNewSession: _createNewSession,
-                      onSelectSession: _selectSession,
-                      onDeleteSession: _deleteSession,
-                    )
-                  : const SizedBox.shrink(),
+              ],
             ),
-
-            Expanded(
-              child: BlocBuilder<ChatBloc, ChatState>(
-                builder: (context, state) {
-                  if (state.isLoading && state.messages.isEmpty) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: state.messages.isEmpty
-                            ? _buildEmptyChatState()
-                            : _buildMessageList(state),
-                      ),
-                      const Divider(height: 1),
-                      ChatInputBar(
-                        isEnabled: state.isConnected && !state.isLoading,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

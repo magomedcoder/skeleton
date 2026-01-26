@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChatInputBar extends StatefulWidget {
   final bool isEnabled;
@@ -78,10 +79,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontal = Breakpoints.isMobile(context) ? 12.0 : 16.0;
     return BlocBuilder<ChatBloc, ChatState>(
       builder: (context, state) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: EdgeInsets.fromLTRB(horizontal, 8, horizontal, 16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             border: Border(
@@ -113,7 +115,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     decoration: InputDecoration(
                       hintText: widget.isEnabled
                           ? 'Напишите сообщение...'
-                          : 'Подключение...',
+                          : 'Обрабатываю...',
                       hintStyle: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),

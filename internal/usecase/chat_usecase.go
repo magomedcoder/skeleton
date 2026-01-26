@@ -51,21 +51,28 @@ func (uc *ChatUseCase) SendMessage(ctx context.Context, userID int, sessionId st
 	}
 
 	assistantMsg := domain.NewMessage(sessionId, "", domain.MessageRoleAssistant)
-	messageID := assistantMsg.Id
+	messageId := assistantMsg.Id
 	var fullResponse strings.Builder
 
+	clientChan := make(chan string, 100)
 	go func() {
 		defer func() {
 			assistantMsg.Content = fullResponse.String()
 			uc.messageRepo.Create(context.Background(), assistantMsg)
 		}()
+		defer close(clientChan)
 
 		for chunk := range responseChan {
 			fullResponse.WriteString(chunk)
+			select {
+			case <-ctx.Done():
+				return
+			case clientChan <- chunk:
+			}
 		}
 	}()
 
-	return responseChan, messageID, nil
+	return clientChan, messageId, nil
 }
 
 func (uc *ChatUseCase) CreateSession(ctx context.Context, userID int, title string) (*domain.ChatSession, error) {

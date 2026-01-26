@@ -48,8 +48,8 @@ func Load() (*Config, error) {
 			RefreshTTL:    7 * 24 * time.Hour,
 		},
 		Ollama: OllamaConfig{
-			BaseURL: "http://localhost:11434",
-			Model:   "llama3.2",
+			BaseURL: "http://127.0.0.1:11434",
+			Model:   "llama3.2:1b",
 		},
 	}
 

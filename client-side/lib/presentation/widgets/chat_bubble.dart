@@ -1,5 +1,6 @@
-import 'package:legion/domain/entities/message.dart';
 import 'package:flutter/material.dart';
+import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/domain/entities/message.dart';
 
 class ChatBubble extends StatelessWidget {
   final Message message;
@@ -15,13 +16,21 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.role == MessageRole.user;
     final theme = Theme.of(context);
+    final width = Breakpoints.width(context);
+    final maxBubbleWidth = Breakpoints.isMobile(context)
+      ? width * 0.85
+      : (Breakpoints.isTablet(context) ? 400.0 : 500.0);
+    final horizontalMargin = Breakpoints.isMobile(context) ? 4.0 : 16.0;
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: const BoxConstraints(maxWidth: 280),
+        margin: EdgeInsets.symmetric(vertical: 4, horizontal: horizontalMargin),
+        padding: EdgeInsets.symmetric(
+          horizontal: Breakpoints.isMobile(context) ? 12 : 16,
+          vertical: Breakpoints.isMobile(context) ? 10 : 12,
+        ),
+        constraints: BoxConstraints(maxWidth: maxBubbleWidth),
         decoration: BoxDecoration(
           color: isUser
               ? theme.colorScheme.primary
@@ -56,7 +65,7 @@ class ChatBubble extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'обрабатываю...',
+                      'Обрабатываю...',
                       style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.onSurfaceVariant.withValues(

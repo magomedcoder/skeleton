@@ -25,6 +25,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   final _uuid = const Uuid();
   StreamSubscription<String>? _streamSubscription;
+  Completer<bool>? _streamCompleter;
 
   ChatBloc({
     required this.connectUseCase,
@@ -234,7 +235,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (text.isEmpty) return;
 
     await _streamSubscription?.cancel();
+    if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
+      _streamCompleter!.complete(true);
+    }
     _streamSubscription = null;
+    _streamCompleter = null;
 
     String sessionId = state.currentSessionId ?? '';
     if (sessionId.isEmpty) {
@@ -279,12 +284,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ),
     );
 
+    _streamCompleter = Completer<bool>();
+
     try {
       final stream = sendMessageUseCase(sessionId, updatedMessages);
 
-      await for (final chunk in stream) {
-        streamingText += chunk;
-        emit(state.copyWith(currentStreamingText: streamingText));
+      _streamSubscription = stream.listen(
+        (chunk) {
+          streamingText += chunk;
+          emit(state.copyWith(currentStreamingText: streamingText));
+        },
+        onDone: () {
+          if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
+            _streamCompleter!.complete(false);
+          }
+        },
+        onError: (e, st) {
+          if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
+            _streamCompleter!.completeError(e, st);
+          }
+        },
+        cancelOnError: false,
+      );
+
+      final cancelled = await _streamCompleter!.future;
+
+      if (cancelled) {
+        return;
       }
 
       if (streamingText.isNotEmpty) {
@@ -314,7 +340,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           ),
         );
       }
-    } catch (e) {
+    } on Object catch (e) {
       emit(
         state.copyWith(
           isLoading: false,
@@ -323,7 +349,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     } finally {
+      await _streamSubscription?.cancel();
       _streamSubscription = null;
+      _streamCompleter = null;
     }
   }
 
@@ -403,7 +431,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     await _streamSubscription?.cancel();
+    if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
+      _streamCompleter!.complete(true);
+    }
     _streamSubscription = null;
+    _streamCompleter = null;
 
     if (state.currentStreamingText != null &&
         state.currentStreamingText!.isNotEmpty) {
@@ -438,6 +470,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   @override
   Future<void> close() {
     _streamSubscription?.cancel();
+    if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
+      _streamCompleter!.complete(true);
+    }
     return super.close();
   }
 }
