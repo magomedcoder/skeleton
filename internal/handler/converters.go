@@ -9,9 +9,9 @@ import (
 
 func (a *AuthHandler) userToProto(user *domain.User) *commonpb.User {
 	return &commonpb.User{
-		Id:    strconv.Itoa(user.Id),
-		Email: user.Email,
-		Name:  user.Name,
+		Id:       strconv.Itoa(user.Id),
+		Username: user.Username,
+		Name:     user.Name,
 	}
 }
 

@@ -9,7 +9,7 @@ type UserRepository interface {
 
 	GetById(ctx context.Context, id int) (*User, error)
 
-	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetByUsername(ctx context.Context, username string) (*User, error)
 
 	Update(ctx context.Context, user *User) error
 }

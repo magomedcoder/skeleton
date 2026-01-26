@@ -6,7 +6,7 @@ import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as grpc;
 import 'package:grpc/grpc.dart';
 
 abstract class IAuthRemoteDataSource {
-  Future<AuthResult> login(String email, String password);
+  Future<AuthResult> login(String username, String password);
 
   Future<AuthTokens> refreshToken(String refreshToken);
 
@@ -19,10 +19,10 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   AuthRemoteDataSource(this._client);
 
   @override
-  Future<AuthResult> login(String email, String password) async {
+  Future<AuthResult> login(String username, String password) async {
     try {
       final request = grpc.LoginRequest()
-        ..email = email
+        ..username = username
         ..password = password;
 
       final response = await _client.login(
@@ -32,7 +32,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
       final user = User(
         id: response.user.id,
-        email: response.user.email,
+        username: response.user.username,
         name: response.user.name,
       );
 
@@ -44,7 +44,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       return AuthResult(user: user, tokens: tokens);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Неверный email или пароль');
+        throw NetworkFailure('Неверное имя пользователя или пароль');
       }
       throw NetworkFailure('Ошибка gRPC при входе: ${e.message}');
     } catch (e) {

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users
 (
     id         SERIAL PRIMARY KEY,
-    email      VARCHAR(255) UNIQUE NOT NULL,
+    username   VARCHAR(255) UNIQUE NOT NULL,
     password   VARCHAR(255)        NOT NULL,
     name       VARCHAR(255)        NOT NULL,
     created_at TIMESTAMP           NOT NULL DEFAULT NOW(),
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS messages
     updated_at TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX idx_users_username ON users (username);
 CREATE INDEX IF NOT EXISTS idx_tokens_user_id ON tokens (user_id);
 CREATE INDEX IF NOT EXISTS idx_tokens_token ON tokens (token);
 CREATE INDEX IF NOT EXISTS idx_tokens_expires_at ON tokens (expires_at);

@@ -6,6 +6,6 @@ option go_package = "github.com/magomedcoder/legion/api/pb/commonpb;commonpb";
 
 message User {
   string id = 1;
-  string email = 2;
+  string username = 2;
   string name = 3;
 }

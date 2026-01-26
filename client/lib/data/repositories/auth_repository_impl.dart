@@ -10,9 +10,9 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this.dataSource);
 
   @override
-  Future<AuthResult> login(String email, String password) async {
+  Future<AuthResult> login(String username, String password) async {
     try {
-      return await dataSource.login(email, password);
+      return await dataSource.login(username, password);
     } catch (e) {
       if (e is NetworkFailure || e is ApiFailure) {
         rethrow;

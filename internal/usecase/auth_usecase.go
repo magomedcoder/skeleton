@@ -26,8 +26,8 @@ func NewAuthUseCase(
 	}
 }
 
-func (a *AuthUseCase) Login(ctx context.Context, email, password string) (*domain.User, string, string, error) {
-	user, err := a.userRepo.GetByEmail(ctx, email)
+func (a *AuthUseCase) Login(ctx context.Context, username, password string) (*domain.User, string, string, error) {
+	user, err := a.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return nil, "", "", errors.New("неверные учетные данные")
 	}

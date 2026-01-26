@@ -14,6 +14,7 @@ gen:
 			$$proto; \
 	done
 
+	mkdir -p ./client/lib/generated/grpc_pb
 	protoc --proto_path=./api/proto \
 		--dart_out=grpc:./client/lib/generated/grpc_pb \
 		./api/proto/*.proto
@@ -22,6 +23,6 @@ gen:
 run:
 	go run ./cmd/legion
 
-.PHONY: run
-run:
+.PHONY: run-ollama
+run-ollama:
 	OLLAMA_HOST=0.0.0.0:11434 go run ./third_party/ollama/main.go

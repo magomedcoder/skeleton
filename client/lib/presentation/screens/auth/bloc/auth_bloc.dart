@@ -32,7 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
-      final result = await loginUseCase(event.email, event.password);
+      final result = await loginUseCase(event.username, event.password);
 
       tokenStorage.saveTokens(
         result.tokens.accessToken,

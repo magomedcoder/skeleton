@@ -19,11 +19,11 @@ func NewUserRepository(db *pgx.Conn) domain.UserRepository {
 func (u *userRepository) Create(ctx context.Context, user *domain.User) error {
 	err := u.db.QueryRow(ctx,
 		`
-		INSERT INTO users (email, password, name, created_at)
+		INSERT INTO users (username, password, name, created_at)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`,
-		user.Email,
+		user.Username,
 		user.Password,
 		user.Name,
 		user.CreatedAt,
@@ -36,12 +36,12 @@ func (u *userRepository) GetById(ctx context.Context, id int) (*domain.User, err
 	var user domain.User
 	err := u.db.QueryRow(ctx,
 		`
-		SELECT id, email, password, name, created_at
+		SELECT id, username, password, name, created_at
 		FROM users
 		WHERE id = $1
 	`, id).Scan(
 		&user.Id,
-		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.Name,
 		&user.CreatedAt,
@@ -57,16 +57,16 @@ func (u *userRepository) GetById(ctx context.Context, id int) (*domain.User, err
 	return &user, nil
 }
 
-func (u *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (u *userRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
 	var user domain.User
 	err := u.db.QueryRow(ctx,
 		`
-		SELECT id, email, password, name, created_at
+		SELECT id, username, password, name, created_at
 		FROM users
-		WHERE email = $1
-	`, email).Scan(
+		WHERE username = $1
+	`, username).Scan(
 		&user.Id,
-		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.Name,
 		&user.CreatedAt,
@@ -85,11 +85,11 @@ func (u *userRepository) Update(ctx context.Context, user *domain.User) error {
 	_, err := u.db.Exec(ctx,
 		`
 		UPDATE users
-		SET email = $2, password = $3, name = $4
+		SET username = $2, password = $3, name = $4
 		WHERE id = $1
 	`,
 		user.Id,
-		user.Email,
+		user.Username,
 		user.Password,
 		user.Name,
 	)
