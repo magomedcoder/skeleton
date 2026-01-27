@@ -8,7 +8,7 @@
 PRODUCT_NAME = legion
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = ru.magomedcoder.legion.legion
+PRODUCT_BUNDLE_IDENTIFIER = ru.magomedcoder.legion
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 ru.magomedcoder.legion. All rights reserved.

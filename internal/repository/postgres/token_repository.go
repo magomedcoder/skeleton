@@ -37,9 +37,9 @@ func (u *tokenRepository) GetByToken(ctx context.Context, token string) (*domain
 	var t domain.Token
 	err := u.db.QueryRow(ctx,
 		`
-		SELECT id, user_id, token, type, expires_at, created_at
+		SELECT id, user_id, token, type, expires_at, created_at, deleted_at
 		FROM tokens
-		WHERE token = $1
+		WHERE token = $1 AND deleted_at IS NULL
 	`, token).Scan(
 		&t.Id,
 		&t.UserId,
@@ -47,6 +47,7 @@ func (u *tokenRepository) GetByToken(ctx context.Context, token string) (*domain
 		&t.Type,
 		&t.ExpiresAt,
 		&t.CreatedAt,
+		&t.DeletedAt,
 	)
 
 	if err != nil {
@@ -60,11 +61,11 @@ func (u *tokenRepository) GetByToken(ctx context.Context, token string) (*domain
 }
 
 func (u *tokenRepository) DeleteByToken(ctx context.Context, token string) error {
-	_, err := u.db.Exec(ctx, `DELETE FROM tokens WHERE token = $1`, token)
+	_, err := u.db.Exec(ctx, `UPDATE tokens SET deleted_at = NOW() WHERE token = $1 AND deleted_at IS NULL`, token)
 	return err
 }
 
 func (u *tokenRepository) DeleteByUserId(ctx context.Context, userID int, tokenType domain.TokenType) error {
-	_, err := u.db.Exec(ctx, `DELETE FROM tokens WHERE user_id = $1 AND type = $2`, userID, tokenType)
+	_, err := u.db.Exec(ctx, `UPDATE tokens SET deleted_at = NOW() WHERE user_id = $1 AND type = $2 AND deleted_at IS NULL`, userID, tokenType)
 	return err
 }

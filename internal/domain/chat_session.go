@@ -12,6 +12,7 @@ type ChatSession struct {
 	Title     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt *time.Time
 }
 
 type Message struct {
@@ -21,6 +22,7 @@ type Message struct {
 	Role      MessageRole
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt *time.Time
 }
 
 func NewChatSession(userId int, title string) *ChatSession {

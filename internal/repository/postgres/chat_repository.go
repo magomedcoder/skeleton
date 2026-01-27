@@ -36,15 +36,16 @@ func (r *chatSessionRepository) Create(ctx context.Context, session *domain.Chat
 func (r *chatSessionRepository) GetById(ctx context.Context, id string) (*domain.ChatSession, error) {
 	var session domain.ChatSession
 	err := r.db.QueryRow(ctx, `
-		SELECT id, user_id, title, created_at, updated_at
+		SELECT id, user_id, title, created_at, updated_at, deleted_at
 		FROM chat_sessions
-		WHERE id = $1
+		WHERE id = $1 AND deleted_at IS NULL
 	`, id).Scan(
 		&session.Id,
 		&session.UserId,
 		&session.Title,
 		&session.CreatedAt,
 		&session.UpdatedAt,
+		&session.DeletedAt,
 	)
 
 	if err != nil {
@@ -61,9 +62,9 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 	offset := (page - 1) * pageSize
 
 	rows, err := r.db.Query(ctx, `
-		SELECT id, user_id, title, created_at, updated_at
+		SELECT id, user_id, title, created_at, updated_at, deleted_at
 		FROM chat_sessions
-		WHERE user_id = $1
+		WHERE user_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
 	`, userID, pageSize, offset)
@@ -81,6 +82,7 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 			&session.Title,
 			&session.CreatedAt,
 			&session.UpdatedAt,
+			&session.DeletedAt,
 		); err != nil {
 			return nil, 0, err
 		}
@@ -91,7 +93,7 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 	err = r.db.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM chat_sessions
-		WHERE user_id = $1
+		WHERE user_id = $1 AND deleted_at IS NULL
 	`, userID).Scan(&total)
 	if err != nil {
 		return nil, 0, err
@@ -105,7 +107,7 @@ func (r *chatSessionRepository) Update(ctx context.Context, session *domain.Chat
 	_, err := r.db.Exec(ctx, `
 		UPDATE chat_sessions
 		SET title = $2, updated_at = $3
-		WHERE id = $1
+		WHERE id = $1 AND deleted_at IS NULL
 	`,
 		session.Id,
 		session.Title,
@@ -117,8 +119,9 @@ func (r *chatSessionRepository) Update(ctx context.Context, session *domain.Chat
 
 func (r *chatSessionRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx, `
-		DELETE FROM chat_sessions
-		WHERE id = $1
+		UPDATE chat_sessions
+		SET deleted_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
 	`, id)
 
 	return err

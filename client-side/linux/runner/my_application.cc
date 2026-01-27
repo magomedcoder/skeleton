@@ -1,5 +1,7 @@
 #include "my_application.h"
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
@@ -25,6 +27,14 @@ static void my_application_activate(GApplication* application) {
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
+    GdkPixbuf *icon = gdk_pixbuf_new_from_file("linux/runner/resources/app_icon.png", nullptr);
+    if (icon != nullptr) {
+        gtk_window_set_icon(window, icon);
+        g_object_unref(icon);
+    } else {
+        g_warning("Не удалось загрузить иконку из linux/runner/resources/app_icon.png");
+    }
+
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
   // desktop).
@@ -45,11 +55,11 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "legion");
+    gtk_header_bar_set_title(header_bar, "Legion");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "legion");
+    gtk_window_set_title(window, "Legion");
   }
 
   gtk_window_set_default_size(window, 1280, 720);

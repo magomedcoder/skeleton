@@ -3,3 +3,4 @@ build
 /api/pb/
 .docker-volumes
 /client-side/lib/generated/
+.DS_Store

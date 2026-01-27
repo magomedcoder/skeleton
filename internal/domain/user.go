@@ -10,4 +10,5 @@ type User struct {
 	Password  string
 	Name      string
 	CreatedAt time.Time
+	DeletedAt *time.Time
 }

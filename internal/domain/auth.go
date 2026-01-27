@@ -18,6 +18,7 @@ type Token struct {
 	Type      TokenType
 	ExpiresAt time.Time
 	CreatedAt time.Time
+	DeletedAt *time.Time
 }
 
 func NewToken(userId int, token string, tokenType TokenType, expiresAt time.Time) *Token {

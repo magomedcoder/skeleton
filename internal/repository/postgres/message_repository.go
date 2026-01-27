@@ -35,9 +35,9 @@ func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string
 	offset := (page - 1) * pageSize
 
 	rows, err := r.db.Query(ctx, `
-		SELECT id, session_id, content, role, created_at, updated_at
+		SELECT id, session_id, content, role, created_at, updated_at, deleted_at
 		FROM messages
-		WHERE session_id = $1
+		WHERE session_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at ASC
 		LIMIT $2 OFFSET $3
 	`, sessionID, pageSize, offset)
@@ -56,6 +56,7 @@ func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string
 			&message.Role,
 			&message.CreatedAt,
 			&message.UpdatedAt,
+			&message.DeletedAt,
 		); err != nil {
 			return nil, 0, err
 		}
@@ -66,7 +67,7 @@ func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string
 	err = r.db.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM messages
-		WHERE session_id = $1
+		WHERE session_id = $1 AND deleted_at IS NULL
 	`, sessionID).Scan(&total)
 	if err != nil {
 		return nil, 0, err

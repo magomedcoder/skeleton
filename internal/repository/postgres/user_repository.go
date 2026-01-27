@@ -36,15 +36,16 @@ func (u *userRepository) GetById(ctx context.Context, id int) (*domain.User, err
 	var user domain.User
 	err := u.db.QueryRow(ctx,
 		`
-		SELECT id, username, password, name, created_at
+		SELECT id, username, password, name, created_at, deleted_at
 		FROM users
-		WHERE id = $1
+		WHERE id = $1 AND deleted_at IS NULL
 	`, id).Scan(
 		&user.Id,
 		&user.Username,
 		&user.Password,
 		&user.Name,
 		&user.CreatedAt,
+		&user.DeletedAt,
 	)
 
 	if err != nil {
@@ -61,15 +62,16 @@ func (u *userRepository) GetByUsername(ctx context.Context, username string) (*d
 	var user domain.User
 	err := u.db.QueryRow(ctx,
 		`
-		SELECT id, username, password, name, created_at
+		SELECT id, username, password, name, created_at, deleted_at
 		FROM users
-		WHERE username = $1
+		WHERE username = $1 AND deleted_at IS NULL
 	`, username).Scan(
 		&user.Id,
 		&user.Username,
 		&user.Password,
 		&user.Name,
 		&user.CreatedAt,
+		&user.DeletedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -85,8 +87,8 @@ func (u *userRepository) Update(ctx context.Context, user *domain.User) error {
 	_, err := u.db.Exec(ctx,
 		`
 		UPDATE users
-		SET username = $2, password = $3, name = $4
-		WHERE id = $1
+		SET username = $2, password = $3, name = $4, updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
 	`,
 		user.Id,
 		user.Username,
