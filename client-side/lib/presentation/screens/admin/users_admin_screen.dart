@@ -16,6 +16,20 @@ class UsersAdminScreen extends StatefulWidget {
 }
 
 class _UsersAdminScreenState extends State<UsersAdminScreen> {
+  late final UsersAdminBloc _usersAdminBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _usersAdminBloc = di.sl<UsersAdminBloc>()..add(const UsersAdminLoadRequested());
+  }
+
+  @override
+  void dispose() {
+    _usersAdminBloc.close();
+    super.dispose();
+  }
+
   void _showAccessDenied() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -32,7 +46,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
     return state.isAuthenticated && user?.isAdmin == true;
   }
 
-  void _createUserDialog(AuthState authState) {
+  Future<void> _createUserDialog(AuthState authState) async {
     if (!_isAdmin(authState)) {
       _showAccessDenied();
       return;
@@ -45,7 +59,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
     int selectedRole = 0;
     final formKey = GlobalKey<FormState>();
 
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Создать пользователя'),
@@ -149,7 +163,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
                 return;
               }
 
-              context.read<UsersAdminBloc>().add(
+              _usersAdminBloc.add(
                 UsersAdminCreateRequested(
                   username: usernameController.text.trim(),
                   password: passwordController.text.trim(),
@@ -168,7 +182,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
     );
   }
 
-  void _editUserDialog(AuthState authState, User user) {
+  Future<void> _editUserDialog(AuthState authState, User user) async {
     if (!_isAdmin(authState)) {
       _showAccessDenied();
       return;
@@ -181,7 +195,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
     int selectedRole = user.role;
     final formKey = GlobalKey<FormState>();
 
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Редактировать пользователя'),
@@ -281,7 +295,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
                 return;
               }
 
-              context.read<UsersAdminBloc>().add(
+              _usersAdminBloc.add(
                 UsersAdminUpdateRequested(
                   id: user.id,
                   username: usernameController.text.trim(),
@@ -303,8 +317,8 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => di.sl<UsersAdminBloc>()..add(const UsersAdminLoadRequested()),
+    return BlocProvider.value(
+      value: _usersAdminBloc,
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           final isAdminUser = _isAdmin(authState);
@@ -373,7 +387,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
                           Expanded(
                             child: RefreshIndicator(
                               onRefresh: () async {
-                                context.read<UsersAdminBloc>().add(
+                                _usersAdminBloc.add(
                                   const UsersAdminLoadRequested(),
                                 );
                               },

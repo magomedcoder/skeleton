@@ -31,7 +31,13 @@ class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
         page: event.page,
         pageSize: event.pageSize,
       );
-      emit(state.copyWith(isLoading: false, users: users, error: null));
+      emit(state.copyWith(
+        isLoading: false,
+        users: users,
+        error: null,
+        currentPage: event.page,
+        pageSize: event.pageSize,
+      ));
     } catch (e) {
       emit(
         state.copyWith(
@@ -55,8 +61,12 @@ class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
         surname: event.surname,
         role: event.role,
       );
-      final users = await getUsersUseCase(page: 1, pageSize: 50);
-      emit(state.copyWith(isLoading: false, users: users, error: null));
+
+      add(UsersAdminLoadRequested(
+        page: state.currentPage,
+        pageSize:
+        state.pageSize,
+      ));
     } catch (e) {
       emit(
         state.copyWith(
@@ -81,8 +91,11 @@ class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
         surname: event.surname,
         role: event.role,
       );
-      final users = await getUsersUseCase(page: 1, pageSize: 50);
-      emit(state.copyWith(isLoading: false, users: users, error: null));
+
+      add(UsersAdminLoadRequested(
+        page: state.currentPage,
+        pageSize: state.pageSize,
+      ));
     } catch (e) {
       emit(
         state.copyWith(
