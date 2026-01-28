@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
+	"github.com/magomedcoder/legion/api/pb/userpb"
 	"github.com/magomedcoder/legion/config"
 	"github.com/magomedcoder/legion/internal/handler"
 	"github.com/magomedcoder/legion/internal/repository"
@@ -43,14 +44,17 @@ func main() {
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
 	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, ollamaRepo)
+	userUseCase := usecase.NewUserUseCase(userRepo, tokenRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(authUseCase)
 	chatHandler := handler.NewChatHandler(chatUseCase, authUseCase)
+	userHandler := handler.NewUserHandler(userUseCase, authUseCase)
 
 	grpcServer := grpc.NewServer()
 
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
 	chatpb.RegisterChatServiceServer(grpcServer, chatHandler)
+	userpb.RegisterUserServiceServer(grpcServer, userHandler)
 
 	reflection.Register(grpcServer)
 

@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/magomedcoder/legion/internal/domain"
@@ -51,10 +50,7 @@ func (u *tokenRepository) GetByToken(ctx context.Context, token string) (*domain
 	)
 
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("токен не найден")
-		}
-		return nil, err
+		return nil, handleNotFound(err, "токен не найден")
 	}
 
 	return &t, nil

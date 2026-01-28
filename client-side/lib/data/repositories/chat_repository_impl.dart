@@ -23,18 +23,7 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   Stream<String> sendMessage(String sessionId, List<Message> messages) {
     try {
-      final messageList = messages
-          .map(
-            (msg) => {
-              'id': msg.id,
-              'role': msg.role == MessageRole.user ? 'user' : 'assistant',
-              'content': msg.content,
-              'created_at': msg.createdAt.millisecondsSinceEpoch,
-            },
-          )
-          .toList();
-
-      return dataSource.sendChatMessage(sessionId, messageList);
+      return dataSource.sendChatMessage(sessionId, messages);
     } catch (e) {
       throw ApiFailure('Ошибка создания потока сообщений: $e');
     }
@@ -59,9 +48,9 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<List<ChatSession>> listSessions(int page, int pageSize) async {
+  Future<List<ChatSession>> getSessions(int page, int pageSize) async {
     try {
-      return await dataSource.listSessions(page, pageSize);
+      return await dataSource.getSessions(page, pageSize);
     } catch (e) {
       throw ApiFailure('Ошибка получения списка сессий: $e');
     }

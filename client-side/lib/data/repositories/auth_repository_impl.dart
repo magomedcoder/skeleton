@@ -44,4 +44,16 @@ class AuthRepositoryImpl implements AuthRepository {
       throw ApiFailure('Ошибка выхода: $e');
     }
   }
+
+  @override
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    try {
+      await dataSource.changePassword(oldPassword, newPassword);
+    } catch (e) {
+      if (e is NetworkFailure || e is ApiFailure) {
+        rethrow;
+      }
+      throw ApiFailure('Ошибка смены пароля: $e');
+    }
+  }
 }

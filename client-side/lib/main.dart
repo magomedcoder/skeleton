@@ -24,9 +24,9 @@ class App extends StatelessWidget {
       title: 'Legion',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
+          seedColor: const Color(0xFF2F80ED),
           brightness: Brightness.light,
-          primary: const Color(0xFF6366F1),
+          primary: const Color(0xFF2F80ED),
           secondary: const Color(0xFFEC4899),
         ),
         useMaterial3: true,

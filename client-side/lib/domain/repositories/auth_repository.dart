@@ -7,4 +7,6 @@ abstract interface class AuthRepository {
   Future<AuthTokens> refreshToken(String refreshToken);
 
   Future<void> logout();
+
+  Future<void> changePassword(String oldPassword, String newPassword);
 }

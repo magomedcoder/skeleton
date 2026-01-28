@@ -2,12 +2,10 @@ package handler
 
 import (
 	"context"
-	"strings"
 
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -29,7 +27,7 @@ func (a *AuthHandler) Login(ctx context.Context, req *authpb.LoginRequest) (*aut
 	}
 
 	return &authpb.LoginResponse{
-		User:         a.userToProto(user),
+		User:         userToProto(user),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
@@ -48,26 +46,9 @@ func (a *AuthHandler) RefreshToken(ctx context.Context, req *authpb.RefreshToken
 }
 
 func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "метаданные не предоставлены")
-	}
-
-	authHeaders := md.Get("authorization")
-	if len(authHeaders) == 0 {
-		return nil, status.Error(codes.Unauthenticated, "заголовок авторизации не предоставлен")
-	}
-
-	authHeader := authHeaders[0]
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return nil, status.Error(codes.Unauthenticated, "неверный формат заголовка авторизации")
-	}
-
-	token := strings.TrimPrefix(authHeader, "Bearer ")
-
-	user, err := a.authUseCase.ValidateToken(ctx, token)
+	user, err := getUserFromContext(ctx, a.authUseCase)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, err.Error())
+		return nil, err
 	}
 
 	if err := a.authUseCase.Logout(ctx, user.Id); err != nil {
@@ -77,4 +58,17 @@ func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*a
 	return &authpb.LogoutResponse{
 		Success: true,
 	}, nil
+}
+
+func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePasswordRequest) (*authpb.ChangePasswordResponse, error) {
+	user, err := getUserFromContext(ctx, a.authUseCase)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.authUseCase.ChangePassword(ctx, user.Id, req.OldPassword, req.NewPassword); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return &authpb.ChangePasswordResponse{Success: true}, nil
 }

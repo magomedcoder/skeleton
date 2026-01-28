@@ -20,7 +20,7 @@ type JWTService struct {
 }
 
 type Claims struct {
-	UserID   int    `json:"user_id"`
+	UserId   int    `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -38,7 +38,7 @@ func (j *JWTService) GenerateAccessToken(user *domain.User) (string, time.Time, 
 	expiresAt := time.Now().Add(j.accessTTL)
 
 	claims := &Claims{
-		UserID:   user.Id,
+		UserId:   user.Id,
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
@@ -61,7 +61,7 @@ func (j *JWTService) GenerateRefreshToken(user *domain.User) (string, time.Time,
 	expiresAt := time.Now().Add(j.refreshTTL)
 
 	claims := &Claims{
-		UserID:   user.Id,
+		UserId:   user.Id,
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),

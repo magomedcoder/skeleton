@@ -12,7 +12,7 @@ abstract interface class ChatRepository {
 
   Future<ChatSession> getSession(String sessionId);
 
-  Future<List<ChatSession>> listSessions(int page, int pageSize);
+  Future<List<ChatSession>> getSessions(int page, int pageSize);
 
   Future<List<Message>> getSessionMessages(
     String sessionId,

@@ -1,21 +1,24 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/internal/domain"
-	"strconv"
 )
 
-func (a *AuthHandler) userToProto(user *domain.User) *commonpb.User {
+func userToProto(user *domain.User) *commonpb.User {
 	return &commonpb.User{
 		Id:       strconv.Itoa(user.Id),
 		Username: user.Username,
 		Name:     user.Name,
+		Surname:  user.Surname,
+		Role:     int32(user.Role),
 	}
 }
 
-func (h *ChatHandler) sessionToProto(session *domain.ChatSession) *chatpb.ChatSession {
+func (c *ChatHandler) sessionToProto(session *domain.ChatSession) *chatpb.ChatSession {
 	return &chatpb.ChatSession{
 		Id:        session.Id,
 		Title:     session.Title,
@@ -24,7 +27,7 @@ func (h *ChatHandler) sessionToProto(session *domain.ChatSession) *chatpb.ChatSe
 	}
 }
 
-func (h *ChatHandler) messageToProto(msg *domain.Message) *chatpb.ChatMessage {
+func (c *ChatHandler) messageToProto(msg *domain.Message) *chatpb.ChatMessage {
 	return &chatpb.ChatMessage{
 		Id:        msg.Id,
 		Content:   msg.Content,

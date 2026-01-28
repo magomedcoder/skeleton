@@ -10,6 +10,6 @@ class GetSessionsUseCase {
     int page = 1,
     int pageSize = 20,
   }) {
-    return repository.listSessions(page, pageSize);
+    return repository.getSessions(page, pageSize);
   }
 }

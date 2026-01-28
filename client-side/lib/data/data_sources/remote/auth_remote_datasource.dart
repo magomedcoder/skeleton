@@ -11,6 +11,8 @@ abstract class IAuthRemoteDataSource {
   Future<AuthTokens> refreshToken(String refreshToken);
 
   Future<void> logout();
+
+  Future<void> changePassword(String oldPassword, String newPassword);
 }
 
 class AuthRemoteDataSource implements IAuthRemoteDataSource {
@@ -21,19 +23,19 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   @override
   Future<AuthResult> login(String username, String password) async {
     try {
-      final request = grpc.LoginRequest()
-        ..username = username
-        ..password = password;
-
-      final response = await _client.login(
-        request,
-        options: CallOptions(timeout: const Duration(seconds: 10)),
+      final request = grpc.LoginRequest(
+        username: username,
+        password: password,
       );
+
+      final response = await _client.login(request);
 
       final user = User(
         id: response.user.id,
         username: response.user.username,
         name: response.user.name,
+        surname: response.user.surname,
+        role: response.user.role,
       );
 
       final tokens = AuthTokens(
@@ -46,6 +48,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       if (e.code == StatusCode.unauthenticated) {
         throw NetworkFailure('Неверное имя пользователя или пароль');
       }
+      
       throw NetworkFailure('Ошибка gRPC при входе: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка входа: $e');
@@ -55,13 +58,11 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   @override
   Future<AuthTokens> refreshToken(String refreshToken) async {
     try {
-      final request = grpc.RefreshTokenRequest()
-        ..refreshToken = refreshToken;
-
-      final response = await _client.refreshToken(
-        request,
-        options: CallOptions(timeout: const Duration(seconds: 10)),
+      final request = grpc.RefreshTokenRequest(
+        refreshToken: refreshToken
       );
+
+      final response = await _client.refreshToken(request);
 
       return AuthTokens(
         accessToken: response.accessToken,
@@ -71,6 +72,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       if (e.code == StatusCode.unauthenticated) {
         throw NetworkFailure('Недействительный refresh token');
       }
+
       throw NetworkFailure('Ошибка gRPC при обновлении токена: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка обновления токена: $e');
@@ -82,14 +84,34 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     try {
       final request = grpc.LogoutRequest();
 
-      await _client.logout(
-        request,
-        options: CallOptions(timeout: const Duration(seconds: 10)),
-      );
+      await _client.logout(request);
     } on GrpcError catch (e) {
       throw NetworkFailure('Ошибка gRPC при выходе: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка выхода: $e');
+    }
+  }
+
+  @override
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    try {
+      final request = grpc.ChangePasswordRequest(
+        oldPassword: oldPassword,
+        newPassword: newPassword
+      );
+
+      await _client.changePassword(request);
+    } on GrpcError catch (e) {
+      if (e.code == StatusCode.invalidArgument) {
+        throw NetworkFailure(e.message ?? 'Неверные данные');
+      }
+
+      if (e.code == StatusCode.unauthenticated) {
+        throw NetworkFailure('Сессия истекла, войдите снова');
+      }
+      throw NetworkFailure('Ошибка gRPC при смене пароля: ${e.message}');
+    } catch (e) {
+      throw ApiFailure('Ошибка смены пароля: $e');
     }
   }
 }

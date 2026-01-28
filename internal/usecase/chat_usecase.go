@@ -25,14 +25,21 @@ func NewChatUseCase(
 	}
 }
 
-func (uc *ChatUseCase) SendMessage(ctx context.Context, userID int, sessionId string, userMessage string) (chan string, string, error) {
-	session, err := uc.sessionRepo.GetById(ctx, sessionId)
+func (uc *ChatUseCase) verifySessionOwnership(ctx context.Context, userId int, sessionID string) (*domain.ChatSession, error) {
+	session, err := uc.sessionRepo.GetById(ctx, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	if session.UserId != userId {
+		return nil, domain.ErrUnauthorized
+	}
+	return session, nil
+}
+
+func (uc *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId string, userMessage string) (chan string, string, error) {
+	_, err := uc.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
 		return nil, "", err
-	}
-
-	if session.UserId != userID {
-		return nil, "", domain.ErrUnauthorized
 	}
 
 	userMsg := domain.NewMessage(sessionId, userMessage, domain.MessageRoleUser)
@@ -75,8 +82,8 @@ func (uc *ChatUseCase) SendMessage(ctx context.Context, userID int, sessionId st
 	return clientChan, messageId, nil
 }
 
-func (uc *ChatUseCase) CreateSession(ctx context.Context, userID int, title string) (*domain.ChatSession, error) {
-	session := domain.NewChatSession(userID, title)
+func (uc *ChatUseCase) CreateSession(ctx context.Context, userId int, title string) (*domain.ChatSession, error) {
+	session := domain.NewChatSession(userId, title)
 	if err := uc.sessionRepo.Create(ctx, session); err != nil {
 		return nil, err
 	}
@@ -84,57 +91,36 @@ func (uc *ChatUseCase) CreateSession(ctx context.Context, userID int, title stri
 	return session, nil
 }
 
-func (uc *ChatUseCase) GetSession(ctx context.Context, userID int, sessionID string) (*domain.ChatSession, error) {
-	session, err := uc.sessionRepo.GetById(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-
-	if session.UserId != userID {
-		return nil, domain.ErrUnauthorized
-	}
-
-	return session, nil
+func (uc *ChatUseCase) GetSession(ctx context.Context, userId int, sessionID string) (*domain.ChatSession, error) {
+	return uc.verifySessionOwnership(ctx, userId, sessionID)
 }
 
-func (uc *ChatUseCase) ListSessions(ctx context.Context, userID int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
-	return uc.sessionRepo.GetByUserId(ctx, userID, page, pageSize)
+func (uc *ChatUseCase) GetSessions(ctx context.Context, userId int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
+	return uc.sessionRepo.GetByUserId(ctx, userId, page, pageSize)
 }
 
 func (uc *ChatUseCase) GetSessionMessages(ctx context.Context, userId int, sessionId string, page, pageSize int32) ([]*domain.Message, int32, error) {
-	session, err := uc.sessionRepo.GetById(ctx, sessionId)
+	_, err := uc.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
 		return nil, 0, err
-	}
-
-	if session.UserId != userId {
-		return nil, 0, domain.ErrUnauthorized
 	}
 
 	return uc.messageRepo.GetBySessionId(ctx, sessionId, page, pageSize)
 }
 
 func (uc *ChatUseCase) DeleteSession(ctx context.Context, userId int, sessionID string) error {
-	session, err := uc.sessionRepo.GetById(ctx, sessionID)
+	_, err := uc.verifySessionOwnership(ctx, userId, sessionID)
 	if err != nil {
 		return err
-	}
-
-	if session.UserId != userId {
-		return domain.ErrUnauthorized
 	}
 
 	return uc.sessionRepo.Delete(ctx, sessionID)
 }
 
 func (uc *ChatUseCase) UpdateSessionTitle(ctx context.Context, userId int, sessionId string, title string) (*domain.ChatSession, error) {
-	session, err := uc.sessionRepo.GetById(ctx, sessionId)
+	session, err := uc.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
 		return nil, err
-	}
-
-	if session.UserId != userId {
-		return nil, domain.ErrUnauthorized
 	}
 
 	session.Title = title

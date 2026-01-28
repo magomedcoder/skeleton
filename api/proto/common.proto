@@ -8,4 +8,6 @@ message User {
   string id = 1;
   string username = 2;
   string name = 3;
+  string surname = 4;
+  int32 role = 5;
 }

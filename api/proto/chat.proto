@@ -11,9 +11,9 @@ service ChatService {
 
   rpc CreateSession(CreateSessionRequest) returns (ChatSession);
 
-  rpc GetSession(GetSessionRequest) returns (ChatSession);
+  rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse);
 
-  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc GetSession(GetSessionRequest) returns (ChatSession);
 
   rpc GetSessionMessages(GetSessionMessagesRequest) returns (GetSessionMessagesResponse);
 
@@ -55,24 +55,24 @@ message ChatSession {
   int64 updated_at = 4;
 }
 
+message GetSessionsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message GetSessionsResponse {
+  repeated ChatSession sessions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
 message CreateSessionRequest {
   string title = 1;
 }
 
 message GetSessionRequest {
   string session_id = 1;
-}
-
-message ListSessionsRequest {
-  int32 page = 1;
-  int32 page_size = 2;
-}
-
-message ListSessionsResponse {
-  repeated ChatSession sessions = 1;
-  int32 total = 2;
-  int32 page = 3;
-  int32 page_size = 4;
 }
 
 message GetSessionMessagesRequest {

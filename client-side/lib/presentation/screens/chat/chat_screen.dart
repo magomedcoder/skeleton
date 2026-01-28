@@ -3,14 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/session.dart';
+import 'package:legion/core/injector.dart' as di;
+import 'package:legion/presentation/screens/admin/bloc/users_admin_bloc.dart';
+import 'package:legion/presentation/screens/admin/bloc/users_admin_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 import 'package:legion/presentation/screens/chat/widgets/chat_input_bar.dart';
 import 'package:legion/presentation/screens/chat/widgets/sessions_sidebar.dart';
+import 'package:legion/presentation/screens/profile/profile_screen.dart';
 import 'package:legion/presentation/widgets/chat_bubble.dart';
+import 'package:legion/presentation/screens/admin/users_admin_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -380,32 +385,47 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.logout),
-                  tooltip: 'Выйти',
+                  icon: const Icon(Icons.person_outline),
+                  tooltip: 'Профиль',
                   onPressed: () {
                     final authBloc = context.read<AuthBloc>();
-                    showDialog<void>(
-                      context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('Выйти из аккаунта?'),
-                        content: const Text('Вы уверены, что хотите выйти?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            child: const Text('Отмена'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              authBloc.add(const AuthLogoutRequested());
-                              Navigator.of(dialogContext).pop();
-                            },
-                            child: const Text(
-                              'Выйти',
-                              style: TextStyle(color: Colors.red),
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => BlocProvider.value(
+                          value: authBloc,
+                          child: const ProfileScreen(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, authState) {
+                    final user = authState.user;
+                    final isAdmin = user?.isAdmin ?? false;
+
+                    if (!isAdmin) return const SizedBox.shrink();
+
+                    return IconButton(
+                      icon: const Icon(Icons.supervisor_account_outlined),
+                      tooltip: 'Пользователи (админ)',
+                      onPressed: () {
+                        final authBloc = context.read<AuthBloc>();
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => MultiBlocProvider(
+                              providers: [
+                                BlocProvider.value(value: authBloc),
+                                BlocProvider(
+                                  create: (_) => di.sl<UsersAdminBloc>()
+                                    ..add(const UsersAdminLoadRequested()),
+                                ),
+                              ],
+                              child: const UsersAdminScreen(),
                             ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     );
                   },
                 ),

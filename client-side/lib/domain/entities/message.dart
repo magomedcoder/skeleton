@@ -15,11 +15,6 @@ class Message extends Equatable {
     required this.createdAt,
   });
 
-  Map<String, dynamic> toJson() => {
-    'role': role == MessageRole.user ? 'user' : 'assistant',
-    'content': content,
-  };
-
   @override
   List<Object?> get props => [id, content, role, createdAt];
 }

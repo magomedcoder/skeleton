@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -49,17 +48,14 @@ func (r *chatSessionRepository) GetById(ctx context.Context, id string) (*domain
 	)
 
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("сессия не найдена")
-		}
-		return nil, err
+		return nil, handleNotFound(err, "сессия не найдена")
 	}
 
 	return &session, nil
 }
 
 func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
-	offset := (page - 1) * pageSize
+	_, pageSize, offset := normalizePagination(page, pageSize)
 
 	rows, err := r.db.Query(ctx, `
 		SELECT id, user_id, title, created_at, updated_at, deleted_at

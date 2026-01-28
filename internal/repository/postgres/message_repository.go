@@ -32,7 +32,7 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 }
 
 func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*domain.Message, int32, error) {
-	offset := (page - 1) * pageSize
+	_, pageSize, offset := normalizePagination(page, pageSize)
 
 	rows, err := r.db.Query(ctx, `
 		SELECT id, session_id, content, role, created_at, updated_at, deleted_at
