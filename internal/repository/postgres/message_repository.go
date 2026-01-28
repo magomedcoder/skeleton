@@ -2,15 +2,16 @@ package postgres
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type messageRepository struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewMessageRepository(db *pgx.Conn) domain.MessageRepository {
+func NewMessageRepository(db *pgxpool.Pool) domain.MessageRepository {
 	return &messageRepository{db: db}
 }
 
@@ -33,6 +34,16 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 
 func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*domain.Message, int32, error) {
 	_, pageSize, offset := normalizePagination(page, pageSize)
+
+	var total int32
+	err := r.db.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM messages
+		WHERE session_id = $1 AND deleted_at IS NULL
+	`, sessionID).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	rows, err := r.db.Query(ctx, `
 		SELECT id, session_id, content, role, created_at, updated_at, deleted_at
@@ -63,14 +74,8 @@ func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string
 		messages = append(messages, &message)
 	}
 
-	var total int32
-	err = r.db.QueryRow(ctx, `
-		SELECT COUNT(*)
-		FROM messages
-		WHERE session_id = $1 AND deleted_at IS NULL
-	`, sessionID).Scan(&total)
-	if err != nil {
-		return nil, 0, err
+	if rows.Err() != nil {
+		return nil, 0, rows.Err()
 	}
 
 	return messages, total, nil

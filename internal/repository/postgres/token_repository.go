@@ -3,15 +3,15 @@ package postgres
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type tokenRepository struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewTokenRepository(db *pgx.Conn) domain.TokenRepository {
+func NewTokenRepository(db *pgxpool.Pool) domain.TokenRepository {
 	return &tokenRepository{db: db}
 }
 

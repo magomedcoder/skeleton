@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type chatSessionRepository struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewChatSessionRepository(db *pgx.Conn) domain.ChatSessionRepository {
+func NewChatSessionRepository(db *pgxpool.Pool) domain.ChatSessionRepository {
 	return &chatSessionRepository{db: db}
 }
 
@@ -57,6 +57,16 @@ func (r *chatSessionRepository) GetById(ctx context.Context, id string) (*domain
 func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
 	_, pageSize, offset := normalizePagination(page, pageSize)
 
+	var total int32
+	err := r.db.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM chat_sessions
+		WHERE user_id = $1 AND deleted_at IS NULL
+	`, userID).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	rows, err := r.db.Query(ctx, `
 		SELECT id, user_id, title, created_at, updated_at, deleted_at
 		FROM chat_sessions
@@ -85,14 +95,8 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 		sessions = append(sessions, &session)
 	}
 
-	var total int32
-	err = r.db.QueryRow(ctx, `
-		SELECT COUNT(*)
-		FROM chat_sessions
-		WHERE user_id = $1 AND deleted_at IS NULL
-	`, userID).Scan(&total)
-	if err != nil {
-		return nil, 0, err
+	if rows.Err() != nil {
+		return nil, 0, rows.Err()
 	}
 
 	return sessions, total, nil

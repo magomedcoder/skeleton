@@ -3,15 +3,15 @@ package postgres
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type userRepository struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewUserRepository(db *pgx.Conn) domain.UserRepository {
+func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
 	return &userRepository{db: db}
 }
 

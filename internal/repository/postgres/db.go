@@ -5,25 +5,30 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewDB(ctx context.Context, dsn string) (*pgx.Conn, error) {
-	config, err := pgx.ParseConfig(dsn)
+func NewDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка парсинга DSN: %w", err)
 	}
 
-	config.ConnectTimeout = 10 * time.Second
+	config.ConnConfig.ConnectTimeout = 10 * time.Second
+	config.MaxConns = 25
+	config.MinConns = 5
+	config.MaxConnLifetime = 30 * time.Minute
+	config.MaxConnIdleTime = 5 * time.Minute
 
-	conn, err := pgx.ConnectConfig(ctx, config)
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка подключения к базе данных: %w", err)
+		return nil, fmt.Errorf("ошибка создания пула соединений: %w", err)
 	}
 
-	if err := conn.Ping(ctx); err != nil {
+	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("ошибка проверки соединения с базой данных: %w", err)
 	}
 
-	return conn, nil
+	return pool, nil
 }
