@@ -172,6 +172,106 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget _buildModelSelector(ChatState state) {
+    final theme = Theme.of(context);
+    final models = state.models;
+    final selected = state.selectedModel;
+    final isEnabled = state.isConnected && !state.isLoading;
+
+    if (models.isEmpty) {
+      return Tooltip(
+        message: 'Модели не загружены',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.smart_toy_outlined,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                'Модель',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return PopupMenuButton<String>(
+      enabled: isEnabled,
+      tooltip: 'Выбор модели',
+      padding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.smart_toy_outlined,
+              size: 14,
+              color: isEnabled
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              selected ?? models.first,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isEnabled
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+      onOpened: () {
+        if (state.models.isEmpty) {
+          context.read<ChatBloc>().add(const ChatLoadModels());
+        }
+      },
+      itemBuilder: (context) => [
+        for (final model in models)
+          PopupMenuItem<String>(
+            value: model,
+            child: Text(model),
+          ),
+      ],
+      onSelected: (value) {
+        context.read<ChatBloc>().add(ChatSelectModel(value));
+      },
+    );
+  }
+
   Widget _buildAppBarTitle(ChatState state) {
     final useDrawer = Breakpoints.useDrawerForSessions(context);
     final currentSession = state.sessions.firstWhere(
@@ -431,10 +531,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ],
             ),
-            body: Row(
-              children: [
-                if (!useDrawer)
-                  AnimatedContainer(
+            body: SafeArea(
+              top: false,
+              bottom: true,
+              left: false,
+              right: false,
+              child: Row(
+                children: [
+                  if (!useDrawer)
+                    AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     width: _isSidebarExpanded ? _sidebarWidth : 0,
                     curve: Curves.easeInOut,
@@ -465,6 +570,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
                       return Column(
                         children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: Breakpoints.isMobile(context) ? 12 : 20,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                _buildModelSelector(state),
+                              ],
+                            ),
+                          ),
                           Expanded(
                             child: state.messages.isEmpty
                                 ? _buildEmptyChatState()
@@ -478,6 +602,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
               ],
+            ),
             ),
           );
         },
