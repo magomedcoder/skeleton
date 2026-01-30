@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/magomedcoder/legion/api/pb/userpb"
+	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +24,6 @@ func NewUserHandler(userUseCase *usecase.UserUseCase, authUseCase *usecase.AuthU
 	}
 }
 
-
 func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
 	if err := requireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
@@ -31,14 +31,14 @@ func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest)
 
 	users, total, err := u.userUseCase.GetUsers(ctx, req.Page, req.PageSize)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, ToStatusError(codes.Internal, err)
 	}
 
 	resp := &userpb.GetUsersResponse{
 		Total: total,
 	}
 	for _, user := range users {
-		resp.Users = append(resp.Users, userToProto(user))
+		resp.Users = append(resp.Users, mappers.UserToProto(user))
 	}
 
 	return resp, nil
@@ -51,10 +51,10 @@ func (u *UserHandler) CreateUser(ctx context.Context, req *userpb.CreateUserRequ
 
 	user, err := u.userUseCase.CreateUser(ctx, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, ToStatusError(codes.InvalidArgument, err)
 	}
 
-	return &userpb.CreateUserResponse{User: userToProto(user)}, nil
+	return &userpb.CreateUserResponse{User: mappers.UserToProto(user)}, nil
 }
 
 func (u *UserHandler) EditUser(ctx context.Context, req *userpb.EditUserRequest) (*userpb.EditUserResponse, error) {
@@ -68,8 +68,8 @@ func (u *UserHandler) EditUser(ctx context.Context, req *userpb.EditUserRequest)
 
 	user, err := u.userUseCase.EditUser(ctx, req.Id, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, ToStatusError(codes.InvalidArgument, err)
 	}
 
-	return &userpb.EditUserResponse{User: userToProto(user)}, nil
+	return &userpb.EditUserResponse{User: mappers.UserToProto(user)}, nil
 }

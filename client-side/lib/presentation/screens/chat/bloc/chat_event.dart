@@ -71,6 +71,19 @@ class ChatStopGeneration extends ChatEvent {
   const ChatStopGeneration();
 }
 
+class ChatLoadModels extends ChatEvent {
+  const ChatLoadModels();
+}
+
+class ChatSelectModel extends ChatEvent {
+  final String model;
+
+  const ChatSelectModel(this.model);
+
+  @override
+  List<Object?> get props => [model];
+}
+
 class ChatDeleteSession extends ChatEvent {
   final String sessionId;
 

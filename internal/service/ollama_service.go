@@ -29,13 +29,13 @@ func NewOllamaService(baseURL, model string) *OllamaService {
 	}
 }
 
-func (c *OllamaService) CheckConnection(ctx context.Context) (bool, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/tags", nil)
+func (o *OllamaService) CheckConnection(ctx context.Context) (bool, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", o.baseURL+"/api/tags", nil)
 	if err != nil {
 		return false, fmt.Errorf("не удалось создать запрос: %w", err)
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := o.client.Do(req)
 	if err != nil {
 		return false, fmt.Errorf("ошибка подключения: %w", err)
 	}
@@ -44,14 +44,55 @@ func (c *OllamaService) CheckConnection(ctx context.Context) (bool, error) {
 	return resp.StatusCode == http.StatusOK, nil
 }
 
-func (c *OllamaService) SendMessage(ctx context.Context, messages []*domain.Message) (chan string, error) {
+type tagsResponse struct {
+	Models []struct {
+		Name string `json:"name"`
+	} `json:"models"`
+}
+
+func (o *OllamaService) GetModels(ctx context.Context) ([]string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", o.baseURL+"/api/tags", nil)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось создать запрос: %w", err)
+	}
+
+	resp, err := o.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка подключения: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("ollama вернул статус: %d", resp.StatusCode)
+	}
+
+	var data tagsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("не удалось прочитать список моделей: %w", err)
+	}
+
+	names := make([]string, 0, len(data.Models))
+	for _, m := range data.Models {
+		if m.Name != "" {
+			names = append(names, m.Name)
+		}
+	}
+	return names, nil
+}
+
+func (o *OllamaService) SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error) {
 	ollamaMessages := make([]map[string]interface{}, len(messages))
 	for i, msg := range messages {
 		ollamaMessages[i] = msg.ToMap()
 	}
 
+	modelName := model
+	if modelName == "" {
+		modelName = o.model
+	}
+
 	requestBody := map[string]interface{}{
-		"model":    c.model,
+		"model":    modelName,
 		"messages": ollamaMessages,
 		"stream":   true,
 	}
@@ -61,13 +102,13 @@ func (c *OllamaService) SendMessage(ctx context.Context, messages []*domain.Mess
 		return nil, fmt.Errorf("не удалось сериализовать запрос: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/chat", bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", o.baseURL+"/api/chat", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("не удалось создать запрос: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req)
+	resp, err := o.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось отправить запрос: %w", err)
 	}

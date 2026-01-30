@@ -11,6 +11,8 @@ class ChatState extends Equatable {
   final List<Message> messages;
   final String? currentStreamingText;
   final String? error;
+  final List<String> models;
+  final String? selectedModel;
 
   const ChatState({
     this.isConnected = false,
@@ -21,6 +23,8 @@ class ChatState extends Equatable {
     this.messages = const [],
     this.currentStreamingText,
     this.error,
+    this.models = const [],
+    this.selectedModel,
   });
 
   ChatState copyWith({
@@ -32,6 +36,8 @@ class ChatState extends Equatable {
     List<Message>? messages,
     String? currentStreamingText,
     String? error,
+    List<String>? models,
+    String? selectedModel,
   }) {
     return ChatState(
       isConnected: isConnected ?? this.isConnected,
@@ -42,6 +48,8 @@ class ChatState extends Equatable {
       messages: messages ?? this.messages,
       currentStreamingText: currentStreamingText,
       error: error,
+      models: models ?? this.models,
+      selectedModel: selectedModel ?? this.selectedModel,
     );
   }
 
@@ -55,5 +63,7 @@ class ChatState extends Equatable {
     messages,
     currentStreamingText,
     error,
+    models,
+    selectedModel,
   ];
 }

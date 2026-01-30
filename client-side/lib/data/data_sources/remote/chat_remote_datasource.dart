@@ -1,19 +1,23 @@
 import 'dart:async';
 
+import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
+import 'package:legion/data/mappers/message_mapper.dart';
+import 'package:legion/data/mappers/session_mapper.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/session.dart';
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as grpc;
-import 'package:fixnum/fixnum.dart';
-import 'package:grpc/grpc.dart';
 
 abstract class IChatRemoteDataSource {
   Future<bool> checkConnection();
 
+  Future<List<String>> getModels();
+
   Stream<String> sendChatMessage(
     String sessionId,
-    List<Message> messages,
-  );
+    List<Message> messages, {
+    String? model,
+  });
 
   Future<ChatSession> createSession(String title);
 
@@ -54,24 +58,35 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
   }
 
   @override
+  Future<List<String>> getModels() async {
+    try {
+      final response = await _client.getModels(grpc.Empty());
+      return response.models;
+    } on GrpcError catch (e) {
+      if (e.code == StatusCode.unavailable) {
+        throw NetworkFailure('Ошибка подключения gRPC');
+      }
+      throw NetworkFailure('Ошибка gRPC: ${e.message}');
+    } catch (e) {
+      throw ApiFailure('Ошибка получения списка моделей: $e');
+    }
+  }
+
+  @override
   Stream<String> sendChatMessage(
     String sessionId,
-    List<Message> messages,
-  ) async* {
+    List<Message> messages, {
+    String? model,
+  }) async* {
     try {
-      final chatMessages = messages.map((msg) {
-        final message = grpc.ChatMessage(
-          id: msg.id,
-          content: msg.content,
-          role: msg.role == MessageRole.user ? 'user' : 'assistant',
-          createdAt: Int64(msg.createdAt.millisecondsSinceEpoch)
-        );
-        return message;
-      }).toList();
+      final chatMessages = MessageMapper.listToProto(messages);
 
       final request = grpc.SendMessageRequest()
         ..sessionId = sessionId
         ..messages.addAll(chatMessages);
+      if (model != null && model.isNotEmpty) {
+        request.model = model;
+      }
 
       final responseStream = _client.sendMessage(request);
 
@@ -104,16 +119,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
       final response = await _client.createSession(request);
 
-      return ChatSession(
-        id: response.id,
-        title: response.title,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          response.createdAt.toInt(),
-        ),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(
-          response.updatedAt.toInt(),
-        ),
-      );
+      return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       throw NetworkFailure('Ошибка gRPC при создании сессии: ${e.message}');
     } catch (e) {
@@ -130,16 +136,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
       final response = await _client.getSession(request);
 
-      return ChatSession(
-        id: response.id,
-        title: response.title,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          response.createdAt.toInt(),
-        ),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(
-          response.updatedAt.toInt(),
-        ),
-      );
+      return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       throw NetworkFailure('Ошибка gRPC при получении сессии: ${e.message}');
     } catch (e) {
@@ -160,16 +157,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
       final response = await _client.getSessions(request);
 
-      return response.sessions.map((session) => ChatSession(
-        id: session.id,
-        title: session.title,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          session.createdAt.toInt(),
-        ),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(
-          session.updatedAt.toInt(),
-        ),
-      )).toList();
+      return SessionMapper.listFromProto(response.sessions);
     } on GrpcError catch (e) {
       throw NetworkFailure('Ошибка gRPC при получении списка сессий: ${e.message}');
     } catch (e) {
@@ -192,16 +180,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
       final response = await _client.getSessionMessages(request);
 
-      return response.messages.map((msg) {
-        return Message(
-          id: msg.id,
-          content: msg.content,
-          role: msg.role == 'user'
-            ? MessageRole.user
-            : MessageRole.assistant,
-          createdAt: DateTime.fromMillisecondsSinceEpoch(msg.createdAt.toInt()),
-        );
-      }).toList();
+      return MessageMapper.listFromProto(response.messages);
     } on GrpcError catch (e) {
       throw NetworkFailure('Ошибка gRPC при получении сообщений: ${e.message}');
     } catch (e) {
@@ -234,16 +213,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
       final response = await _client.updateSessionTitle(request);
 
-      return ChatSession(
-        id: response.id,
-        title: response.title,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          response.createdAt.toInt(),
-        ),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(
-          response.updatedAt.toInt(),
-        ),
-      );
+      return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       throw NetworkFailure('Ошибка gRPC при обновлении заголовка: ${e.message}');
     } catch (e) {

@@ -1,7 +1,7 @@
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
+import 'package:legion/data/mappers/user_mapper.dart';
 import 'package:legion/domain/entities/user.dart';
-import 'package:legion/generated/grpc_pb/common.pb.dart' as common;
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc;
 
 abstract class IUserRemoteDataSource {
@@ -30,14 +30,6 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
 
   UserRemoteDataSource(this._client);
 
-  User _mapUser(common.User u) => User(
-    id: u.id,
-    username: u.username,
-    name: u.name,
-    surname: u.surname,
-    role: u.role,
-  );
-
   @override
   Future<List<User>> getUsers({required int page, required int pageSize}) async {
     try {
@@ -46,7 +38,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         pageSize: pageSize,
       );
       final resp = await _client.getUsers(req);
-      return resp.users.map(_mapUser).toList();
+      return UserMapper.listFromProto(resp.users);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.permissionDenied) {
         throw NetworkFailure('Доступ разрешён только администратору');
@@ -79,7 +71,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         role: role,
       );
       final resp = await _client.createUser(req);
-      return _mapUser(resp.user);
+      return UserMapper.fromProto(resp.user);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.invalidArgument) {
         throw NetworkFailure(e.message ?? 'Неверные данные');
@@ -118,7 +110,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         role: role,
       );
       final resp = await _client.editUser(req);
-      return _mapUser(resp.user);
+      return UserMapper.fromProto(resp.user);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.invalidArgument) {
         throw NetworkFailure(e.message ?? 'Неверные данные');

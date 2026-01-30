@@ -20,6 +20,10 @@ func (r *OllamaRepository) CheckConnection(ctx context.Context) (bool, error) {
 	return r.client.CheckConnection(ctx)
 }
 
-func (r *OllamaRepository) SendMessage(ctx context.Context, sessionID string, messages []*domain.Message) (chan string, error) {
-	return r.client.SendMessage(ctx, messages)
+func (r *OllamaRepository) GetModels(ctx context.Context) ([]string, error) {
+	return r.client.GetModels(ctx)
+}
+
+func (r *OllamaRepository) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.Message) (chan string, error) {
+	return r.client.SendMessage(ctx, model, messages)
 }

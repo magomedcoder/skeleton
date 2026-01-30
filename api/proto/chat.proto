@@ -1,11 +1,13 @@
 syntax = "proto3";
 
-package aichat;
+package chat;
 
 option go_package = "aichat/api/pb/chatpb;chatpb";
 
 service ChatService {
   rpc CheckConnection(Empty) returns (ConnectionResponse);
+
+  rpc GetModels(Empty) returns (GetModelsResponse);
 
   rpc SendMessage(SendMessageRequest) returns (stream ChatResponse);
 
@@ -46,6 +48,11 @@ message ChatResponse {
 message SendMessageRequest {
   string session_id = 1;
   repeated ChatMessage messages = 2;
+  string model = 3;
+}
+
+message GetModelsResponse {
+  repeated string models = 1;
 }
 
 message ChatSession {

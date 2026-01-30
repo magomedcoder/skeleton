@@ -4,6 +4,7 @@ import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/usecases/chat/connect_usecase.dart';
 import 'package:legion/domain/usecases/chat/create_session_usecase.dart';
 import 'package:legion/domain/usecases/chat/delete_session_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_models_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_session_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_sessions_usecase.dart';
 import 'package:legion/domain/usecases/chat/send_message_usecase.dart';
@@ -16,6 +17,7 @@ import 'package:uuid/uuid.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ConnectUseCase connectUseCase;
+  final GetModelsUseCase getModelsUseCase;
   final SendMessageUseCase sendMessageUseCase;
   final CreateSessionUseCase createSessionUseCase;
   final GetSessionsUseCase getSessionsUseCase;
@@ -29,6 +31,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ChatBloc({
     required this.connectUseCase,
+    required this.getModelsUseCase,
     required this.sendMessageUseCase,
     required this.createSessionUseCase,
     required this.getSessionsUseCase,
@@ -46,6 +49,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatStopGeneration>(_onChatStopGeneration);
     on<ChatDeleteSession>(_onDeleteSession);
     on<ChatUpdateSessionTitle>(_onUpdateSessionTitle);
+    on<ChatLoadModels>(_onLoadModels);
+    on<ChatSelectModel>(_onSelectModel);
   }
 
   Future<void> _onChatStarted(
@@ -59,10 +64,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       if (isConnected) {
         try {
-          final sessions = await getSessionsUseCase(
+          final sessionsFuture = getSessionsUseCase(
             page: 1,
             pageSize: 20,
           );
+          final modelsFuture = getModelsUseCase();
+
+          final sessions = await sessionsFuture;
+          List<String> models = const [];
+          String? selectedModel;
+          try {
+            models = await modelsFuture;
+            if (models.isNotEmpty && state.selectedModel == null) {
+              selectedModel = models.first;
+            }
+          } catch (_) {}
 
           String? currentSessionId;
           List<Message> messages = const [];
@@ -85,6 +101,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               sessions: sessions,
               currentSessionId: currentSessionId,
               messages: messages,
+              models: models,
+              selectedModel: selectedModel ?? state.selectedModel,
               error: null,
             ),
           );
@@ -287,7 +305,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _streamCompleter = Completer<bool>();
 
     try {
-      final stream = sendMessageUseCase(sessionId, updatedMessages);
+      final stream = sendMessageUseCase(
+        sessionId,
+        updatedMessages,
+        model: state.selectedModel,
+      );
 
       _streamSubscription = stream.listen(
         (chunk) {
@@ -420,6 +442,34 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     }
+  }
+
+  Future<void> _onLoadModels(
+    ChatLoadModels event,
+    Emitter<ChatState> emit,
+  ) async {
+    try {
+      final models = await getModelsUseCase();
+      String? selectedModel = state.selectedModel;
+      if (models.isNotEmpty && selectedModel == null) {
+        selectedModel = models.first;
+      }
+      if (models.isNotEmpty &&
+          selectedModel != null &&
+          !models.contains(selectedModel)) {
+        selectedModel = models.first;
+      }
+      emit(
+        state.copyWith(
+          models: models,
+          selectedModel: selectedModel ?? state.selectedModel,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  void _onSelectModel(ChatSelectModel event, Emitter<ChatState> emit) {
+    emit(state.copyWith(selectedModel: event.model));
   }
 
   void _onChatClearError(ChatClearError event, Emitter<ChatState> emit) {

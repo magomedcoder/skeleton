@@ -45,7 +45,9 @@ type MessageRepository interface {
 }
 
 type OllamaRepository interface {
-	SendMessage(ctx context.Context, sessionID string, messages []*Message) (chan string, error)
-
 	CheckConnection(ctx context.Context) (bool, error)
+
+	GetModels(ctx context.Context) ([]string, error)
+
+	SendMessage(ctx context.Context, sessionID string, model string, messages []*Message) (chan string, error)
 }

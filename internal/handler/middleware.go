@@ -38,7 +38,7 @@ func getUserFromContext(ctx context.Context, authUseCase *usecase.AuthUseCase) (
 
 	user, err := authUseCase.ValidateToken(ctx, token)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, err.Error())
+		return nil, ToStatusError(codes.Unauthenticated, err)
 	}
 
 	return user, nil

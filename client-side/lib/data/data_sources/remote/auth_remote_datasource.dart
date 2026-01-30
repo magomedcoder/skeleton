@@ -1,9 +1,9 @@
+import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
+import 'package:legion/data/mappers/auth_mapper.dart';
 import 'package:legion/domain/entities/auth_result.dart';
 import 'package:legion/domain/entities/auth_tokens.dart';
-import 'package:legion/domain/entities/user.dart';
 import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as grpc;
-import 'package:grpc/grpc.dart';
 
 abstract class IAuthRemoteDataSource {
   Future<AuthResult> login(String username, String password);
@@ -30,20 +30,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
       final response = await _client.login(request);
 
-      final user = User(
-        id: response.user.id,
-        username: response.user.username,
-        name: response.user.name,
-        surname: response.user.surname,
-        role: response.user.role,
-      );
-
-      final tokens = AuthTokens(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-      );
-
-      return AuthResult(user: user, tokens: tokens);
+      return AuthMapper.loginResponseFromProto(response);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unauthenticated) {
         throw NetworkFailure('Неверное имя пользователя или пароль');
@@ -64,10 +51,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
       final response = await _client.refreshToken(request);
 
-      return AuthTokens(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-      );
+      return AuthMapper.refreshTokenResponseFromProto(response);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unauthenticated) {
         throw NetworkFailure('Недействительный refresh token');

@@ -21,9 +21,26 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Stream<String> sendMessage(String sessionId, List<Message> messages) {
+  Future<List<String>> getModels() async {
     try {
-      return dataSource.sendChatMessage(sessionId, messages);
+      return await dataSource.getModels();
+    } catch (e) {
+      throw ApiFailure('Ошибка получения списка моделей: $e');
+    }
+  }
+
+  @override
+  Stream<String> sendMessage(
+    String sessionId,
+    List<Message> messages, {
+    String? model,
+  }) {
+    try {
+      return dataSource.sendChatMessage(
+        sessionId,
+        messages,
+        model: model,
+      );
     } catch (e) {
       throw ApiFailure('Ошибка создания потока сообщений: $e');
     }

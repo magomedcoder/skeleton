@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/magomedcoder/legion/api/pb/chatpb"
+	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,9 +46,9 @@ func (c *ChatHandler) SendMessage(req *chatpb.SendMessageRequest, stream chatpb.
 	lastMessage := req.Messages[len(req.Messages)-1]
 	userMessage := lastMessage.Content
 
-	responseChan, messageId, err := c.chatUseCase.SendMessage(ctx, userID, req.SessionId, userMessage)
+	responseChan, messageId, err := c.chatUseCase.SendMessage(ctx, userID, req.SessionId, req.GetModel(), userMessage)
 	if err != nil {
-		return status.Error(codes.Internal, err.Error())
+		return ToStatusError(codes.Internal, err)
 	}
 
 	createdAt := time.Now().Unix()
@@ -82,10 +83,10 @@ func (c *ChatHandler) CreateSession(ctx context.Context, req *chatpb.CreateSessi
 
 	session, err := c.chatUseCase.CreateSession(ctx, userID, req.Title)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, ToStatusError(codes.Internal, err)
 	}
 
-	return c.sessionToProto(session), nil
+	return mappers.SessionToProto(session), nil
 }
 
 func (c *ChatHandler) GetSession(ctx context.Context, req *chatpb.GetSessionRequest) (*chatpb.ChatSession, error) {
@@ -96,10 +97,10 @@ func (c *ChatHandler) GetSession(ctx context.Context, req *chatpb.GetSessionRequ
 
 	session, err := c.chatUseCase.GetSession(ctx, userID, req.SessionId)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
+		return nil, ToStatusError(codes.NotFound, err)
 	}
 
-	return c.sessionToProto(session), nil
+	return mappers.SessionToProto(session), nil
 }
 
 func (c *ChatHandler) GetSessions(ctx context.Context, req *chatpb.GetSessionsRequest) (*chatpb.GetSessionsResponse, error) {
@@ -112,12 +113,12 @@ func (c *ChatHandler) GetSessions(ctx context.Context, req *chatpb.GetSessionsRe
 
 	sessions, total, err := c.chatUseCase.GetSessions(ctx, userID, page, pageSize)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, ToStatusError(codes.Internal, err)
 	}
 
 	protoSessions := make([]*chatpb.ChatSession, len(sessions))
 	for i, session := range sessions {
-		protoSessions[i] = c.sessionToProto(session)
+		protoSessions[i] = mappers.SessionToProto(session)
 	}
 
 	return &chatpb.GetSessionsResponse{
@@ -138,12 +139,12 @@ func (c *ChatHandler) GetSessionMessages(ctx context.Context, req *chatpb.GetSes
 
 	messages, total, err := c.chatUseCase.GetSessionMessages(ctx, userID, req.SessionId, page, pageSize)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, ToStatusError(codes.Internal, err)
 	}
 
 	protoMessages := make([]*chatpb.ChatMessage, len(messages))
 	for i, msg := range messages {
-		protoMessages[i] = c.messageToProto(msg)
+		protoMessages[i] = mappers.MessageToProto(msg)
 	}
 
 	return &chatpb.GetSessionMessagesResponse{
@@ -161,7 +162,7 @@ func (c *ChatHandler) DeleteSession(ctx context.Context, req *chatpb.DeleteSessi
 	}
 
 	if err := c.chatUseCase.DeleteSession(ctx, userID, req.SessionId); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, ToStatusError(codes.Internal, err)
 	}
 
 	return &chatpb.Empty{}, nil
@@ -175,12 +176,20 @@ func (c *ChatHandler) UpdateSessionTitle(ctx context.Context, req *chatpb.Update
 
 	session, err := c.chatUseCase.UpdateSessionTitle(ctx, userID, req.SessionId, req.Title)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, ToStatusError(codes.Internal, err)
 	}
 
-	return c.sessionToProto(session), nil
+	return mappers.SessionToProto(session), nil
 }
 
 func (c *ChatHandler) CheckConnection(ctx context.Context, req *chatpb.Empty) (*chatpb.ConnectionResponse, error) {
 	return &chatpb.ConnectionResponse{IsConnected: true}, nil
+}
+
+func (c *ChatHandler) GetModels(ctx context.Context, req *chatpb.Empty) (*chatpb.GetModelsResponse, error) {
+	models, err := c.chatUseCase.GetModels(ctx)
+	if err != nil {
+		return nil, ToStatusError(codes.Internal, err)
+	}
+	return &chatpb.GetModelsResponse{Models: models}, nil
 }

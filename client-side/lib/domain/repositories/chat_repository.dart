@@ -6,7 +6,13 @@ import 'package:legion/domain/entities/session.dart';
 abstract interface class ChatRepository {
   Future<bool> checkConnection();
 
-  Stream<String> sendMessage(String sessionId, List<Message> messages);
+  Future<List<String>> getModels();
+
+  Stream<String> sendMessage(
+    String sessionId,
+    List<Message> messages, {
+    String? model,
+  });
 
   Future<ChatSession> createSession(String title);
 
