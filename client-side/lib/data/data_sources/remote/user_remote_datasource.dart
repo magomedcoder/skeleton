@@ -1,5 +1,6 @@
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/data/mappers/user_mapper.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc;
@@ -26,9 +27,11 @@ abstract class IUserRemoteDataSource {
 }
 
 class UserRemoteDataSource implements IUserRemoteDataSource {
-  final grpc.UserServiceClient _client;
+  final GrpcChannelManager _channelManager;
 
-  UserRemoteDataSource(this._client);
+  UserRemoteDataSource(this._channelManager);
+
+  grpc.UserServiceClient get _client => _channelManager.userClient;
 
   @override
   Future<List<User>> getUsers({required int page, required int pageSize}) async {

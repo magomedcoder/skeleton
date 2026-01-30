@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/injector.dart';
 import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/core/server_config.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
@@ -14,12 +16,24 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _hostController = TextEditingController();
+  final _portController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    final config = sl<ServerConfig>();
+    _hostController.text = config.host;
+    _portController.text = config.port.toString();
+  }
+
+  @override
   void dispose() {
+    _hostController.dispose();
+    _portController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -27,10 +41,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
+      final port = int.tryParse(_portController.text.trim());
       context.read<AuthBloc>().add(
             AuthLoginRequested(
               username: _usernameController.text.trim(),
               password: _passwordController.text,
+              host: _hostController.text.trim(),
+              port: port ?? ServerConfig.defaultPort,
             ),
           );
     }
@@ -79,6 +96,50 @@ class _LoginScreenState extends State<LoginScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _hostController,
+                        keyboardType: TextInputType.url,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'Хост сервера',
+                          hintText: 'Введите хост сервера',
+                          prefixIcon: const Icon(Icons.dns_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Введите хост сервера';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _portController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'Порт сервера',
+                          hintText: 'Например: ${ServerConfig.defaultPort}',
+                          prefixIcon: const Icon(Icons.settings_ethernet_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Введите порт';
+                          }
+                          final port = int.tryParse(value.trim());
+                          if (port == null || port < 1 || port > 65535) {
+                            return 'Введите порт от 1 до 65535';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _usernameController,
                         keyboardType: TextInputType.text,

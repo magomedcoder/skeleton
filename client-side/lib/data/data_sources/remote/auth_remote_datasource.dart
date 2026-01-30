@@ -1,5 +1,6 @@
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/data/mappers/auth_mapper.dart';
 import 'package:legion/domain/entities/auth_result.dart';
 import 'package:legion/domain/entities/auth_tokens.dart';
@@ -16,9 +17,11 @@ abstract class IAuthRemoteDataSource {
 }
 
 class AuthRemoteDataSource implements IAuthRemoteDataSource {
-  final grpc.AuthServiceClient _client;
+  final GrpcChannelManager _channelManager;
 
-  AuthRemoteDataSource(this._client);
+  AuthRemoteDataSource(this._channelManager);
+
+  grpc.AuthServiceClient get _client => _channelManager.authClient;
 
   @override
   Future<AuthResult> login(String username, String password) async {

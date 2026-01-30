@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
-import 'package:grpc/grpc.dart';
 import 'package:legion/core/auth_interceptor.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/server_config.dart';
 import 'package:legion/data/data_sources/local/auth_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
@@ -26,9 +27,6 @@ import 'package:legion/domain/usecases/chat/update_session_title_usecase.dart';
 import 'package:legion/domain/usecases/users/create_user_usecase.dart';
 import 'package:legion/domain/usecases/users/get_users_usecase.dart';
 import 'package:legion/domain/usecases/users/edit_user_usecase.dart';
-import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart';
-import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart';
-import 'package:legion/generated/grpc_pb/user.pbgrpc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/admin/bloc/users_admin_bloc.dart';
@@ -39,46 +37,27 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthLocalDataSourceImpl>(() => AuthLocalDataSourceImpl());
   await sl<AuthLocalDataSourceImpl>().init();
 
+  sl.registerLazySingleton<ServerConfig>(() => ServerConfig());
+  await sl<ServerConfig>().init();
+
   sl.registerLazySingleton<AuthInterceptor>(
     () => AuthInterceptor(sl<AuthLocalDataSourceImpl>()),
   );
 
-  sl.registerLazySingleton<ClientChannel>(() {
-    return ClientChannel(
-      '127.0.0.1',
-      port: 50051,
-      options: const ChannelOptions(
-        credentials: ChannelCredentials.insecure(),
-        idleTimeout: Duration(seconds: 30),
-      ),
-    );
-  });
-
-  sl.registerLazySingleton(() => ChatServiceClient(
-    sl<ClientChannel>(),
-    interceptors: [sl<AuthInterceptor>()],
-  ));
-
-  sl.registerLazySingleton(() => AuthServiceClient(
-    sl<ClientChannel>(),
-    interceptors: [sl<AuthInterceptor>()],
-  ));
-  
-  sl.registerLazySingleton(() => UserServiceClient(
-    sl<ClientChannel>(),
-    interceptors: [sl<AuthInterceptor>()],
-  ));
+  sl.registerLazySingleton<GrpcChannelManager>(
+    () => GrpcChannelManager(sl<ServerConfig>(), sl<AuthInterceptor>()),
+  );
 
   sl.registerLazySingleton<IChatRemoteDataSource>(
-    () => ChatRemoteDataSource(sl()),
+    () => ChatRemoteDataSource(sl<GrpcChannelManager>()),
   );
 
   sl.registerLazySingleton<IAuthRemoteDataSource>(
-    () => AuthRemoteDataSource(sl()),
+    () => AuthRemoteDataSource(sl<GrpcChannelManager>()),
   );
 
   sl.registerLazySingleton<IUserRemoteDataSource>(
-    () => UserRemoteDataSource(sl()),
+    () => UserRemoteDataSource(sl<GrpcChannelManager>()),
   );
 
   sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl()));
@@ -122,6 +101,7 @@ Future<void> init() async {
       refreshTokenUseCase: sl(),
       logoutUseCase: sl(),
       tokenStorage: sl(),
+      channelManager: sl(),
     ),
   );
 

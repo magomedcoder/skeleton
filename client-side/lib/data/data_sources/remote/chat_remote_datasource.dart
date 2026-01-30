@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/data/mappers/message_mapper.dart';
 import 'package:legion/data/mappers/session_mapper.dart';
 import 'package:legion/domain/entities/message.dart';
@@ -37,9 +38,11 @@ abstract class IChatRemoteDataSource {
 }
 
 class ChatRemoteDataSource implements IChatRemoteDataSource {
-  final grpc.ChatServiceClient _client;
+  final GrpcChannelManager _channelManager;
 
-  ChatRemoteDataSource(this._client);
+  ChatRemoteDataSource(this._channelManager);
+
+  grpc.ChatServiceClient get _client => _channelManager.chatClient;
 
   @override
   Future<bool> checkConnection() async {
