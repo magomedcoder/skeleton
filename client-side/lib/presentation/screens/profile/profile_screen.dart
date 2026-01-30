@@ -188,16 +188,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                               ),
-                              onPressed: () =>
-                                  setState(() => _obscureNew = !_obscureNew),
+                              onPressed: () => setState(() => _obscureNew = !_obscureNew),
                             ),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Введите новый пароль';
                             }
-                            if (value.length < 6) {
-                              return 'Минимум 6 символов';
+                            if (value.length < 8) {
+                              return 'Минимум 8 символов';
                             }
                             return null;
                           },

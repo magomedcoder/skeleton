@@ -81,7 +81,7 @@ func (c *ChatHandler) CreateSession(ctx context.Context, req *chatpb.CreateSessi
 		return nil, err
 	}
 
-	session, err := c.chatUseCase.CreateSession(ctx, userID, req.Title)
+	session, err := c.chatUseCase.CreateSession(ctx, userID, req.GetTitle(), req.GetModel())
 	if err != nil {
 		return nil, ToStatusError(codes.Internal, err)
 	}
@@ -175,6 +175,20 @@ func (c *ChatHandler) UpdateSessionTitle(ctx context.Context, req *chatpb.Update
 	}
 
 	session, err := c.chatUseCase.UpdateSessionTitle(ctx, userID, req.SessionId, req.Title)
+	if err != nil {
+		return nil, ToStatusError(codes.Internal, err)
+	}
+
+	return mappers.SessionToProto(session), nil
+}
+
+func (c *ChatHandler) UpdateSessionModel(ctx context.Context, req *chatpb.UpdateSessionModelRequest) (*chatpb.ChatSession, error) {
+	userID, err := c.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := c.chatUseCase.UpdateSessionModel(ctx, userID, req.SessionId, req.GetModel())
 	if err != nil {
 		return nil, ToStatusError(codes.Internal, err)
 	}

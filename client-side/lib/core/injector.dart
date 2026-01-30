@@ -3,6 +3,7 @@ import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/server_config.dart';
 import 'package:legion/data/data_sources/local/auth_local_data_source.dart';
+import 'package:legion/data/data_sources/local/session_model_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
@@ -21,8 +22,11 @@ import 'package:legion/domain/usecases/chat/create_session_usecase.dart';
 import 'package:legion/domain/usecases/chat/delete_session_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_models_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_session_messages_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_sessions_usecase.dart';
 import 'package:legion/domain/usecases/chat/send_message_usecase.dart';
+import 'package:legion/domain/usecases/chat/set_session_model_usecase.dart';
+import 'package:legion/domain/usecases/chat/update_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/update_session_title_usecase.dart';
 import 'package:legion/domain/usecases/users/create_user_usecase.dart';
 import 'package:legion/domain/usecases/users/get_users_usecase.dart';
@@ -52,6 +56,10 @@ Future<void> init() async {
     () => ChatRemoteDataSource(sl<GrpcChannelManager>()),
   );
 
+  sl.registerLazySingleton<SessionModelLocalDataSource>(
+    () => SessionModelLocalDataSourceImpl(),
+  );
+
   sl.registerLazySingleton<IAuthRemoteDataSource>(
     () => AuthRemoteDataSource(sl<GrpcChannelManager>()),
   );
@@ -60,7 +68,9 @@ Future<void> init() async {
     () => UserRemoteDataSource(sl<GrpcChannelManager>()),
   );
 
-  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl()));
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(sl(), sl<SessionModelLocalDataSource>()),
+  );
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
   sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(sl()));
 
@@ -70,6 +80,9 @@ Future<void> init() async {
   sl.registerFactory(() => CreateSessionUseCase(sl()));
   sl.registerFactory(() => GetSessionsUseCase(sl()));
   sl.registerFactory(() => GetSessionMessagesUseCase(sl()));
+  sl.registerFactory(() => GetSessionModelUseCase(sl()));
+  sl.registerFactory(() => SetSessionModelUseCase(sl()));
+  sl.registerFactory(() => UpdateSessionModelUseCase(sl()));
   sl.registerFactory(() => DeleteSessionUseCase(sl()));
   sl.registerFactory(() => UpdateSessionTitleUseCase(sl()));
 
@@ -86,6 +99,9 @@ Future<void> init() async {
     () => ChatBloc(
       connectUseCase: sl(),
       getModelsUseCase: sl(),
+      getSessionModelUseCase: sl(),
+      setSessionModelUseCase: sl(),
+      updateSessionModelUseCase: sl(),
       sendMessageUseCase: sl(),
       createSessionUseCase: sl(),
       getSessionsUseCase: sl(),

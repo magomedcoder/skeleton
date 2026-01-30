@@ -18,13 +18,14 @@ func NewChatSessionRepository(db *pgxpool.Pool) domain.ChatSessionRepository {
 
 func (r *chatSessionRepository) Create(ctx context.Context, session *domain.ChatSession) error {
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO chat_sessions (id, user_id, title, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO chat_sessions (id, user_id, title, model, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`,
 		session.Id,
 		session.UserId,
 		session.Title,
+		session.Model,
 		session.CreatedAt,
 		session.UpdatedAt,
 	).Scan(&session.Id)
@@ -35,13 +36,14 @@ func (r *chatSessionRepository) Create(ctx context.Context, session *domain.Chat
 func (r *chatSessionRepository) GetById(ctx context.Context, id string) (*domain.ChatSession, error) {
 	var session domain.ChatSession
 	err := r.db.QueryRow(ctx, `
-		SELECT id, user_id, title, created_at, updated_at, deleted_at
+		SELECT id, user_id, title, model, created_at, updated_at, deleted_at
 		FROM chat_sessions
 		WHERE id = $1 AND deleted_at IS NULL
 	`, id).Scan(
 		&session.Id,
 		&session.UserId,
 		&session.Title,
+		&session.Model,
 		&session.CreatedAt,
 		&session.UpdatedAt,
 		&session.DeletedAt,
@@ -68,7 +70,7 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 	}
 
 	rows, err := r.db.Query(ctx, `
-		SELECT id, user_id, title, created_at, updated_at, deleted_at
+		SELECT id, user_id, title, model, created_at, updated_at, deleted_at
 		FROM chat_sessions
 		WHERE user_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
@@ -86,6 +88,7 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 			&session.Id,
 			&session.UserId,
 			&session.Title,
+			&session.Model,
 			&session.CreatedAt,
 			&session.UpdatedAt,
 			&session.DeletedAt,
@@ -106,11 +109,12 @@ func (r *chatSessionRepository) Update(ctx context.Context, session *domain.Chat
 	session.UpdatedAt = time.Now()
 	_, err := r.db.Exec(ctx, `
 		UPDATE chat_sessions
-		SET title = $2, updated_at = $3
+		SET title = $2, model = $3, updated_at = $4
 		WHERE id = $1 AND deleted_at IS NULL
 	`,
 		session.Id,
 		session.Title,
+		session.Model,
 		session.UpdatedAt,
 	)
 

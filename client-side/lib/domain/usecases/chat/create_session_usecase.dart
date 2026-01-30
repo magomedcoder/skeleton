@@ -6,8 +6,8 @@ class CreateSessionUseCase {
 
   CreateSessionUseCase(this.repository);
 
-  Future<ChatSession> call({String? title}) async {
+  Future<ChatSession> call({String? title, String? model}) async {
     final sessionTitle = title ?? 'Чат от ${DateTime.now().toString()}';
-    return await repository.createSession(sessionTitle);
+    return await repository.createSession(sessionTitle, model: model);
   }
 }

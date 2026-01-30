@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:legion/domain/entities/message.dart';
+import 'package:legion/domain/entities/session.dart';
 import 'package:legion/domain/usecases/chat/connect_usecase.dart';
 import 'package:legion/domain/usecases/chat/create_session_usecase.dart';
 import 'package:legion/domain/usecases/chat/delete_session_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_models_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_session_messages_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_sessions_usecase.dart';
 import 'package:legion/domain/usecases/chat/send_message_usecase.dart';
+import 'package:legion/domain/usecases/chat/set_session_model_usecase.dart';
+import 'package:legion/domain/usecases/chat/update_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/update_session_title_usecase.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
@@ -18,6 +22,9 @@ import 'package:uuid/uuid.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ConnectUseCase connectUseCase;
   final GetModelsUseCase getModelsUseCase;
+  final GetSessionModelUseCase getSessionModelUseCase;
+  final SetSessionModelUseCase setSessionModelUseCase;
+  final UpdateSessionModelUseCase updateSessionModelUseCase;
   final SendMessageUseCase sendMessageUseCase;
   final CreateSessionUseCase createSessionUseCase;
   final GetSessionsUseCase getSessionsUseCase;
@@ -32,6 +39,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ChatBloc({
     required this.connectUseCase,
     required this.getModelsUseCase,
+    required this.getSessionModelUseCase,
+    required this.setSessionModelUseCase,
+    required this.updateSessionModelUseCase,
     required this.sendMessageUseCase,
     required this.createSessionUseCase,
     required this.getSessionsUseCase,
@@ -92,6 +102,26 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               pageSize: 50,
             );
             messages = sessionMessages;
+
+            if (selectedModel == null &&
+                currentSessionId != null &&
+                models.isNotEmpty &&
+                sessions.isNotEmpty) {
+              final firstSession = sessions.first;
+              if (firstSession.model != null &&
+                  firstSession.model!.isNotEmpty &&
+                  models.contains(firstSession.model)) {
+                selectedModel = firstSession.model;
+              } else {
+                try {
+                  final savedModel =
+                      await getSessionModelUseCase(currentSessionId);
+                  if (savedModel != null && models.contains(savedModel)) {
+                    selectedModel = savedModel;
+                  }
+                } catch (_) {}
+              }
+            }
           }
 
           emit(
@@ -142,7 +172,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
-      final session = await createSessionUseCase(title: event.title);
+      final session = await createSessionUseCase(
+        title: event.title,
+        model: state.selectedModel ??
+            (state.models.isNotEmpty ? state.models.first : null),
+      );
+
+      final modelToSave = state.selectedModel ??
+          (state.models.isNotEmpty ? state.models.first : null);
+      if (modelToSave != null) {
+        try {
+          await setSessionModelUseCase(session.id, modelToSave);
+        } catch (_) {}
+      }
 
       final updatedSessions = [session, ...state.sessions];
 
@@ -206,7 +248,44 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         pageSize: 50,
       );
 
-      emit(state.copyWith(messages: messages, isLoading: false));
+      String? modelForSession = state.selectedModel;
+      if (state.models.isNotEmpty) {
+        ChatSession? serverSession;
+        for (final s in state.sessions) {
+          if (s.id == event.sessionId) {
+            serverSession = s;
+            break;
+          }
+        }
+        if (serverSession?.model != null &&
+            serverSession!.model!.isNotEmpty &&
+            state.models.contains(serverSession.model)) {
+          modelForSession = serverSession.model;
+        } else {
+          try {
+            final savedModel =
+                await getSessionModelUseCase(event.sessionId);
+            if (savedModel != null && state.models.contains(savedModel)) {
+              modelForSession = savedModel;
+            } else if (modelForSession == null ||
+                !state.models.contains(modelForSession)) {
+              modelForSession = state.models.first;
+            }
+          } catch (_) {
+            if (modelForSession == null) {
+              modelForSession = state.models.first;
+            }
+          }
+        }
+      }
+
+      emit(
+        state.copyWith(
+          messages: messages,
+          isLoading: false,
+          selectedModel: modelForSession,
+        ),
+      );
     } catch (e) {
       emit(
         state.copyWith(
@@ -262,8 +341,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     String sessionId = state.currentSessionId ?? '';
     if (sessionId.isEmpty) {
       try {
-        final session = await createSessionUseCase();
+        final session = await createSessionUseCase(
+          model: state.selectedModel ??
+              (state.models.isNotEmpty ? state.models.first : null),
+        );
         sessionId = session.id;
+
+        final modelToSave = state.selectedModel ??
+            (state.models.isNotEmpty ? state.models.first : null);
+        if (modelToSave != null) {
+          try {
+            await setSessionModelUseCase(sessionId, modelToSave);
+          } catch (_) {}
+        }
 
         final updatedSessions = [session, ...state.sessions];
 
@@ -468,8 +558,35 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     } catch (_) {}
   }
 
-  void _onSelectModel(ChatSelectModel event, Emitter<ChatState> emit) {
-    emit(state.copyWith(selectedModel: event.model));
+  Future<void> _onSelectModel(
+    ChatSelectModel event,
+    Emitter<ChatState> emit,
+  ) async {
+    final sessionId = state.currentSessionId;
+    if (sessionId != null && sessionId.isNotEmpty) {
+      try {
+        await updateSessionModelUseCase(sessionId, event.model);
+      } catch (_) {}
+      try {
+        await setSessionModelUseCase(sessionId, event.model);
+      } catch (_) {}
+    }
+    final updatedSessions = state.sessions.map((s) {
+      if (s.id == sessionId) {
+        return ChatSession(
+          id: s.id,
+          title: s.title,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
+          model: event.model,
+        );
+      }
+      return s;
+    }).toList();
+    emit(state.copyWith(
+      selectedModel: event.model,
+      sessions: updatedSessions,
+    ));
   }
 
   void _onChatClearError(ChatClearError event, Emitter<ChatState> emit) {

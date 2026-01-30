@@ -14,6 +14,7 @@ abstract class SessionMapper {
       title: proto.title,
       createdAt: _dateTimeFromUnixSeconds(proto.createdAt.toInt()),
       updatedAt: _dateTimeFromUnixSeconds(proto.updatedAt.toInt()),
+      model: proto.hasModel() && proto.model.isNotEmpty ? proto.model : null,
     );
   }
 

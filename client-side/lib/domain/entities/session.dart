@@ -5,14 +5,16 @@ class ChatSession extends Equatable {
   final String title;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? model;
 
   const ChatSession({
     required this.id,
     required this.title,
     required this.createdAt,
     required this.updatedAt,
+    this.model,
   });
 
   @override
-  List<Object?> get props => [id, title, createdAt, updatedAt];
+  List<Object?> get props => [id, title, createdAt, updatedAt, model];
 }

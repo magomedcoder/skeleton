@@ -10,6 +10,7 @@ type ChatSession struct {
 	Id        string
 	UserId    int
 	Title     string
+	Model     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
@@ -25,11 +26,12 @@ type Message struct {
 	DeletedAt *time.Time
 }
 
-func NewChatSession(userId int, title string) *ChatSession {
+func NewChatSession(userId int, title string, model string) *ChatSession {
 	return &ChatSession{
 		Id:        generateUUID(),
 		UserId:    userId,
 		Title:     title,
+		Model:     model,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

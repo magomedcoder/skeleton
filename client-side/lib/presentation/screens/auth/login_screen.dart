@@ -192,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Введите пароль';
                           }
-                          if (value.length < 6) {
+                          if (value.length < 8) {
                             return 'Пароль должен содержать минимум 6 символов';
                           }
                           return null;

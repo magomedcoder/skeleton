@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
   bool _isComposing = false;
+  PlatformFile? _selectedFile;
 
   @override
   void initState() {
@@ -39,10 +41,30 @@ class _ChatInputBarState extends State<ChatInputBar> {
     context.read<ChatBloc>().add(ChatSendMessage(text));
     _textController.clear();
     _focusNode.unfocus();
+    setState(() => _selectedFile = null);
   }
 
   void _stopGeneration() {
     context.read<ChatBloc>().add(const ChatStopGeneration());
+  }
+
+  Future<void> _pickFile() async {
+    if (!widget.isEnabled) return;
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      allowMultiple: false,
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() => _selectedFile = result.files.single);
+    }
+  }
+
+  void _clearFile() {
+    setState(() => _selectedFile = null);
+  }
+
+  String _fileName(PlatformFile file) {
+    return file.name;
   }
 
   @override
@@ -75,7 +97,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       );
     }
 
-    final canSend = _isComposing && widget.isEnabled;
+    final canSend = (_isComposing || _selectedFile != null) && widget.isEnabled;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -118,74 +140,158 @@ class _ChatInputBarState extends State<ChatInputBar> {
               ),
             ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Container(
+              if (_selectedFile != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(16),
+                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.15),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.shadowColor.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.insert_drive_file_rounded,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _fileName(_selectedFile!),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _clearFile,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  child: Shortcuts(
-                    shortcuts: const <ShortcutActivator, Intent>{
-                      SingleActivator(LogicalKeyboardKey.enter): _SendMessageIntent(),
-                    },
-                    child: Actions(
-                      actions: <Type, Action<Intent>>{
-                        _SendMessageIntent: CallbackAction<_SendMessageIntent>(
-                          onInvoke: (_) {
-                            _sendMessage();
-                            return null;
-                          },
-                        ),
-                      },
-                      child: TextField(
-                        controller: _textController,
-                        focusNode: _focusNode,
-                        minLines: 1,
-                        maxLines: 6,
-                        enabled: widget.isEnabled,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: widget.isEnabled
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: widget.isEnabled
-                              ? 'Напишите сообщение...'
-                              : 'Обрабатываю...',
-                          hintStyle: TextStyle(
-                            fontSize: 15,
-                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                ),
+                const SizedBox(height: 10),
+              ],
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Tooltip(
+                    message: 'Прикрепить файл',
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _pickFile,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                          child: Icon(
+                            Icons.attach_file_rounded,
+                            size: 22,
+                            color: widget.isEnabled
+                                ? theme.colorScheme.onSurfaceVariant
+                                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                           ),
                         ),
-                        textInputAction: TextInputAction.newline,
-                        onSubmitted: (_) => _sendMessage(),
-                        onTapOutside: (_) => _focusNode.unfocus(),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.15),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.shadowColor.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Shortcuts(
+                        shortcuts: const <ShortcutActivator, Intent>{
+                          SingleActivator(LogicalKeyboardKey.enter): _SendMessageIntent(),
+                        },
+                        child: Actions(
+                          actions: <Type, Action<Intent>>{
+                            _SendMessageIntent: CallbackAction<_SendMessageIntent>(
+                              onInvoke: (_) {
+                                _sendMessage();
+                                return null;
+                              },
+                            ),
+                          },
+                          child: TextField(
+                            controller: _textController,
+                            focusNode: _focusNode,
+                            minLines: 1,
+                            maxLines: 6,
+                            enabled: widget.isEnabled,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: widget.isEnabled
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: widget.isEnabled
+                                  ? 'Напишите сообщение...'
+                                  : 'Обрабатываю...',
+                              hintStyle: TextStyle(
+                                fontSize: 15,
+                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            textInputAction: TextInputAction.newline,
+                            onSubmitted: (_) => _sendMessage(),
+                            onTapOutside: (_) => _focusNode.unfocus(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildSendButton(state),
+                ],
               ),
-              const SizedBox(width: 10),
-              _buildSendButton(state),
             ],
           ),
         );

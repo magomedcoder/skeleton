@@ -14,7 +14,7 @@ abstract interface class ChatRepository {
     String? model,
   });
 
-  Future<ChatSession> createSession(String title);
+  Future<ChatSession> createSession(String title, {String? model});
 
   Future<ChatSession> getSession(String sessionId);
 
@@ -29,4 +29,10 @@ abstract interface class ChatRepository {
   Future<void> deleteSession(String sessionId);
 
   Future<ChatSession> updateSessionTitle(String sessionId, String title);
+
+  Future<ChatSession> updateSessionModel(String sessionId, String model);
+
+  Future<String?> getSessionModel(String sessionId);
+
+  Future<void> setSessionModel(String sessionId, String model);
 }

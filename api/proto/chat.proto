@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package chat;
 
-option go_package = "aichat/api/pb/chatpb;chatpb";
+option go_package = "github.com/magomedcoder/legion/api/pb/chatpb;chatpb";
 
 service ChatService {
   rpc CheckConnection(Empty) returns (ConnectionResponse);
@@ -22,6 +22,8 @@ service ChatService {
   rpc DeleteSession(DeleteSessionRequest) returns (Empty);
 
   rpc UpdateSessionTitle(UpdateSessionTitleRequest) returns (ChatSession);
+
+  rpc UpdateSessionModel(UpdateSessionModelRequest) returns (ChatSession);
 }
 
 message Empty {}
@@ -60,6 +62,7 @@ message ChatSession {
   string title = 2;
   int64 created_at = 3;
   int64 updated_at = 4;
+  string model = 5;
 }
 
 message GetSessionsRequest {
@@ -76,6 +79,7 @@ message GetSessionsResponse {
 
 message CreateSessionRequest {
   string title = 1;
+  string model = 2;
 }
 
 message GetSessionRequest {
@@ -102,4 +106,9 @@ message DeleteSessionRequest {
 message UpdateSessionTitleRequest {
   string session_id = 1;
   string title = 2;
+}
+
+message UpdateSessionModelRequest {
+  string session_id = 1;
+  string model = 2;
 }

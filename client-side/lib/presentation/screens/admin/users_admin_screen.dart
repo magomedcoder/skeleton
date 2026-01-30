@@ -93,8 +93,8 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Введите пароль';
                   }
-                  if (value.trim().length < 6) {
-                    return 'Минимум 6 символов';
+                  if (value.trim().length < 8) {
+                    return 'Минимум 8 символов';
                   }
                   return null;
                 },
@@ -227,7 +227,7 @@ class _UsersAdminScreenState extends State<UsersAdminScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) return null;
-                  if (value.trim().length < 6) return 'Минимум 6 символов';
+                  if (value.trim().length < 8) return 'Минимум 8 символов';
                   return null;
                 },
               ),

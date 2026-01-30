@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS chat_sessions
     id         UUID PRIMARY KEY      DEFAULT uuid_generate_v4(),
     user_id    INTEGER      NOT NULL REFERENCES users (id),
     title      VARCHAR(500) NOT NULL,
+    model      VARCHAR(255) NOT NULL DEFAULT '',
     created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP    NULL

@@ -20,7 +20,7 @@ abstract class IChatRemoteDataSource {
     String? model,
   });
 
-  Future<ChatSession> createSession(String title);
+  Future<ChatSession> createSession(String title, {String? model});
 
   Future<ChatSession> getSession(String sessionId);
 
@@ -35,6 +35,8 @@ abstract class IChatRemoteDataSource {
   Future<void> deleteSession(String sessionId);
 
   Future<ChatSession> updateSessionTitle(String sessionId, String title);
+
+  Future<ChatSession> updateSessionModel(String sessionId, String model);
 }
 
 class ChatRemoteDataSource implements IChatRemoteDataSource {
@@ -114,11 +116,14 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
   }
 
   @override
-  Future<ChatSession> createSession(String title) async {
+  Future<ChatSession> createSession(String title, {String? model}) async {
     try {
       final request = grpc.CreateSessionRequest(
-        title: title
+        title: title,
       );
+      if (model != null && model.isNotEmpty) {
+        request.model = model;
+      }
 
       final response = await _client.createSession(request);
 
@@ -211,7 +216,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     try {
       final request = grpc.UpdateSessionTitleRequest(
         sessionId: sessionId,
-        title: title
+        title: title,
       );
 
       final response = await _client.updateSessionTitle(request);
@@ -221,6 +226,25 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       throw NetworkFailure('Ошибка gRPC при обновлении заголовка: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка обновления заголовка: $e');
+    }
+  }
+
+  @override
+  Future<ChatSession> updateSessionModel(String sessionId, String model) async {
+    try {
+      final request = grpc.UpdateSessionModelRequest(
+        sessionId: sessionId,
+        model: model,
+      );
+
+      final response = await _client.updateSessionModel(request);
+
+      return SessionMapper.fromProto(response);
+    } on GrpcError catch (e) {
+      throw NetworkFailure(
+          'Ошибка gRPC при обновлении модели сессии: ${e.message}');
+    } catch (e) {
+      throw ApiFailure('Ошибка обновления модели сессии: $e');
     }
   }
 }

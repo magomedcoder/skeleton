@@ -86,8 +86,8 @@ func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId str
 	return clientChan, messageId, nil
 }
 
-func (c *ChatUseCase) CreateSession(ctx context.Context, userId int, title string) (*domain.ChatSession, error) {
-	session := domain.NewChatSession(userId, title)
+func (c *ChatUseCase) CreateSession(ctx context.Context, userId int, title string, model string) (*domain.ChatSession, error) {
+	session := domain.NewChatSession(userId, title, model)
 	if err := c.sessionRepo.Create(ctx, session); err != nil {
 		return nil, err
 	}
@@ -128,6 +128,20 @@ func (c *ChatUseCase) UpdateSessionTitle(ctx context.Context, userId int, sessio
 	}
 
 	session.Title = title
+	if err := c.sessionRepo.Update(ctx, session); err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
+func (c *ChatUseCase) UpdateSessionModel(ctx context.Context, userId int, sessionId string, model string) (*domain.ChatSession, error) {
+	session, err := c.verifySessionOwnership(ctx, userId, sessionId)
+	if err != nil {
+		return nil, err
+	}
+
+	session.Model = model
 	if err := c.sessionRepo.Update(ctx, session); err != nil {
 		return nil, err
 	}
