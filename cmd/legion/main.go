@@ -3,6 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/magomedcoder/legion"
+	"github.com/magomedcoder/legion/internal/bootstrap"
+	"log"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/userpb"
@@ -14,11 +22,6 @@ import (
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -28,11 +31,20 @@ func main() {
 	}
 
 	ctx := context.Background()
+
+	if err := bootstrap.CheckDatabase(ctx, cfg.Database.DSN); err != nil {
+		log.Fatalf("Ошибка инициализации базы данных: %v", err)
+	}
+
 	db, err := postgres.NewDB(ctx, cfg.Database.DSN)
 	if err != nil {
 		log.Fatalf("Ошибка подключения к базе данных: %v", err)
 	}
 	defer db.Close()
+
+	if err := bootstrap.RunMigrations(ctx, db, legion.Postgres); err != nil {
+		log.Fatalf("Ошибка применения миграций: %v", err)
+	}
 
 	userRepo := postgres.NewUserRepository(db)
 	tokenRepo := postgres.NewTokenRepository(db)
@@ -40,6 +52,11 @@ func main() {
 	messageRepo := postgres.NewMessageRepository(db)
 
 	jwtService := service.NewJWTService(cfg)
+
+	if err := bootstrap.CreateFirstUser(ctx, userRepo, jwtService); err != nil {
+		log.Fatalf("Ошибка создания первого пользователя: %v", err)
+	}
+
 	ollamaRepo := repository.NewOllamaRepository(cfg.Ollama.BaseURL, cfg.Ollama.Model)
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
