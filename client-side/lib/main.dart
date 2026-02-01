@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:legion/core/injector.dart' as di;
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/core/theme/app_theme.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
@@ -13,7 +14,9 @@ import 'package:legion/presentation/theme/theme_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Logs().i('Запуск приложения');
   await di.init();
+  Logs().i('Инициализация завершена');
   runApp(const App());
 }
 

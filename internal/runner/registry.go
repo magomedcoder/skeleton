@@ -2,7 +2,9 @@ package runner
 
 import (
 	"context"
+
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/pkg/logger"
 )
 
 type Registry struct {
@@ -18,6 +20,7 @@ func NewRegistry(pool *Pool) *Registry {
 
 func (r *Registry) Register(ctx context.Context, req *runnerpb.RegisterRunnerRequest) (*runnerpb.Empty, error) {
 	if req != nil && req.Address != "" {
+		logger.I("Registry: регистрация раннера %s", req.Address)
 		r.pool.Add(req.Address)
 	}
 
@@ -26,6 +29,7 @@ func (r *Registry) Register(ctx context.Context, req *runnerpb.RegisterRunnerReq
 
 func (r *Registry) Unregister(ctx context.Context, req *runnerpb.UnregisterRunnerRequest) (*runnerpb.Empty, error) {
 	if req != nil && req.Address != "" {
+		logger.I("Registry: снятие с регистрации раннера %s", req.Address)
 		r.pool.Remove(req.Address)
 	}
 

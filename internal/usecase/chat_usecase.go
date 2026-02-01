@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/pkg/logger"
 )
 
 type ChatUseCase struct {
@@ -47,13 +48,16 @@ func (c *ChatUseCase) GetModels(ctx context.Context) ([]string, error) {
 }
 
 func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId string, model string, userMessage string, attachmentName string, attachmentContent []byte) (chan string, string, error) {
+	logger.D("ChatUseCase: отправка сообщения в сессию %s", sessionId)
 	_, err := c.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
+		logger.W("ChatUseCase: ошибка проверки сессии: %v", err)
 		return nil, "", err
 	}
 
 	messages, _, err := c.messageRepo.GetBySessionId(ctx, sessionId, 1, 100)
 	if err != nil {
+		logger.E("ChatUseCase: ошибка получения сообщений: %v", err)
 		return nil, "", err
 	}
 
@@ -79,8 +83,10 @@ func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId str
 
 	responseChan, err := c.llmProvider.SendMessage(ctx, sessionId, model, messagesForLLM)
 	if err != nil {
+		logger.E("ChatUseCase: ошибка LLM: %v", err)
 		return nil, "", err
 	}
+	logger.V("ChatUseCase: поток ответа запущен")
 
 	assistantMsg := domain.NewMessage(sessionId, "", domain.MessageRoleAssistant)
 	messageId := assistantMsg.Id

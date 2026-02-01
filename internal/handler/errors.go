@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"log"
-
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -10,7 +9,7 @@ import (
 func ToStatusError(code codes.Code, err error) error {
 	msg := safeMessage(code)
 	if code == codes.Internal && err != nil {
-		log.Printf("[handler] внутренняя ошибка: %v", err)
+		logger.E("handler: внутренняя ошибка: %v", err)
 	}
 
 	return status.Error(code, msg)

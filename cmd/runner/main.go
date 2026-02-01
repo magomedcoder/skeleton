@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/legion/internal/runner/service"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -14,6 +12,8 @@ import (
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/runner"
 	"github.com/magomedcoder/legion/internal/runner/provider"
+	"github.com/magomedcoder/legion/internal/runner/service"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -21,18 +21,18 @@ import (
 type config struct {
 	ollamaBaseURL string
 	ollamaModel   string
-
-	coreAddr   string
-	listenAddr string
+	coreAddr      string
+	listenAddr    string
+	logLevel      string
 }
 
 func loadConfig() *config {
 	c := &config{
 		ollamaBaseURL: "http://127.0.0.1:11434",
 		ollamaModel:   "llama3.2:1b",
-
-		coreAddr:   "127.0.0.1:50051",
-		listenAddr: "127.0.0.1:50052",
+		coreAddr:      "127.0.0.1:50051",
+		listenAddr:    "127.0.0.1:50052",
+		logLevel:      "info",
 	}
 
 	return c
@@ -40,6 +40,9 @@ func loadConfig() *config {
 
 func main() {
 	cfg := loadConfig()
+	logger.Default.SetLevel(logger.ParseLevel(cfg.logLevel))
+
+	logger.I("Запуск раннера")
 
 	ollamaSvc := service.NewOllamaService(cfg.ollamaBaseURL, cfg.ollamaModel)
 	textProvider := provider.NewText(ollamaSvc)
@@ -47,7 +50,8 @@ func main() {
 
 	lis, err := net.Listen("tcp", cfg.listenAddr)
 	if err != nil {
-		log.Fatalf("Ошибка слушателя: %v", err)
+		logger.E("Ошибка слушателя: %v", err)
+		os.Exit(1)
 	}
 	defer lis.Close()
 
@@ -55,17 +59,18 @@ func main() {
 	runnerpb.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 	go func() {
-		log.Printf("Раннер слушает на %s", cfg.listenAddr)
+		logger.I("Раннер слушает на %s", cfg.listenAddr)
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Ошибка gRPC: %v", err)
+			logger.E("Ошибка gRPC: %v", err)
+			os.Exit(1)
 		}
 	}()
 
 	if cfg.coreAddr != "" && cfg.listenAddr != "" {
 		if err := registerWithCore(cfg.coreAddr, cfg.listenAddr); err != nil {
-			log.Printf("Регистрация в ядре не удалась: %v", err)
+			logger.W("Регистрация в ядре не удалась: %v", err)
 		} else {
-			log.Printf("Зарегистрирован в ядре %s как %s", cfg.coreAddr, cfg.listenAddr)
+			logger.I("Зарегистрирован в ядре %s как %s", cfg.coreAddr, cfg.listenAddr)
 			defer unregisterFromCore(cfg.coreAddr, cfg.listenAddr)
 		}
 	}
@@ -75,7 +80,7 @@ func main() {
 	<-quit
 
 	grpcServer.GracefulStop()
-	log.Println("Раннер остановлен")
+	logger.I("Раннер остановлен")
 }
 
 func registerWithCore(coreAddr, registerAddress string) error {
@@ -98,7 +103,7 @@ func registerWithCore(coreAddr, registerAddress string) error {
 func unregisterFromCore(coreAddr, registerAddress string) {
 	conn, err := grpc.NewClient(coreAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Printf("Unregister: подключение к ядру: %v", err)
+		logger.W("Unregister: подключение к ядру: %v", err)
 		return
 	}
 	defer conn.Close()

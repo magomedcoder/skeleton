@@ -18,6 +18,7 @@ import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/utils/request_logout_on_unauthorized.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,6 +76,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatStarted event,
     Emitter<ChatState> emit,
 ) async {
+    Logs().i('ChatBloc: старт чата, проверка подключения');
     emit(state.copyWith(isLoading: true));
 
     try {
@@ -151,6 +153,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             ),
           );
         } catch (e) {
+          Logs().e('ChatBloc: ошибка загрузки сессий при старте', e);
           requestLogoutIfUnauthorized(e, authBloc);
           emit(
             state.copyWith(
@@ -162,6 +165,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           );
         }
       } else {
+        Logs().w('ChatBloc: не удалось подключиться к серверу');
         emit(
           state.copyWith(
             isConnected: isConnected,
@@ -172,6 +176,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
       }
     } catch (e) {
+      Logs().e('ChatBloc: ошибка подключения при старте', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
@@ -187,6 +192,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatCreateSession event,
     Emitter<ChatState> emit,
   ) async {
+    Logs().d('ChatBloc: создание сессии "${event.title}"');
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
@@ -206,6 +212,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       final updatedSessions = [session, ...state.sessions];
 
+      Logs().i('ChatBloc: сессия создана');
       emit(
         state.copyWith(
           sessions: updatedSessions,
@@ -216,6 +223,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     } catch (e) {
+      Logs().e('ChatBloc: ошибка создания сессии', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(isLoading: false, error: 'Ошибка создания сессии'),
@@ -237,6 +245,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       emit(state.copyWith(sessions: sessions, isLoading: false, error: null));
     } catch (e) {
+      Logs().e('ChatBloc: ошибка загрузки сессий', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(isLoading: false, error: 'Ошибка загрузки сессий'),
@@ -305,6 +314,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     } catch (e) {
+      Logs().e('ChatBloc: ошибка загрузки сообщений при выборе сессии', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
@@ -334,6 +344,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         state.copyWith(messages: allMessages, isLoading: false, error: null),
       );
     } catch (e) {
+      Logs().e('ChatBloc: ошибка загрузки сообщений', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
@@ -388,6 +399,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           ),
         );
       } catch (e) {
+        Logs().e('ChatBloc: ошибка создания сессии при отправке', e);
         requestLogoutIfUnauthorized(e, authBloc);
         emit(
           state.copyWith(error: 'Ошибка создания сессии', isLoading: false),
@@ -396,6 +408,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
     }
 
+    Logs().d('ChatBloc: отправка сообщения в сессию $sessionId');
     final userMessage = Message(
       id: _uuid.v4(),
       content: text,
@@ -454,6 +467,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
 
       if (streamingText.isNotEmpty) {
+        Logs().i('ChatBloc: сообщение получено');
         final assistantMessage = Message(
           id: _uuid.v4(),
           content: streamingText,
@@ -481,6 +495,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
       }
     } on Object catch (e) {
+      Logs().e('ChatBloc: ошибка отправки сообщения', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
@@ -500,6 +515,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatDeleteSession event,
     Emitter<ChatState> emit,
   ) async {
+    Logs().d('ChatBloc: удаление сессии ${event.sessionId}');
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
@@ -511,6 +527,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       final shouldClearCurrent = state.currentSessionId == event.sessionId;
 
+      Logs().i('ChatBloc: сессия удалена');
       emit(
         state.copyWith(
           sessions: updatedSessions,
@@ -521,6 +538,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     } catch (e) {
+      Logs().e('ChatBloc: ошибка удаления сессии', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(isLoading: false, error: 'Ошибка удаления сессии'),
@@ -555,6 +573,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     } catch (e) {
+      Logs().e('ChatBloc: ошибка обновления заголовка', e);
       requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
@@ -569,6 +588,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatLoadModels event,
     Emitter<ChatState> emit,
   ) async {
+    Logs().d('ChatBloc: загрузка списка моделей');
     try {
       final models = await getModelsUseCase();
       String? selectedModel = state.selectedModel;
@@ -586,7 +606,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           selectedModel: selectedModel ?? state.selectedModel,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      Logs().w('ChatBloc: ошибка загрузки моделей', e);
+    }
   }
 
   Future<void> _onSelectModel(
@@ -628,6 +650,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatStopGeneration event,
     Emitter<ChatState> emit,
   ) async {
+    Logs().d('ChatBloc: остановка генерации');
     await _streamSubscription?.cancel();
     if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
       _streamCompleter!.complete(true);

@@ -4,6 +4,7 @@ import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/grpc_error_handler.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/mappers/message_mapper.dart';
 import 'package:legion/data/mappers/session_mapper.dart';
 import 'package:legion/domain/entities/message.dart';
@@ -49,32 +50,41 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
   @override
   Future<bool> checkConnection() async {
+    Logs().d('ChatRemoteDataSource: проверка подключения');
     try {
       final response = await _client.checkConnection(grpc.Empty(),);
+      Logs().i('ChatRemoteDataSource: подключение ${response.isConnected ? "установлено" : "нет"}');
       return response.isConnected;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unavailable) {
+        Logs().w('ChatRemoteDataSource: сервер недоступен');
         return false;
       }
-
-      throw NetworkFailure('Ошибка подключения gRPC: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка проверки подключения', e);
+      throw NetworkFailure('Ошибка подключения');
     } catch (e) {
+      Logs().e('ChatRemoteDataSource: ошибка проверки подключения', e);
       return false;
     }
   }
 
   @override
   Future<List<String>> getModels() async {
+    Logs().d('ChatRemoteDataSource: получение списка моделей');
     try {
       final response = await _client.getModels(grpc.Empty());
+      Logs().i('ChatRemoteDataSource: получено моделей: ${response.models.length}');
       return response.models;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unavailable) {
-        throw NetworkFailure('Ошибка подключения gRPC');
+        Logs().w('ChatRemoteDataSource: сервер недоступен при получении моделей');
+        throw NetworkFailure('Ошибка подключения');
       }
-      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка получения моделей', e);
+      throwGrpcError(e, 'Ошибка получения списка моделей');
     } catch (e) {
-      throw ApiFailure('Ошибка получения списка моделей: $e');
+      Logs().e('ChatRemoteDataSource: ошибка получения моделей', e);
+      throw ApiFailure('Ошибка получения списка моделей');
     }
   }
 
@@ -84,6 +94,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     List<Message> messages, {
     String? model,
   }) async* {
+    Logs().d('ChatRemoteDataSource: отправка сообщения в сессию $sessionId');
     try {
       final chatMessages = MessageMapper.listToProto(messages);
 
@@ -105,18 +116,23 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
           break;
         }
       }
+      Logs().i('ChatRemoteDataSource: сообщение отправлено');
     } on GrpcError catch (e) {
       if (e.code == StatusCode.deadlineExceeded) {
-        throw NetworkFailure('Таймаут запроса gRPC');
+        Logs().w('ChatRemoteDataSource: таймаут отправки сообщения');
+        throw NetworkFailure('Превышено время ожидания');
       }
-      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка отправки сообщения', e);
+      throwGrpcError(e, 'Ошибка отправки сообщения');
     } catch (e) {
-      throw ApiFailure('Ошибка отправки сообщения через gRPC: $e');
+      Logs().e('ChatRemoteDataSource: ошибка отправки сообщения', e);
+      throw ApiFailure('Ошибка отправки сообщения');
     }
   }
 
   @override
   Future<ChatSession> createSession(String title, {String? model}) async {
+    Logs().d('ChatRemoteDataSource: создание сессии "$title"');
     try {
       final request = grpc.CreateSessionRequest(
         title: title,
@@ -126,29 +142,33 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       }
 
       final response = await _client.createSession(request);
-
+      Logs().i('ChatRemoteDataSource: сессия создана');
       return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при создании сессии: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка создания сессии', e);
+      throwGrpcError(e, 'Ошибка создания сессии');
     } catch (e) {
-      throw ApiFailure('Ошибка создания сессии: $e');
+      Logs().e('ChatRemoteDataSource: ошибка создания сессии', e);
+      throw ApiFailure('Ошибка создания сессии');
     }
   }
 
   @override
   Future<ChatSession> getSession(String sessionId) async {
+    Logs().v('ChatRemoteDataSource: получение сессии $sessionId');
     try {
       final request = grpc.GetSessionRequest(
         sessionId: sessionId
       );
 
       final response = await _client.getSession(request);
-
       return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при получении сессии: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка получения сессии', e);
+      throwGrpcError(e, 'Ошибка получения сессии');
     } catch (e) {
-      throw ApiFailure('Ошибка получения сессии: $e');
+      Logs().e('ChatRemoteDataSource: ошибка получения сессии', e);
+      throw ApiFailure('Ошибка получения сессии');
     }
   }
 
@@ -157,6 +177,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     int page,
     int pageSize,
   ) async {
+    Logs().d('ChatRemoteDataSource: получение сессий page=$page pageSize=$pageSize');
     try {
       final request = grpc.GetSessionsRequest(
         page: page,
@@ -164,12 +185,15 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       );
 
       final response = await _client.getSessions(request);
-
-      return SessionMapper.listFromProto(response.sessions);
+      final sessions = SessionMapper.listFromProto(response.sessions);
+      Logs().i('ChatRemoteDataSource: получено сессий: ${sessions.length}');
+      return sessions;
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при получении списка сессий: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка получения сессий', e);
+      throwGrpcError(e, 'Ошибка получения списка сессий');
     } catch (e) {
-      throw ApiFailure('Ошибка получения списка сессий: $e');
+      Logs().e('ChatRemoteDataSource: ошибка получения сессий', e);
+      throw ApiFailure('Ошибка получения списка сессий');
     }
   }
 
@@ -179,6 +203,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     int page,
     int pageSize,
   ) async {
+    Logs().v('ChatRemoteDataSource: получение сообщений сессии $sessionId');
     try {
       final request = grpc.GetSessionMessagesRequest(
         sessionId: sessionId,
@@ -187,32 +212,38 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       );
 
       final response = await _client.getSessionMessages(request);
-
       return MessageMapper.listFromProto(response.messages);
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при получении сообщений: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка получения сообщений', e);
+      throwGrpcError(e, 'Ошибка получения сообщений');
     } catch (e) {
-      throw ApiFailure('Ошибка получения сообщений: $e');
+      Logs().e('ChatRemoteDataSource: ошибка получения сообщений', e);
+      throw ApiFailure('Ошибка получения сообщений');
     }
   }
 
   @override
   Future<void> deleteSession(String sessionId) async {
+    Logs().d('ChatRemoteDataSource: удаление сессии $sessionId');
     try {
       final request = grpc.DeleteSessionRequest(
         sessionId: sessionId
       );
 
       await _client.deleteSession(request);
+      Logs().i('ChatRemoteDataSource: сессия удалена');
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при удалении сессии: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка удаления сессии', e);
+      throwGrpcError(e, 'Ошибка удаления сессии');
     } catch (e) {
-      throw ApiFailure('Ошибка удаления сессии: $e');
+      Logs().e('ChatRemoteDataSource: ошибка удаления сессии', e);
+      throw ApiFailure('Ошибка удаления сессии');
     }
   }
 
   @override
   Future<ChatSession> updateSessionTitle(String sessionId, String title) async {
+    Logs().d('ChatRemoteDataSource: обновление заголовка сессии $sessionId');
     try {
       final request = grpc.UpdateSessionTitleRequest(
         sessionId: sessionId,
@@ -220,17 +251,20 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       );
 
       final response = await _client.updateSessionTitle(request);
-
+      Logs().i('ChatRemoteDataSource: заголовок обновлён');
       return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при обновлении заголовка: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка обновления заголовка', e);
+      throwGrpcError(e, 'Ошибка обновления заголовка');
     } catch (e) {
-      throw ApiFailure('Ошибка обновления заголовка: $e');
+      Logs().e('ChatRemoteDataSource: ошибка обновления заголовка', e);
+      throw ApiFailure('Ошибка обновления заголовка');
     }
   }
 
   @override
   Future<ChatSession> updateSessionModel(String sessionId, String model) async {
+    Logs().d('ChatRemoteDataSource: обновление модели сессии $sessionId');
     try {
       final request = grpc.UpdateSessionModelRequest(
         sessionId: sessionId,
@@ -238,12 +272,14 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       );
 
       final response = await _client.updateSessionModel(request);
-
+      Logs().i('ChatRemoteDataSource: модель сессии обновлена');
       return SessionMapper.fromProto(response);
     } on GrpcError catch (e) {
-      throwGrpcError(e, 'Ошибка gRPC при обновлении модели сессии: ${e.message}');
+      Logs().e('ChatRemoteDataSource: ошибка обновления модели сессии', e);
+      throwGrpcError(e, 'Ошибка обновления модели сессии');
     } catch (e) {
-      throw ApiFailure('Ошибка обновления модели сессии: $e');
+      Logs().e('ChatRemoteDataSource: ошибка обновления модели сессии', e);
+      throw ApiFailure('Ошибка обновления модели сессии');
     }
   }
 }

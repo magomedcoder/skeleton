@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:legion/core/failures.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/local/session_model_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
 import 'package:legion/domain/entities/message.dart';
@@ -18,7 +19,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.checkConnection();
     } catch (e) {
-      throw NetworkFailure('Ошибка проверки подключения: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка проверки подключения', e);
+      throw NetworkFailure('Ошибка проверки подключения');
     }
   }
 
@@ -27,7 +30,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.getModels();
     } catch (e) {
-      throw ApiFailure('Ошибка получения списка моделей: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка получения моделей', e);
+      throw ApiFailure('Ошибка получения списка моделей');
     }
   }
 
@@ -44,7 +49,9 @@ class ChatRepositoryImpl implements ChatRepository {
         model: model,
       );
     } catch (e) {
-      throw ApiFailure('Ошибка создания потока сообщений: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка создания потока сообщений', e);
+      throw ApiFailure('Ошибка создания потока сообщений');
     }
   }
 
@@ -53,7 +60,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.createSession(title, model: model);
     } catch (e) {
-      throw ApiFailure('Ошибка создания сессии: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка создания сессии', e);
+      throw ApiFailure('Ошибка создания сессии');
     }
   }
 
@@ -62,7 +71,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.getSession(sessionId);
     } catch (e) {
-      throw ApiFailure('Ошибка получения сессии: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка получения сессии', e);
+      throw ApiFailure('Ошибка получения сессии');
     }
   }
 
@@ -71,7 +82,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.getSessions(page, pageSize);
     } catch (e) {
-      throw ApiFailure('Ошибка получения списка сессий: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка получения сессий', e);
+      throw ApiFailure('Ошибка получения списка сессий');
     }
   }
 
@@ -84,7 +97,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.getSessionMessages(sessionId, page, pageSize);
     } catch (e) {
-      throw ApiFailure('Ошибка получения сообщений сессии: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка получения сообщений', e);
+      throw ApiFailure('Ошибка получения сообщений сессии');
     }
   }
 
@@ -93,7 +108,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       await dataSource.deleteSession(sessionId);
     } catch (e) {
-      throw ApiFailure('Ошибка удаления сессии: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка удаления сессии', e);
+      throw ApiFailure('Ошибка удаления сессии');
     }
   }
 
@@ -102,7 +119,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.updateSessionTitle(sessionId, title);
     } catch (e) {
-      throw ApiFailure('Ошибка обновления заголовка сессии: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка обновления заголовка', e);
+      throw ApiFailure('Ошибка обновления заголовка сессии');
     }
   }
 
@@ -111,7 +130,9 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       return await dataSource.updateSessionModel(sessionId, model);
     } catch (e) {
-      throw ApiFailure('Ошибка обновления модели сессии: $e');
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка обновления модели сессии', e);
+      throw ApiFailure('Ошибка обновления модели сессии');
     }
   }
 

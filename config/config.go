@@ -5,11 +5,16 @@ import (
 )
 
 type Config struct {
-	Server     ServerConfig
-	Database   DatabaseConfig
-	JWT        JWTConfig
-	Runners    RunnersConfig
+	Server      ServerConfig
+	Database    DatabaseConfig
+	JWT         JWTConfig
+	Runners     RunnersConfig
 	Attachments AttachmentsConfig
+	Log         LogConfig
+}
+
+type LogConfig struct {
+	Level string
 }
 
 type AttachmentsConfig struct {
@@ -58,6 +63,10 @@ func Load() (*Config, error) {
 		Attachments: AttachmentsConfig{
 			// пусто = не сохранять
 			SaveDir: "./uploads",
+		},
+		Log: LogConfig{
+			// "debug", "verbose", "info", "warn", "error", "off" (по умолчанию "info")
+			Level: "debug",
 		},
 	}
 

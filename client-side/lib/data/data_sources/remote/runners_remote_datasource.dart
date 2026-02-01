@@ -1,6 +1,7 @@
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/runner.dart';
 import 'package:legion/generated/grpc_pb/runner.pb.dart' as runner_pb;
 
@@ -19,30 +20,37 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
 
   @override
   Future<List<Runner>> getRunners() async {
+    Logs().d('RunnersRemoteDataSource: получение списка раннеров');
     try {
       final response = await _channelManager.runnerAdminClient.getRunners(
         runner_pb.Empty(),
       );
-      return response.runners
+      final runners = response.runners
         .map((r) => Runner(address: r.address, enabled: r.enabled))
         .toList();
+      Logs().i('RunnersRemoteDataSource: получено раннеров: ${runners.length}');
+      return runners;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unavailable) {
-        throw NetworkFailure('Ошибка подключения gRPC');
+        Logs().w('RunnersRemoteDataSource: сервер недоступен');
+        throw NetworkFailure('Ошибка подключения');
       }
 
       if (e.code == StatusCode.permissionDenied) {
+        Logs().w('RunnersRemoteDataSource: доступ запрещён');
         throw NetworkFailure('Доступ разрешён только администратору');
       }
-
-      throw NetworkFailure('Ошибка gRPC: ${e.message}');
+      Logs().e('RunnersRemoteDataSource: ошибка получения раннеров', e);
+      throw NetworkFailure('Ошибка получения списка раннеров');
     } catch (e) {
-      throw ApiFailure('Ошибка получения списка раннеров: $e');
+      Logs().e('RunnersRemoteDataSource: ошибка получения раннеров', e);
+      throw ApiFailure('Ошибка получения списка раннеров');
     }
   }
 
   @override
   Future<void> setRunnerEnabled(String address, bool enabled) async {
+    Logs().d('RunnersRemoteDataSource: setRunnerEnabled $address enabled=$enabled');
     try {
       await _channelManager.runnerAdminClient.setRunnerEnabled(
         runner_pb.SetRunnerEnabledRequest(
@@ -50,23 +58,28 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
           enabled: enabled
         ),
       );
+      Logs().i('RunnersRemoteDataSource: состояние раннера обновлено');
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unavailable) {
-        throw NetworkFailure('Ошибка подключения gRPC');
+        Logs().w('RunnersRemoteDataSource: сервер недоступен');
+        throw NetworkFailure('Ошибка подключения');
       }
 
       if (e.code == StatusCode.permissionDenied) {
+        Logs().w('RunnersRemoteDataSource: доступ запрещён');
         throw NetworkFailure('Доступ разрешён только администратору');
       }
-
-      throw NetworkFailure('Ошибка gRPC: ${e.message}');
+      Logs().e('RunnersRemoteDataSource: ошибка изменения состояния раннера', e);
+      throw NetworkFailure('Ошибка изменения состояния раннера');
     } catch (e) {
-      throw ApiFailure('Ошибка изменения состояния раннера: $e');
+      Logs().e('RunnersRemoteDataSource: ошибка изменения состояния раннера', e);
+      throw ApiFailure('Ошибка изменения состояния раннера');
     }
   }
 
   @override
   Future<bool> getRunnersStatus() async {
+    Logs().v('RunnersRemoteDataSource: проверка статуса раннеров');
     try {
       final response = await _channelManager.runnerAdminClient.getRunnersStatus(
         runner_pb.Empty(),
@@ -74,13 +87,16 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
       return response.hasActiveRunners;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unimplemented) {
+        Logs().d('RunnersRemoteDataSource: getRunnersStatus не реализован');
         return true;
       }
       if (e.code == StatusCode.unavailable) {
+        Logs().w('RunnersRemoteDataSource: сервер недоступен при проверке статуса');
         return false;
       }
       return false;
-    } catch (_) {
+    } catch (e) {
+      Logs().e('RunnersRemoteDataSource: ошибка проверки статуса', e);
       return false;
     }
   }

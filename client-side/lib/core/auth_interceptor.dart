@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 
 class AuthInterceptor implements ClientInterceptor {
@@ -11,6 +12,7 @@ class AuthInterceptor implements ClientInterceptor {
   FutureOr<void> _tokenProvider(Map<String, String> metadata, String _) async {
     if (tokenStorage.hasToken) {
       metadata['authorization'] = 'Bearer ${tokenStorage.accessToken}';
+      Logs().d('AuthInterceptor: добавлен Bearer токен в запрос');
     }
   }
 

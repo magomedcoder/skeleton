@@ -3,14 +3,16 @@ package runner
 import (
 	"context"
 	"fmt"
+	"sync"
+	"sync/atomic"
+
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/mappers"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"sync"
-	"sync/atomic"
 )
 
 type Pool struct {
@@ -89,9 +91,11 @@ func (p *Pool) getConn(ctx context.Context, address string) (runnerpb.RunnerServ
 
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
+		logger.W("Pool: ошибка подключения к раннеру %s: %v", address, err)
 		return nil, fmt.Errorf("подключение к раннеру %s: %w", address, err)
 	}
 
+	logger.D("Pool: подключение к раннеру %s установлено", address)
 	p.conns[address] = conn
 
 	return runnerpb.NewRunnerServiceClient(conn), nil
@@ -203,9 +207,11 @@ func (p *Pool) GetModels(ctx context.Context) ([]string, error) {
 func (p *Pool) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.Message) (chan string, error) {
 	addr, ok := p.pickRunner()
 	if !ok {
+		logger.W("Pool: нет доступных раннеров для сессии %s", sessionID)
 		return nil, fmt.Errorf("нет доступных раннеров")
 	}
 
+	logger.V("Pool: выбран раннер %s для сессии %s", addr, sessionID)
 	client, err := p.getConn(ctx, addr)
 	if err != nil {
 		return nil, err

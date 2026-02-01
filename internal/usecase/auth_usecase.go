@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
-	"github.com/magomedcoder/legion/pkg"
 
 	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/service"
+	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/legion/pkg"
 )
 
 type AuthUseCase struct {
@@ -28,17 +29,21 @@ func NewAuthUseCase(
 }
 
 func (a *AuthUseCase) Login(ctx context.Context, username, password string) (*domain.User, string, string, error) {
+	logger.D("AuthUseCase: вход пользователя %s", username)
 	user, err := a.userRepo.GetByUsername(ctx, username)
 	if err != nil {
+		logger.W("AuthUseCase: пользователь не найден: %s", username)
 		return nil, "", "", errors.New("неверные учетные данные")
 	}
 
 	if !a.jwtService.CheckPassword(user.Password, password) {
+		logger.W("AuthUseCase: неверный пароль для %s", username)
 		return nil, "", "", errors.New("неверные учетные данные")
 	}
 
 	accessToken, accessExpires, err := a.jwtService.GenerateAccessToken(user)
 	if err != nil {
+		logger.E("AuthUseCase: ошибка генерации access token: %v", err)
 		return nil, "", "", err
 	}
 

@@ -2,6 +2,7 @@ import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/grpc_error_handler.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/mappers/user_mapper.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc;
@@ -36,21 +37,26 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
 
   @override
   Future<List<User>> getUsers({required int page, required int pageSize}) async {
+    Logs().d('UserRemoteDataSource: получение пользователей page=$page');
     try {
       final req = grpc.GetUsersRequest(
         page: page,
         pageSize: pageSize,
       );
       final resp = await _client.getUsers(req);
-      return UserMapper.listFromProto(resp.users);
+      final users = UserMapper.listFromProto(resp.users);
+      Logs().i('UserRemoteDataSource: получено пользователей: ${users.length}');
+      return users;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.permissionDenied) {
+        Logs().w('UserRemoteDataSource: доступ запрещён');
         throw NetworkFailure('Доступ разрешён только администратору');
       }
-
-      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
+      Logs().e('UserRemoteDataSource: ошибка получения пользователей', e);
+      throwGrpcError(e, 'Ошибка получения пользователей');
     } catch (e) {
-      throw ApiFailure('Ошибка получения пользователей: $e');
+      Logs().e('UserRemoteDataSource: ошибка получения пользователей', e);
+      throw ApiFailure('Ошибка получения пользователей');
     }
   }
 
@@ -62,6 +68,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
     required String surname,
     required int role,
   }) async {
+    Logs().d('UserRemoteDataSource: создание пользователя $username');
     try {
       final req = grpc.CreateUserRequest(
         username: username,
@@ -71,19 +78,23 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         role: role,
       );
       final resp = await _client.createUser(req);
+      Logs().i('UserRemoteDataSource: пользователь создан');
       return UserMapper.fromProto(resp.user);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.invalidArgument) {
-        throw NetworkFailure(e.message ?? 'Неверные данные');
+        Logs().w('UserRemoteDataSource: неверные данные при создании');
+        throw NetworkFailure('Неверные данные');
       }
 
       if (e.code == StatusCode.permissionDenied) {
+        Logs().w('UserRemoteDataSource: доступ запрещён');
         throw NetworkFailure('Доступ разрешён только администратору');
       }
-
-      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
+      Logs().e('UserRemoteDataSource: ошибка создания пользователя', e);
+      throwGrpcError(e, 'Ошибка создания пользователя');
     } catch (e) {
-      throw ApiFailure('Ошибка создания пользователя: $e');
+      Logs().e('UserRemoteDataSource: ошибка создания пользователя', e);
+      throw ApiFailure('Ошибка создания пользователя');
     }
   }
 
@@ -96,6 +107,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
     required String surname,
     required int role,
   }) async {
+    Logs().d('UserRemoteDataSource: обновление пользователя $id');
     try {
       final req = grpc.EditUserRequest(
         id: id,
@@ -106,19 +118,23 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         role: role,
       );
       final resp = await _client.editUser(req);
+      Logs().i('UserRemoteDataSource: пользователь обновлён');
       return UserMapper.fromProto(resp.user);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.invalidArgument) {
-        throw NetworkFailure(e.message ?? 'Неверные данные');
+        Logs().w('UserRemoteDataSource: неверные данные при обновлении');
+        throw NetworkFailure('Неверные данные');
       }
 
       if (e.code == StatusCode.permissionDenied) {
+        Logs().w('UserRemoteDataSource: доступ запрещён');
         throw NetworkFailure('Доступ разрешён только администратору');
       }
-
-      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
+      Logs().e('UserRemoteDataSource: ошибка обновления пользователя', e);
+      throwGrpcError(e, 'Ошибка обновления пользователя');
     } catch (e) {
-      throw ApiFailure('Ошибка обновления пользователя: $e');
+      Logs().e('UserRemoteDataSource: ошибка обновления пользователя', e);
+      throw ApiFailure('Ошибка обновления пользователя');
     }
   }
 }

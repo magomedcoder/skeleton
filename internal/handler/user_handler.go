@@ -7,6 +7,7 @@ import (
 	"github.com/magomedcoder/legion/api/pb/userpb"
 	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -28,11 +29,13 @@ func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest)
 	if err := RequireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
 	}
-
+	logger.D("UserHandler: получение пользователей page=%d", req.Page)
 	users, total, err := u.userUseCase.GetUsers(ctx, req.Page, req.PageSize)
 	if err != nil {
+		logger.E("UserHandler: ошибка получения пользователей: %v", err)
 		return nil, ToStatusError(codes.Internal, err)
 	}
+	logger.V("UserHandler: получено пользователей: %d", len(users))
 
 	resp := &userpb.GetUsersResponse{
 		Total: total,
@@ -48,11 +51,13 @@ func (u *UserHandler) CreateUser(ctx context.Context, req *userpb.CreateUserRequ
 	if err := RequireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
 	}
-
+	logger.I("UserHandler: создание пользователя %s", req.Username)
 	user, err := u.userUseCase.CreateUser(ctx, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
+		logger.W("UserHandler: ошибка создания пользователя: %v", err)
 		return nil, ToStatusError(codes.InvalidArgument, err)
 	}
+	logger.I("UserHandler: пользователь создан")
 
 	return &userpb.CreateUserResponse{User: mappers.UserToProto(user)}, nil
 }
@@ -61,15 +66,17 @@ func (u *UserHandler) EditUser(ctx context.Context, req *userpb.EditUserRequest)
 	if err := RequireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
 	}
-
 	if _, err := strconv.Atoi(req.Id); err != nil {
+		logger.W("UserHandler: неверный id пользователя: %s", req.Id)
 		return nil, status.Error(codes.InvalidArgument, "неверный id пользователя")
 	}
-
+	logger.D("UserHandler: обновление пользователя %s", req.Id)
 	user, err := u.userUseCase.EditUser(ctx, req.Id, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
+		logger.W("UserHandler: ошибка обновления пользователя: %v", err)
 		return nil, ToStatusError(codes.InvalidArgument, err)
 	}
+	logger.I("UserHandler: пользователь обновлён")
 
 	return &userpb.EditUserResponse{User: mappers.UserToProto(user)}, nil
 }

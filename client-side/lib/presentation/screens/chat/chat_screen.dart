@@ -38,16 +38,27 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChatBloc>().add(ChatStarted());
     });
   }
 
-  void _scrollListener() {
-    if (_scrollController.hasClients) {
+  void _scrollToBottom() {
+    if (!mounted) return;
+
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    final target = position.maxScrollExtent;
+
+    if (position.pixels >= target) return;
+
+    const threshold = 80.0;
+    if (target - position.pixels <= threshold) {
+      position.jumpTo(target);
+    } else {
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        target,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
@@ -418,18 +429,16 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return BlocListener<ChatBloc, ChatState>(
       listener: (context, state) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients && state.messages.isNotEmpty) {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        });
+        if (state.messages.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _scrollToBottom();
+          });
+        }
 
         if (state.error != null && !_isEditingTitle) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error!),

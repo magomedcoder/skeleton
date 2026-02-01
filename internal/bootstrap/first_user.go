@@ -3,9 +3,11 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/service"
-	"time"
+	"github.com/magomedcoder/legion/pkg/logger"
 )
 
 func CreateFirstUser(ctx context.Context, userRepo domain.UserRepository, jwtService *service.JWTService) error {
@@ -16,8 +18,10 @@ func CreateFirstUser(ctx context.Context, userRepo domain.UserRepository, jwtSer
 		return fmt.Errorf("ошибка проверки существующих пользователей: %w", err)
 	}
 	if total > 0 {
+		logger.D("Bootstrap: пользователи уже есть, первый пользователь не создаётся")
 		return nil
 	}
+	logger.I("Bootstrap: создание первого пользователя %s", username)
 
 	hashed, err := jwtService.HashPassword(password)
 	if err != nil {
@@ -35,6 +39,7 @@ func CreateFirstUser(ctx context.Context, userRepo domain.UserRepository, jwtSer
 	if err := userRepo.Create(ctx, user); err != nil {
 		return fmt.Errorf("ошибка создания первого пользователя: %w", err)
 	}
+	logger.I("Bootstrap: первый пользователь создан")
 
 	return nil
 }

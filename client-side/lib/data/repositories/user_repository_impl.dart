@@ -1,4 +1,5 @@
 import 'package:legion/core/failures.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/domain/repositories/user_repository.dart';
@@ -13,7 +14,9 @@ class UserRepositoryImpl implements UserRepository {
     try {
       return await dataSource.getUsers(page: page, pageSize: pageSize);
     } catch (e) {
-      throw ApiFailure('Ошибка получения пользователей: $e');
+      if (e is Failure) rethrow;
+      Logs().e('UserRepository: неожиданная ошибка получения пользователей', e);
+      throw ApiFailure('Ошибка получения пользователей');
     }
   }
 
@@ -34,7 +37,9 @@ class UserRepositoryImpl implements UserRepository {
         role: role,
       );
     } catch (e) {
-      throw ApiFailure('Ошибка создания пользователя: $e');
+      if (e is Failure) rethrow;
+      Logs().e('UserRepository: неожиданная ошибка создания пользователя', e);
+      throw ApiFailure('Ошибка создания пользователя');
     }
   }
 
@@ -57,7 +62,9 @@ class UserRepositoryImpl implements UserRepository {
         role: role,
       );
     } catch (e) {
-      throw ApiFailure('Ошибка обновления пользователя: $e');
+      if (e is Failure) rethrow;
+      Logs().e('UserRepository: неожиданная ошибка обновления пользователя', e);
+      throw ApiFailure('Ошибка обновления пользователя');
     }
   }
 }

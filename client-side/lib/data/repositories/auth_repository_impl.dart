@@ -1,4 +1,5 @@
 import 'package:legion/core/failures.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/domain/entities/auth_result.dart';
 import 'package:legion/domain/entities/auth_tokens.dart';
@@ -15,7 +16,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return await dataSource.login(username, password);
     } catch (e) {
       if (e is Failure) rethrow;
-      throw ApiFailure('Ошибка входа: $e');
+      Logs().e('AuthRepository: неожиданная ошибка входа', e);
+      throw ApiFailure('Ошибка входа');
     }
   }
 
@@ -25,7 +27,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return await dataSource.refreshToken(refreshToken);
     } catch (e) {
       if (e is Failure) rethrow;
-      throw ApiFailure('Ошибка обновления токена: $e');
+      Logs().e('AuthRepository: неожиданная ошибка обновления токена', e);
+      throw ApiFailure('Ошибка обновления токена');
     }
   }
 
@@ -35,7 +38,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await dataSource.logout();
     } catch (e) {
       if (e is Failure) rethrow;
-      throw ApiFailure('Ошибка выхода: $e');
+      Logs().e('AuthRepository: неожиданная ошибка выхода', e);
+      throw ApiFailure('Ошибка выхода');
     }
   }
 
@@ -45,7 +49,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await dataSource.changePassword(oldPassword, newPassword);
     } catch (e) {
       if (e is Failure) rethrow;
-      throw ApiFailure('Ошибка смены пароля: $e');
+      Logs().e('AuthRepository: неожиданная ошибка смены пароля', e);
+      throw ApiFailure('Ошибка смены пароля');
     }
   }
 }

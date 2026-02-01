@@ -2,10 +2,11 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/runner"
 
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/internal/runner"
 	"github.com/magomedcoder/legion/internal/usecase"
+	"github.com/magomedcoder/legion/pkg/logger"
 )
 
 type RunnerHandler struct {
@@ -25,6 +26,7 @@ func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*run
 	if err := RequireAdmin(ctx, r.authUseCase); err != nil {
 		return nil, err
 	}
+	logger.D("RunnerHandler: получение списка раннеров")
 	items := r.pool.GetRunners()
 	runners := make([]*runnerpb.RunnerInfo, len(items))
 	for i := range items {
@@ -33,6 +35,7 @@ func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*run
 			Enabled: items[i].Enabled,
 		}
 	}
+	logger.V("RunnerHandler: раннеров: %d", len(runners))
 
 	return &runnerpb.GetRunnersResponse{
 		Runners: runners,
@@ -44,6 +47,7 @@ func (r *RunnerHandler) SetRunnerEnabled(ctx context.Context, req *runnerpb.SetR
 		return nil, err
 	}
 	if req != nil && req.Address != "" {
+		logger.I("RunnerHandler: setRunnerEnabled %s enabled=%v", req.Address, req.Enabled)
 		r.pool.SetRunnerEnabled(req.Address, req.Enabled)
 	}
 

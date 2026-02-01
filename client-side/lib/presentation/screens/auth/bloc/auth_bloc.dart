@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
 import 'package:legion/domain/usecases/auth/logout_usecase.dart';
@@ -33,10 +34,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthCheckRequested event,
     Emitter<AuthState> emit,
   ) async {
+    Logs().d('AuthBloc: проверка авторизации');
     emit(state.copyWith(isLoading: true, error: null));
 
     final refreshToken = tokenStorage.refreshToken;
     if (refreshToken == null || refreshToken.isEmpty) {
+      Logs().i('AuthBloc: токен отсутствует, пользователь не авторизован');
       emit(
         state.copyWith(
           isLoading: false,
@@ -73,6 +76,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           return;
         }
 
+        Logs().i('AuthBloc: проверка авторизации успешна');
         emit(
           state.copyWith(
             isLoading: false,
@@ -86,8 +90,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         lastError = e;
         wasUnauthorized = e is UnauthorizedFailure;
         if (wasUnauthorized) {
+          Logs().w('AuthBloc: неавторизован при проверке токена');
           break;
         }
+        Logs().w('AuthBloc: ошибка при проверке токена, попытка ${attempt + 1}/$maxAttempts', e);
         if (attempt < maxAttempts) {
           await Future<void>.delayed(retryDelay);
         }
@@ -121,6 +127,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
+    Logs().i('AuthBloc: запрос входа для ${event.username}');
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
@@ -133,6 +140,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       tokenStorage.saveUser(result.user);
 
+      Logs().i('AuthBloc: вход выполнен успешно');
       emit(
         state.copyWith(
           isLoading: false,
@@ -142,6 +150,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
     } catch (e) {
+      Logs().e('AuthBloc: ошибка входа', e);
       emit(
         state.copyWith(
           isLoading: false,
@@ -156,6 +165,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRefreshTokenRequested event,
     Emitter<AuthState> emit,
   ) async {
+    Logs().d('AuthBloc: обновление токена');
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
@@ -166,9 +176,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         tokens.refreshToken,
       );
 
+      Logs().i('AuthBloc: токен обновлён');
       emit(state.copyWith(isLoading: false, error: null));
     } catch (e) {
       if (e is UnauthorizedFailure) {
+        Logs().w('AuthBloc: недействительный refresh token');
         tokenStorage.clearTokens();
         emit(
           state.copyWith(
@@ -179,6 +191,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } else {
+        Logs().e('AuthBloc: ошибка обновления токена', e);
         emit(
           state.copyWith(
             isLoading: false,
@@ -193,12 +206,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    Logs().i('AuthBloc: выход');
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
       await logoutUseCase();
-    } catch (_) {
-
+      Logs().i('AuthBloc: выход выполнен');
+    } catch (e) {
+      Logs().w('AuthBloc: ошибка при выходе на сервере (токены очищены)', e);
     } finally {
       tokenStorage.clearTokens();
       emit(

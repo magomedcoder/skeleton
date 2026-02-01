@@ -7,6 +7,7 @@ import (
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -54,8 +55,10 @@ func (c *ChatHandler) SendMessage(req *chatpb.SendMessageRequest, stream chatpb.
 		attachmentContent = lastMessage.AttachmentContent
 	}
 
+	logger.D("ChatHandler: отправка сообщения в сессию %s", req.SessionId)
 	responseChan, messageId, err := c.chatUseCase.SendMessage(ctx, userID, req.SessionId, req.GetModel(), userMessage, attachmentName, attachmentContent)
 	if err != nil {
+		logger.E("ChatHandler: ошибка отправки сообщения: %v", err)
 		return ToStatusError(codes.Internal, err)
 	}
 
@@ -88,11 +91,13 @@ func (c *ChatHandler) CreateSession(ctx context.Context, req *chatpb.CreateSessi
 	if err != nil {
 		return nil, err
 	}
-
+	logger.D("ChatHandler: создание сессии \"%s\" пользователем %d", req.GetTitle(), userID)
 	session, err := c.chatUseCase.CreateSession(ctx, userID, req.GetTitle(), req.GetModel())
 	if err != nil {
+		logger.E("ChatHandler: ошибка создания сессии: %v", err)
 		return nil, ToStatusError(codes.Internal, err)
 	}
+	logger.I("ChatHandler: сессия создана")
 
 	return mappers.SessionToProto(session), nil
 }
