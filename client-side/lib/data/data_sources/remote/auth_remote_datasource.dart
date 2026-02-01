@@ -1,6 +1,7 @@
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/grpc_error_handler.dart';
 import 'package:legion/data/mappers/auth_mapper.dart';
 import 'package:legion/domain/entities/auth_result.dart';
 import 'package:legion/domain/entities/auth_tokens.dart';
@@ -35,11 +36,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
       return AuthMapper.loginResponseFromProto(response);
     } on GrpcError catch (e) {
-      if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Неверное имя пользователя или пароль');
-      }
-      
-      throw NetworkFailure('Ошибка gRPC при входе: ${e.message}');
+      throwGrpcError(e, 'Ошибка gRPC при входе: ${e.message}',
+        unauthenticatedMessage: 'Неверное имя пользователя или пароль',
+      );
     } catch (e) {
       throw ApiFailure('Ошибка входа: $e');
     }
@@ -56,11 +55,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
       return AuthMapper.refreshTokenResponseFromProto(response);
     } on GrpcError catch (e) {
-      if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Недействительный refresh token');
-      }
-
-      throw NetworkFailure('Ошибка gRPC при обновлении токена: ${e.message}');
+      throwGrpcError(e, 'Ошибка gRPC при обновлении токена: ${e.message}',
+        unauthenticatedMessage: 'Недействительный refresh token',
+      );
     } catch (e) {
       throw ApiFailure('Ошибка обновления токена: $e');
     }
@@ -93,10 +90,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         throw NetworkFailure(e.message ?? 'Неверные данные');
       }
 
-      if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Сессия истекла, войдите снова');
-      }
-      throw NetworkFailure('Ошибка gRPC при смене пароля: ${e.message}');
+      throwGrpcError(e, 'Ошибка gRPC при смене пароля: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка смены пароля: $e');
     }

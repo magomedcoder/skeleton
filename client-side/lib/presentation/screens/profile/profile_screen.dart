@@ -5,6 +5,7 @@ import 'package:legion/domain/usecases/auth/change_password_usecase.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:legion/presentation/theme/theme_cubit.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -137,6 +138,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: BlocBuilder<ThemeCubit, ThemeMode>(
+                  builder: (context, themeMode) {
+                    final isDark = themeMode == ThemeMode.dark;
+                    return SwitchListTile(
+                      title: const Text('Тёмная тема'),
+                      subtitle: Text(isDark ? 'Включена' : 'Выключена'),
+                      value: isDark,
+                      onChanged: (value) {
+                        context.read<ThemeCubit>().setThemeMode(
+                          value ? ThemeMode.dark : ThemeMode.light,
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),

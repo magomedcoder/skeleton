@@ -4,13 +4,17 @@ import 'package:legion/domain/usecases/users/get_users_usecase.dart';
 import 'package:legion/domain/usecases/users/edit_user_usecase.dart';
 import 'package:legion/presentation/screens/admin/bloc/users_admin_event.dart';
 import 'package:legion/presentation/screens/admin/bloc/users_admin_state.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/utils/request_logout_on_unauthorized.dart';
 
 class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
+  final AuthBloc authBloc;
   final GetUsersUseCase getUsersUseCase;
   final CreateUserUseCase createUserUseCase;
   final EditUserUseCase editUserUseCase;
 
   UsersAdminBloc({
+    required this.authBloc,
     required this.getUsersUseCase,
     required this.createUserUseCase,
     required this.editUserUseCase,
@@ -39,6 +43,7 @@ class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
         pageSize: event.pageSize,
       ));
     } catch (e) {
+      requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
           isLoading: false,
@@ -68,6 +73,7 @@ class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
         state.pageSize,
       ));
     } catch (e) {
+      requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
           isLoading: false,
@@ -97,6 +103,7 @@ class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
         pageSize: state.pageSize,
       ));
     } catch (e) {
+      requestLogoutIfUnauthorized(e, authBloc);
       emit(
         state.copyWith(
           isLoading: false,

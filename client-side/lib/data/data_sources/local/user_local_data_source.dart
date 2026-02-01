@@ -1,15 +1,24 @@
+import 'package:flutter/material.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-abstract class AuthLocalDataSource {
+abstract class UserLocalDataSource {
+  String? get accessToken;
+  String? get refreshToken;
+  User? get user;
+  bool get hasToken;
+
   void saveTokens(String accessToken, String refreshToken);
-
   void saveUser(User user);
-
   void clearTokens();
+
+  ThemeMode getThemeMode();
+  Future<void> setThemeMode(ThemeMode mode);
+
+  Future<void> init();
 }
 
-class AuthLocalDataSourceImpl implements AuthLocalDataSource {
+class UserLocalDataSourceImpl implements UserLocalDataSource {
   static const _keyAccessToken = 'legion_access_token';
   static const _keyRefreshToken = 'legion_refresh_token';
   static const _keyUserId = 'legion_user_id';
@@ -17,20 +26,26 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   static const _keyUserName = 'legion_user_name';
   static const _keyUserSurname = 'legion_user_surname';
   static const _keyUserRole = 'legion_user_role';
+  static const _keyThemeMode = 'legion_theme_mode';
 
   SharedPreferences? _prefs;
   String? _accessToken;
   String? _refreshToken;
   User? _user;
 
+  @override
   String? get accessToken => _accessToken;
 
+  @override
   String? get refreshToken => _refreshToken;
 
+  @override
   User? get user => _user;
 
+  @override
   bool get hasToken => _accessToken != null && _accessToken!.isNotEmpty;
 
+  @override
   Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
     _accessToken = _prefs!.getString(_keyAccessToken);
@@ -84,5 +99,24 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     _prefs?.remove(_keyUserName);
     _prefs?.remove(_keyUserSurname);
     _prefs?.remove(_keyUserRole);
+  }
+
+  @override
+  ThemeMode getThemeMode() {
+    final index = _prefs?.getInt(_keyThemeMode);
+    if (index == null) {
+      return ThemeMode.light;
+    }
+
+    if (index < 0 || index >= ThemeMode.values.length) {
+      return ThemeMode.light;
+    }
+
+    return ThemeMode.values[index];
+  }
+
+  @override
+  Future<void> setThemeMode(ThemeMode mode) async {
+    await _prefs?.setInt(_keyThemeMode, mode.index);
   }
 }

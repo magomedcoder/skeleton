@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
-import 'package:legion/data/data_sources/local/auth_local_data_source.dart';
+import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
 import 'package:legion/domain/usecases/auth/logout_usecase.dart';
 import 'package:legion/domain/usecases/auth/refresh_token_usecase.dart';
@@ -11,7 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final RefreshTokenUseCase refreshTokenUseCase;
   final LogoutUseCase logoutUseCase;
-  final AuthLocalDataSourceImpl tokenStorage;
+  final UserLocalDataSourceImpl tokenStorage;
   final GrpcChannelManager channelManager;
 
   AuthBloc({
@@ -50,6 +51,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     const maxAttempts = 3;
     const retryDelay = Duration(milliseconds: 1500);
 
+    Object? lastError;
+    var wasUnauthorized = false;
+
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         final tokens = await refreshTokenUseCase(refreshToken);
@@ -79,8 +83,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         );
         return;
       } catch (e) {
-        final msg = e.toString();
-        if (msg.contains('Недействительный refresh token')) {
+        lastError = e;
+        wasUnauthorized = e is UnauthorizedFailure;
+        if (wasUnauthorized) {
           break;
         }
         if (attempt < maxAttempts) {
@@ -89,15 +94,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     }
 
-    tokenStorage.clearTokens();
-    emit(
-      state.copyWith(
-        isLoading: false,
-        isAuthenticated: false,
-        user: null,
-        error: null,
-      ),
-    );
+    if (wasUnauthorized) {
+      tokenStorage.clearTokens();
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          user: null,
+          error: null,
+        ),
+      );
+    } else {
+      final user = tokenStorage.user;
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isAuthenticated: true,
+          user: user,
+          error: lastError?.toString().replaceAll('Exception: ', ''),
+        ),
+      );
+    }
   }
 
   Future<void> _onLoginRequested(
@@ -151,14 +168,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       emit(state.copyWith(isLoading: false, error: null));
     } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          isAuthenticated: false,
-          user: null,
-          error: e.toString().replaceAll('Exception: ', ''),
-        ),
-      );
+      if (e is UnauthorizedFailure) {
+        tokenStorage.clearTokens();
+        emit(
+          state.copyWith(
+            isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            error: e.toString().replaceAll('Exception: ', ''),
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: e.toString().replaceAll('Exception: ', ''),
+          ),
+        );
+      }
     }
   }
 

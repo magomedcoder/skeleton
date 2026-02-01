@@ -14,9 +14,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       return await dataSource.login(username, password);
     } catch (e) {
-      if (e is NetworkFailure || e is ApiFailure) {
-        rethrow;
-      }
+      if (e is Failure) rethrow;
       throw ApiFailure('Ошибка входа: $e');
     }
   }
@@ -26,9 +24,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       return await dataSource.refreshToken(refreshToken);
     } catch (e) {
-      if (e is NetworkFailure || e is ApiFailure) {
-        rethrow;
-      }
+      if (e is Failure) rethrow;
       throw ApiFailure('Ошибка обновления токена: $e');
     }
   }
@@ -38,9 +34,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await dataSource.logout();
     } catch (e) {
-      if (e is NetworkFailure || e is ApiFailure) {
-        rethrow;
-      }
+      if (e is Failure) rethrow;
       throw ApiFailure('Ошибка выхода: $e');
     }
   }
@@ -50,9 +44,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await dataSource.changePassword(oldPassword, newPassword);
     } catch (e) {
-      if (e is NetworkFailure || e is ApiFailure) {
-        rethrow;
-      }
+      if (e is Failure) rethrow;
       throw ApiFailure('Ошибка смены пароля: $e');
     }
   }

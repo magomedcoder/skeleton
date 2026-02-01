@@ -18,3 +18,7 @@ class ApiFailure extends Failure {
 class ParseFailure extends Failure {
   const ParseFailure(super.message);
 }
+
+class UnauthorizedFailure extends Failure {
+  const UnauthorizedFailure(super.message);
+}

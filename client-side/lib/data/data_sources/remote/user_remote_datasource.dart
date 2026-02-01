@@ -1,6 +1,7 @@
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/grpc_error_handler.dart';
 import 'package:legion/data/mappers/user_mapper.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc;
@@ -46,12 +47,8 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
       if (e.code == StatusCode.permissionDenied) {
         throw NetworkFailure('Доступ разрешён только администратору');
       }
-      
-      if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Сессия истекла, войдите снова');
-      }
 
-      throw NetworkFailure('Ошибка gRPC: ${e.message}');
+      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка получения пользователей: $e');
     }
@@ -84,11 +81,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         throw NetworkFailure('Доступ разрешён только администратору');
       }
 
-      if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Сессия истекла, войдите снова');
-      }
-
-      throw NetworkFailure('Ошибка gRPC: ${e.message}');
+      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка создания пользователя: $e');
     }
@@ -123,11 +116,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
         throw NetworkFailure('Доступ разрешён только администратору');
       }
 
-      if (e.code == StatusCode.unauthenticated) {
-        throw NetworkFailure('Сессия истекла, войдите снова');
-      }
-
-      throw NetworkFailure('Ошибка gRPC: ${e.message}');
+      throwGrpcError(e, 'Ошибка gRPC: ${e.message}');
     } catch (e) {
       throw ApiFailure('Ошибка обновления пользователя: $e');
     }
