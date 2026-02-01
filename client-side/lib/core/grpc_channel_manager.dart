@@ -3,6 +3,7 @@ import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/server_config.dart';
 import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as grpc_auth;
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as grpc_chat;
+import 'package:legion/generated/grpc_pb/runner.pbgrpc.dart' as grpc_runner;
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc_user;
 
 class GrpcChannelManager {
@@ -13,6 +14,7 @@ class GrpcChannelManager {
   grpc_auth.AuthServiceClient? _authClient;
   grpc_chat.ChatServiceClient? _chatClient;
   grpc_user.UserServiceClient? _userClient;
+  grpc_runner.RunnerAdminServiceClient? _runnerAdminClient;
 
   GrpcChannelManager(this._config, this._authInterceptor);
 
@@ -52,6 +54,14 @@ class GrpcChannelManager {
     return _userClient!;
   }
 
+  grpc_runner.RunnerAdminServiceClient get runnerAdminClient {
+    _runnerAdminClient ??= grpc_runner.RunnerAdminServiceClient(
+      channel,
+      interceptors: [_authInterceptor],
+    );
+    return _runnerAdminClient!;
+  }
+
   Future<void> setServer(String host, int port) async {
     await _config.setServer(host, port);
     await _closeChannel();
@@ -63,6 +73,7 @@ class GrpcChannelManager {
     _authClient = null;
     _chatClient = null;
     _userClient = null;
+    _runnerAdminClient = null;
     if (ch != null) {
       await ch.shutdown();
     }

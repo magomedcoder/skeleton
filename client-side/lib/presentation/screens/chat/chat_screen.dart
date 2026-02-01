@@ -15,6 +15,9 @@ import 'package:legion/presentation/screens/chat/widgets/chat_input_bar.dart';
 import 'package:legion/presentation/screens/chat/widgets/sessions_sidebar.dart';
 import 'package:legion/presentation/screens/profile/profile_screen.dart';
 import 'package:legion/presentation/widgets/chat_bubble.dart';
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_bloc.dart';
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_event.dart';
+import 'package:legion/presentation/screens/admin/runners_admin_screen.dart';
 import 'package:legion/presentation/screens/admin/users_admin_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -506,26 +509,52 @@ class _ChatScreenState extends State<ChatScreen> {
 
                     if (!isAdmin) return const SizedBox.shrink();
 
-                    return IconButton(
-                      icon: const Icon(Icons.supervisor_account_outlined),
-                      tooltip: 'Пользователи (админ)',
-                      onPressed: () {
-                        final authBloc = context.read<AuthBloc>();
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => MultiBlocProvider(
-                              providers: [
-                                BlocProvider.value(value: authBloc),
-                                BlocProvider(
-                                  create: (_) => di.sl<UsersAdminBloc>()
-                                    ..add(const UsersAdminLoadRequested()),
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.dns_outlined),
+                          tooltip: 'Раннеры (админ)',
+                          onPressed: () {
+                            final authBloc = context.read<AuthBloc>();
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => MultiBlocProvider(
+                                  providers: [
+                                    BlocProvider.value(value: authBloc),
+                                    BlocProvider(
+                                      create: (_) => di.sl<RunnersAdminBloc>()
+                                        ..add(const RunnersAdminLoadRequested()),
+                                    ),
+                                  ],
+                                  child: const RunnersAdminScreen(),
                                 ),
-                              ],
-                              child: const UsersAdminScreen(),
-                            ),
-                          ),
-                        );
-                      },
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.supervisor_account_outlined),
+                          tooltip: 'Пользователи (админ)',
+                          onPressed: () {
+                            final authBloc = context.read<AuthBloc>();
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => MultiBlocProvider(
+                                  providers: [
+                                    BlocProvider.value(value: authBloc),
+                                    BlocProvider(
+                                      create: (_) => di.sl<UsersAdminBloc>()
+                                        ..add(const UsersAdminLoadRequested()),
+                                    ),
+                                  ],
+                                  child: const UsersAdminScreen(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -570,6 +599,35 @@ class _ChatScreenState extends State<ChatScreen> {
 
                       return Column(
                         children: [
+                          if (state.hasActiveRunners == false)
+                            Material(
+                              color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.6),
+                              child: SafeArea(
+                                top: true,
+                                bottom: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        size: 20,
+                                        color: Theme.of(context).colorScheme.onErrorContainer,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'Нет активных раннеров',
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: Theme.of(context).colorScheme.onErrorContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: Breakpoints.isMobile(context) ? 12 : 20,
@@ -595,7 +653,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                 : _buildMessageList(state),
                           ),
                           const Divider(height: 1),
-                          ChatInputBar(isEnabled: state.isConnected && !state.isLoading),
+                          ChatInputBar(
+                            isEnabled: state.isConnected &&
+                                !state.isLoading &&
+                                (state.hasActiveRunners != false),
+                          ),
                         ],
                       );
                     },

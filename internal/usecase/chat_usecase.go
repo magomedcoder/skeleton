@@ -10,18 +10,18 @@ import (
 type ChatUseCase struct {
 	sessionRepo domain.ChatSessionRepository
 	messageRepo domain.MessageRepository
-	ollamaRepo  domain.OllamaRepository
+	llmProvider domain.LLMProvider
 }
 
 func NewChatUseCase(
 	sessionRepo domain.ChatSessionRepository,
 	messageRepo domain.MessageRepository,
-	ollamaRepo domain.OllamaRepository,
+	llmProvider domain.LLMProvider,
 ) *ChatUseCase {
 	return &ChatUseCase{
 		sessionRepo: sessionRepo,
 		messageRepo: messageRepo,
-		ollamaRepo:  ollamaRepo,
+		llmProvider: llmProvider,
 	}
 }
 
@@ -37,7 +37,7 @@ func (c *ChatUseCase) verifySessionOwnership(ctx context.Context, userId int, se
 }
 
 func (c *ChatUseCase) GetModels(ctx context.Context) ([]string, error) {
-	return c.ollamaRepo.GetModels(ctx)
+	return c.llmProvider.GetModels(ctx)
 }
 
 func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId string, model string, userMessage string) (chan string, string, error) {
@@ -56,7 +56,7 @@ func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId str
 		return nil, "", err
 	}
 
-	responseChan, err := c.ollamaRepo.SendMessage(ctx, sessionId, model, messages)
+	responseChan, err := c.llmProvider.SendMessage(ctx, sessionId, model, messages)
 	if err != nil {
 		return nil, "", err
 	}

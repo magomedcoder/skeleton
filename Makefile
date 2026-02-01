@@ -23,10 +23,10 @@ gen:
 run:
 	go run ./cmd/legion
 
-.PHONY: run-ollama
-run-ollama:
-	#go generate ./...
-	#go build -tags cuda .
-	# OLLAMA_GPU=1
-	# CUDA_VISIBLE_DEVICES=0
-	OLLAMA_HOST=0.0.0.0:11434 go run ./third_party/ollama/main.go
+.PHONY: run-runner
+run-runner:
+	go run ./cmd/runner
+
+.PHONY: deps
+deps:
+	$(MAKE) -C third_party -f Makefile $(MAKECMDGOALS)

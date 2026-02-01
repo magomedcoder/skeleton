@@ -44,7 +44,7 @@ type MessageRepository interface {
 	GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*Message, int32, error)
 }
 
-type OllamaRepository interface {
+type LLMProvider interface {
 	CheckConnection(ctx context.Context) (bool, error)
 
 	GetModels(ctx context.Context) ([]string, error)

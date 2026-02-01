@@ -13,6 +13,7 @@ import 'package:legion/domain/usecases/chat/send_message_usecase.dart';
 import 'package:legion/domain/usecases/chat/set_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/update_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/update_session_title_usecase.dart';
+import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
@@ -31,6 +32,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final GetSessionMessagesUseCase getSessionMessagesUseCase;
   final DeleteSessionUseCase deleteSessionUseCase;
   final UpdateSessionTitleUseCase updateSessionTitleUseCase;
+  final GetRunnersStatusUseCase getRunnersStatusUseCase;
 
   final _uuid = const Uuid();
   StreamSubscription<String>? _streamSubscription;
@@ -48,6 +50,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     required this.getSessionMessagesUseCase,
     required this.deleteSessionUseCase,
     required this.updateSessionTitleUseCase,
+    required this.getRunnersStatusUseCase,
   }) : super(const ChatState()) {
     on<ChatStarted>(_onChatStarted);
     on<ChatCreateSession>(_onCreateSession);
@@ -71,6 +74,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       final isConnected = await connectUseCase();
+      bool? hasActiveRunners;
+      try {
+        hasActiveRunners = await getRunnersStatusUseCase();
+      } catch (_) {
+        hasActiveRunners = null;
+      }
 
       if (isConnected) {
         try {
@@ -133,6 +142,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               messages: messages,
               models: models,
               selectedModel: selectedModel ?? state.selectedModel,
+              hasActiveRunners: hasActiveRunners,
               error: null,
             ),
           );
@@ -141,6 +151,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             state.copyWith(
               isConnected: isConnected,
               isLoading: false,
+              hasActiveRunners: hasActiveRunners,
               error: 'Ошибка загрузки сессий',
             ),
           );
@@ -150,6 +161,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           state.copyWith(
             isConnected: isConnected,
             isLoading: false,
+            hasActiveRunners: hasActiveRunners,
             error: isConnected ? null : 'Не удалось подключиться к серверу',
           ),
         );
@@ -272,9 +284,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               modelForSession = state.models.first;
             }
           } catch (_) {
-            if (modelForSession == null) {
-              modelForSession = state.models.first;
-            }
+            modelForSession ??= state.models.first;
           }
         }
       }

@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package runner;
+
+option go_package = "github.com/magomedcoder/legion/api/pb/runnerpb;runnerpb";
+
+import "chat.proto";
+
+service RunnerService {
+  rpc Ping(Empty) returns (PingResponse);
+
+  rpc GetModels(Empty) returns (GetModelsResponse);
+
+  rpc Generate(GenerateRequest) returns (stream GenerateResponse);
+
+  rpc Register(RegisterRunnerRequest) returns (Empty);
+
+  rpc Unregister(UnregisterRunnerRequest) returns (Empty);
+}
+
+service RunnerAdminService {
+  rpc GetRunners(Empty) returns (GetRunnersResponse);
+
+  rpc SetRunnerEnabled(SetRunnerEnabledRequest) returns (Empty);
+
+  rpc GetRunnersStatus(Empty) returns (GetRunnersStatusResponse);
+}
+
+message Empty {}
+
+message PingResponse {
+  bool ok = 1;
+}
+
+message GetModelsResponse {
+  repeated string models = 1;
+}
+
+message GenerateRequest {
+  string session_id = 1;
+  repeated chat.ChatMessage messages = 2;
+  string model = 3;
+}
+
+message GenerateResponse {
+  string content = 1;
+  bool done = 2;
+}
+
+message RegisterRunnerRequest {
+  string address = 1;
+}
+
+message UnregisterRunnerRequest {
+  string address = 1;
+}
+
+message RunnerInfo {
+  string address = 1;
+  bool enabled = 2;
+}
+
+message GetRunnersResponse {
+  repeated RunnerInfo runners = 1;
+}
+
+message SetRunnerEnabledRequest {
+  string address = 1;
+  bool enabled = 2;
+}
+
+message GetRunnersStatusResponse {
+  bool has_active_runners = 1;
+}

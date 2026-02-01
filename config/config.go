@@ -8,7 +8,11 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
-	Ollama   OllamaConfig
+	Runners  RunnersConfig
+}
+
+type RunnersConfig struct {
+	Addresses []string
 }
 
 type ServerConfig struct {
@@ -27,11 +31,6 @@ type JWTConfig struct {
 	RefreshTTL    time.Duration
 }
 
-type OllamaConfig struct {
-	BaseURL string
-	Model   string
-}
-
 func Load() (*Config, error) {
 	config := &Config{
 		Server: ServerConfig{
@@ -47,9 +46,9 @@ func Load() (*Config, error) {
 			AccessTTL:     15 * time.Minute,
 			RefreshTTL:    7 * 24 * time.Hour,
 		},
-		Ollama: OllamaConfig{
-			BaseURL: "http://127.0.0.1:11434",
-			Model:   "llama3.2:1b",
+		Runners: RunnersConfig{
+			// ["localhost:50052", "192.168.1.10:50052"]
+			Addresses: []string{"127.0.0.1:50052"},
 		},
 	}
 

@@ -13,11 +13,12 @@ import (
 
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
+	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/api/pb/userpb"
 	"github.com/magomedcoder/legion/config"
 	"github.com/magomedcoder/legion/internal/handler"
-	"github.com/magomedcoder/legion/internal/repository"
 	"github.com/magomedcoder/legion/internal/repository/postgres"
+	"github.com/magomedcoder/legion/internal/runner"
 	"github.com/magomedcoder/legion/internal/service"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc"
@@ -57,10 +58,9 @@ func main() {
 		log.Fatalf("Ошибка создания первого пользователя: %v", err)
 	}
 
-	ollamaRepo := repository.NewOllamaRepository(cfg.Ollama.BaseURL, cfg.Ollama.Model)
-
+	runnerPool := runner.NewPool(cfg.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
-	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, ollamaRepo)
+	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(authUseCase)
@@ -72,6 +72,8 @@ func main() {
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
 	chatpb.RegisterChatServiceServer(grpcServer, chatHandler)
 	userpb.RegisterUserServiceServer(grpcServer, userHandler)
+	runnerpb.RegisterRunnerAdminServiceServer(grpcServer, handler.NewRunnerHandler(runnerPool, authUseCase))
+	runnerpb.RegisterRunnerServiceServer(grpcServer, runner.NewRegistry(runnerPool))
 
 	reflection.Register(grpcServer)
 

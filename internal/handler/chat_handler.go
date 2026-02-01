@@ -25,7 +25,7 @@ func NewChatHandler(chatUseCase *usecase.ChatUseCase, authUseCase *usecase.AuthU
 }
 
 func (c *ChatHandler) getUserID(ctx context.Context) (int, error) {
-	user, err := getUserFromContext(ctx, c.authUseCase)
+	user, err := GetUserFromContext(ctx, c.authUseCase)
 	if err != nil {
 		return 0, err
 	}

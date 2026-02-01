@@ -1,3 +1,0 @@
-[submodule "third_party/ollama"]
-	path = third_party/ollama
-	url = https://github.com/ollama/ollama.git
