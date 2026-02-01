@@ -1,4 +1,5 @@
 import 'package:grpc/grpc.dart';
+import 'package:legion/core/auth_guard.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/log/logs.dart';
@@ -15,15 +16,18 @@ abstract class IRunnersRemoteDataSource {
 
 class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
   final GrpcChannelManager _channelManager;
+  final AuthGuard _authGuard;
 
-  RunnersRemoteDataSource(this._channelManager);
+  RunnersRemoteDataSource(this._channelManager, this._authGuard);
 
   @override
   Future<List<Runner>> getRunners() async {
     Logs().d('RunnersRemoteDataSource: получение списка раннеров');
     try {
-      final response = await _channelManager.runnerAdminClient.getRunners(
-        runner_pb.Empty(),
+      final response = await _authGuard.execute(
+        () => _channelManager.runnerAdminClient.getRunners(
+          runner_pb.Empty(),
+        ),
       );
       final runners = response.runners
         .map((r) => Runner(address: r.address, enabled: r.enabled))
@@ -52,10 +56,12 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
   Future<void> setRunnerEnabled(String address, bool enabled) async {
     Logs().d('RunnersRemoteDataSource: setRunnerEnabled $address enabled=$enabled');
     try {
-      await _channelManager.runnerAdminClient.setRunnerEnabled(
-        runner_pb.SetRunnerEnabledRequest(
-          address: address,
-          enabled: enabled
+      await _authGuard.execute(
+        () => _channelManager.runnerAdminClient.setRunnerEnabled(
+          runner_pb.SetRunnerEnabledRequest(
+            address: address,
+            enabled: enabled
+          ),
         ),
       );
       Logs().i('RunnersRemoteDataSource: состояние раннера обновлено');
@@ -81,8 +87,10 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
   Future<bool> getRunnersStatus() async {
     Logs().v('RunnersRemoteDataSource: проверка статуса раннеров');
     try {
-      final response = await _channelManager.runnerAdminClient.getRunnersStatus(
-        runner_pb.Empty(),
+      final response = await _authGuard.execute(
+        () => _channelManager.runnerAdminClient.getRunnersStatus(
+          runner_pb.Empty(),
+        ),
       );
       return response.hasActiveRunners;
     } on GrpcError catch (e) {

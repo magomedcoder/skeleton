@@ -44,3 +44,7 @@ class AuthClearError extends AuthEvent {
 class AuthCheckRequested extends AuthEvent {
   const AuthCheckRequested();
 }
+
+class AuthRefreshTokenInBackground extends AuthEvent {
+  const AuthRefreshTokenInBackground();
+}

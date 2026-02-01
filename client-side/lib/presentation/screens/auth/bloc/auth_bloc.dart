@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/auth_guard.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/jwt_util.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
@@ -15,6 +19,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LogoutUseCase logoutUseCase;
   final UserLocalDataSourceImpl tokenStorage;
   final GrpcChannelManager channelManager;
+  final AuthGuard authGuard;
+
+  Timer? _backgroundRefreshTimer;
 
   AuthBloc({
     required this.loginUseCase,
@@ -22,12 +29,52 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.logoutUseCase,
     required this.tokenStorage,
     required this.channelManager,
+    required this.authGuard,
   }) : super(const AuthState()) {
+    authGuard.setOnSessionExpired(() => add(const AuthLogoutRequested()));
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRefreshTokenRequested>(_onRefreshTokenRequested);
+    on<AuthRefreshTokenInBackground>(_onRefreshTokenInBackground);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthClearError>(_onClearError);
     on<AuthCheckRequested>(_onCheckRequested);
+  }
+
+  @override
+  void onTransition(Transition<AuthEvent, AuthState> transition) {
+    super.onTransition(transition);
+    if (transition.nextState.isAuthenticated) {
+      _startBackgroundRefreshTimer();
+    } else {
+      _cancelBackgroundRefreshTimer();
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _cancelBackgroundRefreshTimer();
+    return super.close();
+  }
+
+  void _startBackgroundRefreshTimer() {
+    _cancelBackgroundRefreshTimer();
+    _backgroundRefreshTimer = Timer.periodic(
+      backgroundRefreshCheckInterval,
+      (_) {
+        final expiry = getAccessTokenExpiry(tokenStorage.accessToken);
+        if (expiry == null) return;
+        final now = DateTime.now();
+        if (expiry.difference(now) <= accessTokenRefreshThreshold) {
+          Logs().d('AuthBloc: время access-токена подходит к концу — фоновый рефреш');
+          add(const AuthRefreshTokenInBackground());
+        }
+      },
+    );
+  }
+
+  void _cancelBackgroundRefreshTimer() {
+    _backgroundRefreshTimer?.cancel();
+    _backgroundRefreshTimer = null;
   }
 
   Future<void> _onCheckRequested(
@@ -196,6 +243,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           state.copyWith(
             isLoading: false,
             error: e.toString().replaceAll('Exception: ', ''),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _onRefreshTokenInBackground(
+    AuthRefreshTokenInBackground event,
+    Emitter<AuthState> emit,
+  ) async {
+    final refreshToken = tokenStorage.refreshToken;
+    if (refreshToken == null || refreshToken.isEmpty) return;
+
+    try {
+      final tokens = await refreshTokenUseCase(refreshToken);
+      tokenStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
+      Logs().d('AuthBloc: фоновый рефреш токена выполнен');
+    } catch (e) {
+      if (e is UnauthorizedFailure) {
+        Logs().w('AuthBloc: недействительный refresh token при фоновом рефреше');
+        tokenStorage.clearTokens();
+        emit(
+          state.copyWith(
+            isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            error: null,
           ),
         );
       }
