@@ -12,12 +12,17 @@ func MessageToProto(msg *domain.Message) *chatpb.ChatMessage {
 		return nil
 	}
 
-	return &chatpb.ChatMessage{
+	p := &chatpb.ChatMessage{
 		Id:        msg.Id,
 		Content:   msg.Content,
 		Role:      domain.ToProtoRole(msg.Role),
 		CreatedAt: msg.CreatedAt.Unix(),
 	}
+	if msg.AttachmentName != "" {
+		p.AttachmentName = &msg.AttachmentName
+	}
+
+	return p
 }
 
 func MessageFromProto(proto *chatpb.ChatMessage, sessionID string) *domain.Message {
@@ -25,7 +30,7 @@ func MessageFromProto(proto *chatpb.ChatMessage, sessionID string) *domain.Messa
 		return nil
 	}
 
-	return &domain.Message{
+	msg := &domain.Message{
 		Id:        proto.Id,
 		SessionId: sessionID,
 		Content:   proto.Content,
@@ -33,6 +38,11 @@ func MessageFromProto(proto *chatpb.ChatMessage, sessionID string) *domain.Messa
 		CreatedAt: time.Unix(proto.CreatedAt, 0),
 		UpdatedAt: time.Unix(proto.CreatedAt, 0),
 	}
+	if proto.AttachmentName != nil {
+		msg.AttachmentName = *proto.AttachmentName
+	}
+
+	return msg
 }
 
 func MessagesFromProto(protos []*chatpb.ChatMessage, sessionID string) []*domain.Message {

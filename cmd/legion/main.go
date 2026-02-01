@@ -60,7 +60,7 @@ func main() {
 
 	runnerPool := runner.NewPool(cfg.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
-	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, runnerPool)
+	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, runnerPool, cfg.Attachments.SaveDir)
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(authUseCase)

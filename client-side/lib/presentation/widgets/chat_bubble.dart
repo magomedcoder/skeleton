@@ -59,16 +59,46 @@ class _ChatBubbleState extends State<ChatBubble> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SelectableText(
-                  message.content,
-                  style: TextStyle(
-                    color: isUser
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurfaceVariant,
+                if (message.attachmentFileName != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.insert_drive_file_rounded,
+                          size: 18,
+                          color: isUser
+                              ? theme.colorScheme.onPrimary.withValues(alpha: 0.9)
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            message.attachmentFileName!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isUser
+                                  ? theme.colorScheme.onPrimary.withValues(alpha: 0.9)
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  enableInteractiveSelection: true,
-                  selectionControls: materialTextSelectionControls,
-                ),
+                if (message.content.isNotEmpty)
+                  SelectableText(
+                    message.content,
+                    style: TextStyle(
+                      color: isUser
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    enableInteractiveSelection: true,
+                    selectionControls: materialTextSelectionControls,
+                  ),
                 if (isStreaming)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),

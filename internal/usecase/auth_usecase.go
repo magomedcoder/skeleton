@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"github.com/magomedcoder/legion/pkg"
 
 	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/service"
@@ -145,7 +146,7 @@ func (a *AuthUseCase) ChangePassword(ctx context.Context, UserId int, oldPasswor
 	if oldPassword == "" {
 		return errors.New("текущий пароль не может быть пустым")
 	}
-	if err := validatePassword(newPassword); err != nil {
+	if err := pkg.ValidatePassword(newPassword); err != nil {
 		return err
 	}
 

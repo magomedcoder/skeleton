@@ -37,13 +37,14 @@ CREATE TABLE IF NOT EXISTS chat_sessions
 
 CREATE TABLE IF NOT EXISTS messages
 (
-    id         UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
-    session_id UUID        NOT NULL REFERENCES chat_sessions (id),
-    content    TEXT        NOT NULL,
-    role       VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP   NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP   NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMP   NULL
+    id              UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    session_id      UUID        NOT NULL REFERENCES chat_sessions (id),
+    content         TEXT        NOT NULL,
+    role            VARCHAR(20) NOT NULL,
+    attachment_name VARCHAR(255) NULL,
+    created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+    deleted_at      TIMESTAMP   NULL
 );
 
 CREATE INDEX idx_users_username ON users (username);

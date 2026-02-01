@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/session.dart';
@@ -112,19 +113,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             );
             messages = sessionMessages;
 
-            if (selectedModel == null &&
-                currentSessionId != null &&
-                models.isNotEmpty &&
-                sessions.isNotEmpty) {
+            if (selectedModel == null
+                && currentSessionId != null
+                && models.isNotEmpty
+                && sessions.isNotEmpty) {
               final firstSession = sessions.first;
-              if (firstSession.model != null &&
-                  firstSession.model!.isNotEmpty &&
-                  models.contains(firstSession.model)) {
+              if (firstSession.model != null
+                  && firstSession.model!.isNotEmpty
+                  && models.contains(firstSession.model)) {
                 selectedModel = firstSession.model;
               } else {
                 try {
-                  final savedModel =
-                      await getSessionModelUseCase(currentSessionId);
+                  final savedModel = await getSessionModelUseCase(currentSessionId);
                   if (savedModel != null && models.contains(savedModel)) {
                     selectedModel = savedModel;
                   }
@@ -269,9 +269,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             break;
           }
         }
-        if (serverSession?.model != null &&
-            serverSession!.model!.isNotEmpty &&
-            state.models.contains(serverSession.model)) {
+        if (serverSession?.model != null
+          && serverSession!.model!.isNotEmpty
+          && state.models.contains(serverSession.model)) {
           modelForSession = serverSession.model;
         } else {
           try {
@@ -339,7 +339,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     final text = event.text.trim();
-    if (text.isEmpty) return;
+    final hasAttachment = event.attachmentFileName != null
+        && event.attachmentContent != null
+        && event.attachmentContent!.isNotEmpty;
+    if (text.isEmpty && !hasAttachment) return;
 
     await _streamSubscription?.cancel();
     if (_streamCompleter != null && !_streamCompleter!.isCompleted) {
@@ -387,6 +390,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       content: text,
       role: MessageRole.user,
       createdAt: DateTime.now(),
+      attachmentFileName: event.attachmentFileName,
+      attachmentContent: event.attachmentContent != null
+        ? Uint8List.fromList(event.attachmentContent!)
+        : null,
     );
 
     final updatedMessages = [...state.messages, userMessage];
@@ -554,9 +561,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       if (models.isNotEmpty && selectedModel == null) {
         selectedModel = models.first;
       }
-      if (models.isNotEmpty &&
-          selectedModel != null &&
-          !models.contains(selectedModel)) {
+      if (models.isNotEmpty
+        && selectedModel != null
+        && !models.contains(selectedModel)) {
         selectedModel = models.first;
       }
       emit(
@@ -614,8 +621,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _streamSubscription = null;
     _streamCompleter = null;
 
-    if (state.currentStreamingText != null &&
-        state.currentStreamingText!.isNotEmpty) {
+    if (state.currentStreamingText != null
+        && state.currentStreamingText!.isNotEmpty) {
       final assistantMessage = Message(
         id: _uuid.v4(),
         content: state.currentStreamingText!,

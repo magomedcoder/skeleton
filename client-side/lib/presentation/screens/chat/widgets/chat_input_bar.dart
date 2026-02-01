@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/attachment_settings.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
@@ -34,11 +37,60 @@ class _ChatInputBarState extends State<ChatInputBar> {
     });
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty) return;
+    final hasFile = _selectedFile != null;
 
-    context.read<ChatBloc>().add(ChatSendMessage(text));
+    if (!text.isNotEmpty && !hasFile) return;
+
+    if (hasFile) {
+      final file = _selectedFile!;
+      Uint8List? bytes = file.bytes;
+      if (bytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Не удалось прочитать файл. Попробуйте снова.'),
+            ),
+          );
+        }
+        return;
+      }
+      if (bytes.length > AttachmentSettings.maxFileSizeBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Файл слишком большой (макс. ${AttachmentSettings.maxFileSizeKb} КБ)',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+      try {
+        utf8.decode(bytes);
+      } on FormatException {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Поддерживаются только текстовые файлы (UTF-8)',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    context.read<ChatBloc>().add(
+      ChatSendMessage(
+        text,
+        attachmentFileName: hasFile ? _selectedFile!.name : null,
+        attachmentContent: hasFile ? _selectedFile!.bytes : null,
+      ),
+    );
     _textController.clear();
     _focusNode.unfocus();
     setState(() => _selectedFile = null);
@@ -51,12 +103,36 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Future<void> _pickFile() async {
     if (!widget.isEnabled) return;
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
+      type: FileType.custom,
+      allowedExtensions: AttachmentSettings.textFileExtensions,
       allowMultiple: false,
+      withData: true,
     );
-    if (result != null && result.files.single.path != null) {
-      setState(() => _selectedFile = result.files.single);
+    if (result == null) return;
+    final file = result.files.single;
+    if (file.bytes == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось загрузить содержимое файла'),
+          ),
+        );
+      }
+      return;
     }
+    if (file.bytes!.length > AttachmentSettings.maxFileSizeBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Файл слишком большой (макс. ${AttachmentSettings.maxFileSizeKb} КБ)',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    setState(() => _selectedFile = file);
   }
 
   void _clearFile() {
@@ -74,23 +150,60 @@ class _ChatInputBarState extends State<ChatInputBar> {
     super.dispose();
   }
 
+  Widget _buildFileButton() {
+    final theme = Theme.of(context);
+    return Tooltip(
+      message: 'Прикрепить файл',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _pickFile,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              Icons.attach_file_rounded,
+              size: 22,
+              color: widget.isEnabled
+                  ? theme.colorScheme.onSurfaceVariant
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSendButton(ChatState state) {
+    final theme = Theme.of(context);
     if (state.isStreaming) {
       return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: _stopGeneration,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(24),
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(12),
+              color: theme.colorScheme.errorContainer,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Icon(
               Icons.stop_rounded,
               size: 22,
-              color: Theme.of(context).colorScheme.onErrorContainer,
+              color: theme.colorScheme.onErrorContainer,
             ),
           ),
         ),
@@ -102,21 +215,25 @@ class _ChatInputBarState extends State<ChatInputBar> {
       color: Colors.transparent,
       child: InkWell(
         onTap: canSend ? _sendMessage : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: canSend
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerHighest,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
           child: Icon(
             Icons.send_rounded,
             size: 22,
             color: canSend
-                ? Theme.of(context).colorScheme.onPrimary
-                : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -196,37 +313,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Tooltip(
-                    message: 'Прикрепить файл',
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _pickFile,
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                              width: 1,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.attach_file_rounded,
-                            size: 22,
-                            color: widget.isEnabled
-                                ? theme.colorScheme.onSurfaceVariant
-                                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildFileButton(),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Container(
+                      constraints: const BoxConstraints(minHeight: 40),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(16),
@@ -277,7 +368,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
-                                vertical: 14,
+                                vertical: 10,
                               ),
                             ),
                             textInputAction: TextInputAction.newline,

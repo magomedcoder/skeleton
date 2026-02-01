@@ -2,26 +2,32 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type ChatUseCase struct {
-	sessionRepo domain.ChatSessionRepository
-	messageRepo domain.MessageRepository
-	llmProvider domain.LLMProvider
+	sessionRepo        domain.ChatSessionRepository
+	messageRepo        domain.MessageRepository
+	llmProvider        domain.LLMProvider
+	attachmentsSaveDir string
 }
 
 func NewChatUseCase(
 	sessionRepo domain.ChatSessionRepository,
 	messageRepo domain.MessageRepository,
 	llmProvider domain.LLMProvider,
+	attachmentsSaveDir string,
 ) *ChatUseCase {
 	return &ChatUseCase{
-		sessionRepo: sessionRepo,
-		messageRepo: messageRepo,
-		llmProvider: llmProvider,
+		sessionRepo:        sessionRepo,
+		messageRepo:        messageRepo,
+		llmProvider:        llmProvider,
+		attachmentsSaveDir: attachmentsSaveDir,
 	}
 }
 
@@ -40,14 +46,9 @@ func (c *ChatUseCase) GetModels(ctx context.Context) ([]string, error) {
 	return c.llmProvider.GetModels(ctx)
 }
 
-func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId string, model string, userMessage string) (chan string, string, error) {
+func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId string, model string, userMessage string, attachmentName string, attachmentContent []byte) (chan string, string, error) {
 	_, err := c.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
-		return nil, "", err
-	}
-
-	userMsg := domain.NewMessage(sessionId, userMessage, domain.MessageRoleUser)
-	if err := c.messageRepo.Create(ctx, userMsg); err != nil {
 		return nil, "", err
 	}
 
@@ -56,7 +57,27 @@ func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId str
 		return nil, "", err
 	}
 
-	responseChan, err := c.llmProvider.SendMessage(ctx, sessionId, model, messages)
+	userMsg := domain.NewMessageWithAttachment(sessionId, userMessage, domain.MessageRoleUser, attachmentName)
+	if err := c.messageRepo.Create(ctx, userMsg); err != nil {
+		return nil, "", err
+	}
+
+	if c.attachmentsSaveDir != "" && len(attachmentContent) > 0 && attachmentName != "" {
+		_ = c.saveAttachment(sessionId, userMsg.Id, attachmentName, attachmentContent)
+	}
+
+	messagesForLLM := make([]*domain.Message, 0, len(messages)+1)
+	messagesForLLM = append(messagesForLLM, messages...)
+	if len(attachmentContent) > 0 && attachmentName != "" {
+		fullContent := buildMessageWithFile(attachmentName, attachmentContent, userMessage)
+		userMsgForLLM := *userMsg
+		userMsgForLLM.Content = fullContent
+		messagesForLLM = append(messagesForLLM, &userMsgForLLM)
+	} else {
+		messagesForLLM = append(messagesForLLM, userMsg)
+	}
+
+	responseChan, err := c.llmProvider.SendMessage(ctx, sessionId, model, messagesForLLM)
 	if err != nil {
 		return nil, "", err
 	}
@@ -147,4 +168,28 @@ func (c *ChatUseCase) UpdateSessionModel(ctx context.Context, userId int, sessio
 	}
 
 	return session, nil
+}
+
+func buildMessageWithFile(attachmentName string, attachmentContent []byte, userMessage string) string {
+	fileContent := string(attachmentContent)
+	s := fmt.Sprintf("Файл «%s»:\n\n```\n%s\n```", attachmentName, fileContent)
+	if userMessage != "" {
+		s += "\n\n---\n\n" + userMessage
+	}
+
+	return s
+}
+
+func (c *ChatUseCase) saveAttachment(sessionId, messageId, attachmentName string, content []byte) error {
+	baseName := filepath.Base(attachmentName)
+	if baseName == "" || baseName == "." {
+		baseName = "attachment"
+	}
+	dir := filepath.Join(c.attachmentsSaveDir, sessionId)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	name := messageId + "_" + baseName
+	path := filepath.Join(dir, name)
+	return os.WriteFile(path, content, 0644)
 }

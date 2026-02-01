@@ -45,8 +45,16 @@ func (c *ChatHandler) SendMessage(req *chatpb.SendMessageRequest, stream chatpb.
 
 	lastMessage := req.Messages[len(req.Messages)-1]
 	userMessage := lastMessage.Content
+	attachmentName := ""
+	if lastMessage.AttachmentName != nil {
+		attachmentName = *lastMessage.AttachmentName
+	}
+	var attachmentContent []byte
+	if lastMessage.AttachmentContent != nil {
+		attachmentContent = lastMessage.AttachmentContent
+	}
 
-	responseChan, messageId, err := c.chatUseCase.SendMessage(ctx, userID, req.SessionId, req.GetModel(), userMessage)
+	responseChan, messageId, err := c.chatUseCase.SendMessage(ctx, userID, req.SessionId, req.GetModel(), userMessage, attachmentName, attachmentContent)
 	if err != nil {
 		return ToStatusError(codes.Internal, err)
 	}

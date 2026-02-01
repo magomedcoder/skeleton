@@ -37,6 +37,8 @@ message ChatMessage {
   string content = 2;
   string role = 3;
   int64 created_at = 4;
+  optional string attachment_name = 5;
+  optional bytes attachment_content = 6;
 }
 
 message ChatResponse {

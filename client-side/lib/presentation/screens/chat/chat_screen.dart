@@ -649,14 +649,13 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           Expanded(
                             child: state.messages.isEmpty
-                                ? _buildEmptyChatState()
-                                : _buildMessageList(state),
+                              ? _buildEmptyChatState()
+                              : _buildMessageList(state),
                           ),
                           const Divider(height: 1),
-                          ChatInputBar(
-                            isEnabled: state.isConnected &&
-                                !state.isLoading &&
-                                (state.hasActiveRunners != false),
+                          ChatInputBar(isEnabled: state.isConnected
+                            && !state.isLoading
+                            && (state.hasActiveRunners != false),
                           ),
                         ],
                       );

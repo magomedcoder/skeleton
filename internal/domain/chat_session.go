@@ -17,13 +17,14 @@ type ChatSession struct {
 }
 
 type Message struct {
-	Id        string
-	SessionId string
-	Content   string
-	Role      MessageRole
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	Id             string
+	SessionId      string
+	Content        string
+	Role           MessageRole
+	AttachmentName string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      *time.Time
 }
 
 func NewChatSession(userId int, title string, model string) *ChatSession {
@@ -38,13 +39,18 @@ func NewChatSession(userId int, title string, model string) *ChatSession {
 }
 
 func NewMessage(sessionId, content string, role MessageRole) *Message {
+	return NewMessageWithAttachment(sessionId, content, role, "")
+}
+
+func NewMessageWithAttachment(sessionId, content string, role MessageRole, attachmentName string) *Message {
 	return &Message{
-		Id:        generateUUID(),
-		SessionId: sessionId,
-		Content:   content,
-		Role:      role,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Id:             generateUUID(),
+		SessionId:      sessionId,
+		Content:        content,
+		Role:           role,
+		AttachmentName: attachmentName,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 }
 

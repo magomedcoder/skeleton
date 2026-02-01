@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"github.com/magomedcoder/legion/pkg"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +45,8 @@ func (u *UserUseCase) CreateUser(ctx context.Context, username, password, name, 
 	if username == "" || name == "" {
 		return nil, errors.New("username и name обязательны")
 	}
-	if err := validatePassword(password); err != nil {
+
+	if err := pkg.ValidatePassword(password); err != nil {
 		return nil, err
 	}
 
@@ -111,13 +113,15 @@ func (u *UserUseCase) EditUser(ctx context.Context, id string, username, passwor
 	existing.Role = newRole
 
 	if strings.TrimSpace(password) != "" {
-		if err := validatePassword(password); err != nil {
+		if err := pkg.ValidatePassword(password); err != nil {
 			return nil, err
 		}
+
 		hashed, err := u.jwtService.HashPassword(password)
 		if err != nil {
 			return nil, err
 		}
+
 		existing.Password = hashed
 	} else {
 		existing.Password = ""

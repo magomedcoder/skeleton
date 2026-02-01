@@ -34,6 +34,9 @@ abstract class MessageMapper {
       content: proto.content,
       role: _roleFromProto(proto.role),
       createdAt: _dateTimeFromUnixSeconds(proto.createdAt.toInt()),
+      attachmentFileName: proto.hasAttachmentName()
+        ? proto.attachmentName
+        : null,
     );
   }
 
@@ -43,6 +46,14 @@ abstract class MessageMapper {
     p.content = entity.content;
     p.role = _roleToProto(entity.role);
     p.createdAt = Int64(_dateTimeToUnixSeconds(entity.createdAt));
+    if (entity.attachmentFileName != null && entity.attachmentFileName!.isNotEmpty) {
+      p.attachmentName = entity.attachmentFileName!;
+    }
+
+    if (entity.attachmentContent != null && entity.attachmentContent!.isNotEmpty) {
+      p.attachmentContent = entity.attachmentContent!;
+    }
+
     return p;
   }
 

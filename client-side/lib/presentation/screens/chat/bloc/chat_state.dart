@@ -13,7 +13,6 @@ class ChatState extends Equatable {
   final String? error;
   final List<String> models;
   final String? selectedModel;
-  /// false — нет активных раннеров (ядро в режиме раннеров). null — неизвестно или ядро без раннеров.
   final bool? hasActiveRunners;
 
   const ChatState({

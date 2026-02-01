@@ -56,11 +56,17 @@ class ChatLoadSessionMessages extends ChatEvent {
 
 class ChatSendMessage extends ChatEvent {
   final String text;
+  final String? attachmentFileName;
+  final List<int>? attachmentContent;
 
-  const ChatSendMessage(this.text);
+  const ChatSendMessage(
+    this.text, {
+    this.attachmentFileName,
+    this.attachmentContent,
+  });
 
   @override
-  List<Object?> get props => [text];
+  List<Object?> get props => [text, attachmentFileName];
 }
 
 class ChatClearError extends ChatEvent {
