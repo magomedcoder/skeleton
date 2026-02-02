@@ -8,6 +8,7 @@ import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/auth/login_screen.dart';
+import 'package:legion/presentation/screens/auth/update_required_screen.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/chat/chat_screen.dart';
 import 'package:legion/presentation/theme/theme_cubit.dart';
@@ -52,6 +53,9 @@ class App extends StatelessWidget {
               ],
               child: BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, authState) {
+                  if (authState.needsUpdate) {
+                    return const UpdateRequiredScreen();
+                  }
                   if (authState.isLoading && !authState.isAuthenticated) {
                     return const Scaffold(
                       body: Center(child: CircularProgressIndicator()),

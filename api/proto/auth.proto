@@ -14,6 +14,8 @@ service AuthService {
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  rpc CheckVersion(CheckVersionRequest) returns (CheckVersionResponse);
 }
 
 message LoginRequest {
@@ -49,4 +51,13 @@ message ChangePasswordRequest {
 
 message ChangePasswordResponse {
   bool success = 1;
+}
+
+message CheckVersionRequest {
+  int32 client_build = 1;
+}
+
+message CheckVersionResponse {
+  bool compatible = 1;
+  string message = 2;
 }

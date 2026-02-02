@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/magomedcoder/legion/api/pb/authpb"
+	"github.com/magomedcoder/legion/config"
 	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg/logger"
@@ -14,10 +15,12 @@ import (
 type AuthHandler struct {
 	authpb.UnimplementedAuthServiceServer
 	authUseCase *usecase.AuthUseCase
+	cfg         *config.Config
 }
 
-func NewAuthHandler(authUseCase *usecase.AuthUseCase) *AuthHandler {
+func NewAuthHandler(cfg *config.Config, authUseCase *usecase.AuthUseCase) *AuthHandler {
 	return &AuthHandler{
+		cfg:         cfg,
 		authUseCase: authUseCase,
 	}
 }
@@ -83,4 +86,19 @@ func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePass
 	logger.I("AuthHandler: пароль изменён")
 
 	return &authpb.ChangePasswordResponse{Success: true}, nil
+}
+
+func (a *AuthHandler) CheckVersion(ctx context.Context, req *authpb.CheckVersionRequest) (*authpb.CheckVersionResponse, error) {
+	clientBuild := req.GetClientBuild()
+	compatible := clientBuild >= a.cfg.MinClientBuild
+
+	msg := ""
+	if !compatible {
+		msg = "Версия приложения несовместима с сервером"
+	}
+
+	return &authpb.CheckVersionResponse{
+		Compatible: compatible,
+		Message:    msg,
+	}, nil
 }

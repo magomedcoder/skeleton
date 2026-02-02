@@ -48,3 +48,7 @@ class AuthCheckRequested extends AuthEvent {
 class AuthRefreshTokenInBackground extends AuthEvent {
   const AuthRefreshTokenInBackground();
 }
+
+class AuthClearNeedsUpdate extends AuthEvent {
+  const AuthClearNeedsUpdate();
+}

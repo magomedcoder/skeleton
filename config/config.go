@@ -5,12 +5,13 @@ import (
 )
 
 type Config struct {
-	Server      ServerConfig
-	Database    DatabaseConfig
-	JWT         JWTConfig
-	Runners     RunnersConfig
-	Attachments AttachmentsConfig
-	Log         LogConfig
+	Server         ServerConfig
+	Database       DatabaseConfig
+	JWT            JWTConfig
+	Runners        RunnersConfig
+	Attachments    AttachmentsConfig
+	Log            LogConfig
+	MinClientBuild int32
 }
 
 type LogConfig struct {
@@ -68,6 +69,7 @@ func Load() (*Config, error) {
 			// "debug", "verbose", "info", "warn", "error", "off" (по умолчанию "info")
 			Level: "debug",
 		},
+		MinClientBuild: 1,
 	}
 
 	return config, nil

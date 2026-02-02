@@ -13,6 +13,7 @@ class GrpcChannelManager {
 
   ClientChannel? _channel;
   grpc_auth.AuthServiceClient? _authClient;
+  grpc_auth.AuthServiceClient? _authClientNoInterceptor;
   grpc_chat.ChatServiceClient? _chatClient;
   grpc_user.UserServiceClient? _userClient;
   grpc_runner.RunnerAdminServiceClient? _runnerAdminClient;
@@ -66,6 +67,11 @@ class GrpcChannelManager {
     return _runnerAdminClient!;
   }
 
+  grpc_auth.AuthServiceClient get authClientForVersionCheck {
+    _authClientNoInterceptor ??= grpc_auth.AuthServiceClient(channel);
+    return _authClientNoInterceptor!;
+  }
+
   Future<void> setServer(String host, int port) async {
     Logs().i('GrpcChannelManager: смена сервера на $host:$port');
     await _config.setServer(host, port);
@@ -76,6 +82,7 @@ class GrpcChannelManager {
     final ch = _channel;
     _channel = null;
     _authClient = null;
+    _authClientNoInterceptor = null;
     _chatClient = null;
     _userClient = null;
     _runnerAdminClient = null;

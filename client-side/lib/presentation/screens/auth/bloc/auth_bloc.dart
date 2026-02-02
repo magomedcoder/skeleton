@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/app_version.dart' as app_version;
 import 'package:legion/core/auth_guard.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
@@ -10,6 +11,7 @@ import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
 import 'package:legion/domain/usecases/auth/logout_usecase.dart';
 import 'package:legion/domain/usecases/auth/refresh_token_usecase.dart';
+import 'package:legion/generated/grpc_pb/auth.pb.dart' as auth_pb;
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 
@@ -38,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthClearError>(_onClearError);
     on<AuthCheckRequested>(_onCheckRequested);
+    on<AuthClearNeedsUpdate>(_onClearNeedsUpdate);
   }
 
   @override
@@ -93,6 +96,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           isAuthenticated: false,
           user: null,
           error: null,
+        ),
+      );
+      return;
+    }
+
+    final versionOk = await _checkVersion(channelManager);
+    if (!versionOk) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          user: null,
+          error: null,
+          needsUpdate: true,
         ),
       );
       return;
@@ -179,6 +196,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       await channelManager.setServer(event.host, event.port);
+      final versionOk = await _checkVersion(channelManager);
+      if (!versionOk) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            isAuthenticated: false,
+            error: null,
+            needsUpdate: true,
+          ),
+        );
+        return;
+      }
       final result = await loginUseCase(event.username, event.password);
 
       tokenStorage.saveTokens(
@@ -303,5 +332,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void _onClearError(AuthClearError event, Emitter<AuthState> emit) {
     emit(state.copyWith(error: null));
+  }
+
+  void _onClearNeedsUpdate(AuthClearNeedsUpdate event, Emitter<AuthState> emit) {
+    emit(state.copyWith(needsUpdate: false));
+  }
+
+  Future<bool> _checkVersion(GrpcChannelManager channelManager) async {
+    try {
+      final request = auth_pb.CheckVersionRequest()
+        ..clientBuild = app_version.appBuildNumber;
+      final response =
+          await channelManager.authClientForVersionCheck.checkVersion(request);
+      return response.compatible;
+    } catch (e) {
+      Logs().w('AuthBloc: ошибка проверки версии', e);
+      return true;
+    }
   }
 }

@@ -1,6 +1,5 @@
 import 'package:legion/domain/entities/auth_result.dart';
 import 'package:legion/domain/entities/auth_tokens.dart';
-import 'package:legion/domain/entities/user.dart';
 import 'package:legion/generated/grpc_pb/auth.pb.dart' as grpc;
 import 'package:legion/data/mappers/user_mapper.dart';
 

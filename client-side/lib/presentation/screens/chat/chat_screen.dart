@@ -143,49 +143,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _startEditingTitle(ChatSession session) {
-    _sessionTitleController.text = session.title;
-    _isEditingTitle = true;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Редактировать название'),
-        content: TextField(
-          controller: _sessionTitleController,
-          decoration: const InputDecoration(
-            hintText: 'Введите новое название',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _isEditingTitle = false;
-              _sessionTitleController.clear();
-              Navigator.of(context).pop();
-            },
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final title = _sessionTitleController.text.trim();
-              if (title.isNotEmpty && title != session.title) {
-                context.read<ChatBloc>().add(
-                  ChatUpdateSessionTitle(session.id, title),
-                );
-              }
-              _isEditingTitle = false;
-              _sessionTitleController.clear();
-              Navigator.of(context).pop();
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildModelSelector(ChatState state) {
     final theme = Theme.of(context);
     final models = state.models;

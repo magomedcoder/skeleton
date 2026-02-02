@@ -47,6 +47,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
 
   Widget _buildSessionItem(ChatSession session, ChatState state) {
     final isSelected = state.currentSessionId == session.id;
+    final isDesktop = Breakpoints.isDesktop(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -64,48 +65,101 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => widget.onSelectSession(session),
-          onLongPress: () => _showSessionContextMenu(session, context),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        session.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.onPrimaryContainer
-                              : Theme.of(context).colorScheme.onSurface,
+        child: GestureDetector(
+          onSecondaryTapDown: isDesktop
+              ? (TapDownDetails details) =>
+                  _showSessionContextMenuDesktop(session, details)
+              : null,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => widget.onSelectSession(session),
+            onLongPress: () => _showSessionContextMenu(session, context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          session.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.onPrimaryContainer
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (isSelected)
-                  Icon(
-                    Icons.chevron_right,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-              ],
+                  if (isSelected)
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _showSessionContextMenuDesktop(
+    ChatSession session,
+    TapDownDetails details,
+  ) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final position = RelativeRect.fromLTRB(
+      details.globalPosition.dx,
+      details.globalPosition.dy,
+      screenSize.width - details.globalPosition.dx,
+      screenSize.height - details.globalPosition.dy,
+    );
+    showMenu<String>(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem<String>(
+          value: 'edit',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.edit, size: 20, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 12),
+              const Text('Редактировать название'),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.delete_outline, size: 20, color: Theme.of(context).colorScheme.error),
+              const SizedBox(width: 12),
+              Text(
+                'Удалить',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit') _showEditDialog(session);
+      if (value == 'delete') widget.onDeleteSession(session.id, session.title);
+    });
   }
 
   void _showSessionContextMenu(ChatSession session, BuildContext context) {
@@ -128,29 +182,18 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ListTile(
-            //   leading: Icon(
-            //     Icons.edit,
-            //     color: Theme.of(context).colorScheme.primary,
-            //   ),
-            //   title: const Text('Редактировать название'),
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     _showEditDialog(session);
-            //   },
-            // ),
-//             ListTile(
-//               leading: Icon(
-//                 Icons.content_copy,
-//                 color: Theme.of(context).colorScheme.secondary,
-//               ),
-//               title: const Text('Создать копию'),
-//               onTap: () {
-//                 Navigator.pop(context);
-//                 widget.onCreateNewSession();
-//               },
-//             ),
-//             const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                Icons.edit,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text('Редактировать название'),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditDialog(session);
+              },
+            ),
+            const Divider(height: 1),
             ListTile(
               leading: Icon(
                 Icons.delete_outline,
@@ -173,10 +216,11 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
   }
 
   void _showEditDialog(ChatSession session) {
+    final chatBloc = context.read<ChatBloc>();
     final controller = TextEditingController(text: session.title);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Редактировать название'),
         content: TextField(
           controller: controller,
@@ -188,18 +232,18 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Отмена'),
           ),
           ElevatedButton(
             onPressed: () {
               final title = controller.text.trim();
               if (title.isNotEmpty && title != session.title) {
-                context.read<ChatBloc>().add(
+                chatBloc.add(
                   ChatUpdateSessionTitle(session.id, title),
                 );
               }
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
             },
             child: const Text('Сохранить'),
           ),
