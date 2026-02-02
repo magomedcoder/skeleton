@@ -62,6 +62,7 @@ func main() {
 	tokenRepo := postgres.NewTokenRepository(db)
 	sessionRepo := postgres.NewChatSessionRepository(db)
 	messageRepo := postgres.NewMessageRepository(db)
+	fileRepo := postgres.NewFileRepository(db)
 
 	jwtService := service.NewJWTService(cfg)
 
@@ -73,7 +74,7 @@ func main() {
 
 	runnerPool := runner.NewPool(cfg.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
-	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, runnerPool, cfg.Attachments.SaveDir)
+	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, fileRepo, runnerPool, cfg.Attachments.SaveDir)
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)

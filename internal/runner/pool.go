@@ -127,13 +127,30 @@ func (p *Pool) pickRunner() (string, bool) {
 
 func (p *Pool) GetRunners() []RunnerInfo {
 	p.mu.RLock()
-	defer p.mu.RUnlock()
-
-	out := make([]RunnerInfo, len(p.addresses))
-	for i, a := range p.addresses {
-		out[i] = RunnerInfo{Address: a, Enabled: !p.disabled[a]}
+	addrs := make([]string, len(p.addresses))
+	copy(addrs, p.addresses)
+	disabledCopy := make(map[string]bool)
+	for k, v := range p.disabled {
+		disabledCopy[k] = v
 	}
+	p.mu.RUnlock()
 
+	p.connMu.Lock()
+	connStatus := make(map[string]bool)
+	for a := range p.conns {
+		connStatus[a] = true
+	}
+	p.connMu.Unlock()
+
+	out := make([]RunnerInfo, len(addrs))
+	for i, a := range addrs {
+		enabled := !disabledCopy[a]
+		out[i] = RunnerInfo{
+			Address:   a,
+			Enabled:   enabled,
+			Connected: connStatus[a] && enabled,
+		}
+	}
 	return out
 }
 
@@ -147,6 +164,7 @@ func (p *Pool) SetRunnerEnabled(address string, enabled bool) {
 				delete(p.disabled, address)
 			} else {
 				p.disabled[address] = true
+				p.closeConn(address)
 			}
 			return
 		}
@@ -158,8 +176,9 @@ func (p *Pool) HasActiveRunners() bool {
 }
 
 type RunnerInfo struct {
-	Address string
-	Enabled bool
+	Address   string
+	Enabled   bool
+	Connected bool
 }
 
 func (p *Pool) CheckConnection(ctx context.Context) (bool, error) {

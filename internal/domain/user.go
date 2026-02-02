@@ -12,12 +12,13 @@ const (
 )
 
 type User struct {
-	Id        int
-	Username  string
-	Password  string
-	Name      string
-	Surname   string
-	Role      UserRole
-	CreatedAt time.Time
-	DeletedAt *time.Time
+	Id            int
+	Username      string
+	Password      string
+	Name          string
+	Surname       string
+	Role          UserRole
+	CreatedAt     time.Time
+	LastVisitedAt *time.Time
+	DeletedAt     *time.Time
 }

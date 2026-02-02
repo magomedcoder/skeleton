@@ -31,8 +31,9 @@ func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*run
 	runners := make([]*runnerpb.RunnerInfo, len(items))
 	for i := range items {
 		runners[i] = &runnerpb.RunnerInfo{
-			Address: items[i].Address,
-			Enabled: items[i].Enabled,
+			Address:   items[i].Address,
+			Enabled:   items[i].Enabled,
+			Connected: items[i].Connected,
 		}
 	}
 	logger.V("RunnerHandler: раннеров: %d", len(runners))

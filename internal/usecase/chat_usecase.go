@@ -14,6 +14,7 @@ import (
 type ChatUseCase struct {
 	sessionRepo        domain.ChatSessionRepository
 	messageRepo        domain.MessageRepository
+	fileRepo           domain.FileRepository
 	llmProvider        domain.LLMProvider
 	attachmentsSaveDir string
 }
@@ -21,12 +22,14 @@ type ChatUseCase struct {
 func NewChatUseCase(
 	sessionRepo domain.ChatSessionRepository,
 	messageRepo domain.MessageRepository,
+	fileRepo domain.FileRepository,
 	llmProvider domain.LLMProvider,
 	attachmentsSaveDir string,
 ) *ChatUseCase {
 	return &ChatUseCase{
 		sessionRepo:        sessionRepo,
 		messageRepo:        messageRepo,
+		fileRepo:           fileRepo,
 		llmProvider:        llmProvider,
 		attachmentsSaveDir: attachmentsSaveDir,
 	}
@@ -61,13 +64,21 @@ func (c *ChatUseCase) SendMessage(ctx context.Context, userId int, sessionId str
 		return nil, "", err
 	}
 
-	userMsg := domain.NewMessageWithAttachment(sessionId, userMessage, domain.MessageRoleUser, attachmentName)
-	if err := c.messageRepo.Create(ctx, userMsg); err != nil {
-		return nil, "", err
+	var attachmentFileID string
+	if len(attachmentContent) > 0 && attachmentName != "" && c.attachmentsSaveDir != "" {
+		file, _, err := c.saveAttachmentAndCreateFile(ctx, sessionId, attachmentName, attachmentContent)
+		if err == nil {
+			attachmentFileID = file.Id
+			if err := c.fileRepo.Create(ctx, file); err != nil {
+				logger.W("ChatUseCase: не удалось сохранить запись файла: %v", err)
+				attachmentFileID = ""
+			}
+		}
 	}
 
-	if c.attachmentsSaveDir != "" && len(attachmentContent) > 0 && attachmentName != "" {
-		_ = c.saveAttachment(sessionId, userMsg.Id, attachmentName, attachmentContent)
+	userMsg := domain.NewMessageWithAttachment(sessionId, userMessage, domain.MessageRoleUser, attachmentFileID)
+	if err := c.messageRepo.Create(ctx, userMsg); err != nil {
+		return nil, "", err
 	}
 
 	messagesForLLM := make([]*domain.Message, 0, len(messages)+1)
@@ -186,16 +197,21 @@ func buildMessageWithFile(attachmentName string, attachmentContent []byte, userM
 	return s
 }
 
-func (c *ChatUseCase) saveAttachment(sessionId, messageId, attachmentName string, content []byte) error {
+func (c *ChatUseCase) saveAttachmentAndCreateFile(ctx context.Context, sessionId, attachmentName string, content []byte) (*domain.File, string, error) {
 	baseName := filepath.Base(attachmentName)
 	if baseName == "" || baseName == "." {
 		baseName = "attachment"
 	}
 	dir := filepath.Join(c.attachmentsSaveDir, sessionId)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+		return nil, "", err
 	}
-	name := messageId + "_" + baseName
-	path := filepath.Join(dir, name)
-	return os.WriteFile(path, content, 0644)
+	file := domain.NewFile(baseName, "", int64(len(content)), "")
+	storageName := file.Id + "_" + baseName
+	storagePath := filepath.Join(dir, storageName)
+	file.StoragePath = storagePath
+	if err := os.WriteFile(storagePath, content, 0644); err != nil {
+		return nil, "", err
+	}
+	return file, storagePath, nil
 }

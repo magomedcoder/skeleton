@@ -161,6 +161,18 @@ class _RunnersAdminScreenState extends State<RunnersAdminScreen> {
   }
 }
 
+String _runnerStatusText(Runner runner) {
+  if (!runner.enabled) return 'Отключён';
+  if (runner.connected) return 'Подключён';
+  return 'Ожидание подключения';
+}
+
+Color _runnerStatusColor(BuildContext context, Runner runner) {
+  if (runner.connected) return Theme.of(context).colorScheme.primary;
+  if (runner.enabled) return Theme.of(context).colorScheme.tertiary;
+  return Theme.of(context).colorScheme.outline;
+}
+
 class _RunnerTile extends StatelessWidget {
   final Runner runner;
   final VoidCallback onToggle;
@@ -172,11 +184,12 @@ class _RunnerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isConnected = runner.enabled && runner.connected;
     return Card(
       child: ListTile(
         leading: Icon(
           runner.enabled ? Icons.link : Icons.link_off,
-          color: runner.enabled
+          color: isConnected
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.outline,
         ),
@@ -190,11 +203,9 @@ class _RunnerTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          runner.enabled ? 'Подключён' : 'Отключён',
+          _runnerStatusText(runner),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: runner.enabled
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline,
+            color: _runnerStatusColor(context, runner),
           ),
         ),
         trailing: Switch(

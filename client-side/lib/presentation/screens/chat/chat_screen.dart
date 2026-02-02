@@ -31,7 +31,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _sessionTitleController = TextEditingController();
-  bool _isEditingTitle = false;
   bool _isSidebarExpanded = true;
   double get _sidebarWidth => Breakpoints.sidebarDefaultWidth;
 
@@ -393,7 +392,7 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         }
 
-        if (state.error != null && !_isEditingTitle) {
+        if (state.error != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(

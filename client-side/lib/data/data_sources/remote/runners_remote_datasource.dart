@@ -30,7 +30,11 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
         ),
       );
       final runners = response.runners
-        .map((r) => Runner(address: r.address, enabled: r.enabled))
+        .map((r) => Runner(
+          address: r.address,
+          enabled: r.enabled,
+          connected: r.hasConnected() ? r.connected : false,
+        ))
         .toList();
       Logs().i('RunnersRemoteDataSource: получено раннеров: ${runners.length}');
       return runners;

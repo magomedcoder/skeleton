@@ -130,6 +130,8 @@ func (a *AuthUseCase) ValidateToken(ctx context.Context, token string) (*domain.
 		return nil, errors.New("пользователь не найден")
 	}
 
+	_ = a.userRepo.UpdateLastVisitedAt(ctx, user.Id)
+
 	user.Password = ""
 
 	return user, nil

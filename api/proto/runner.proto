@@ -58,6 +58,7 @@ message UnregisterRunnerRequest {
 message RunnerInfo {
   string address = 1;
   bool enabled = 2;
+  bool connected = 3;
 }
 
 message GetRunnersResponse {

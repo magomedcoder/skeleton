@@ -14,6 +14,8 @@ type UserRepository interface {
 	List(ctx context.Context, page, pageSize int32) ([]*User, int32, error)
 
 	Update(ctx context.Context, user *User) error
+
+	UpdateLastVisitedAt(ctx context.Context, userID int) error
 }
 
 type TokenRepository interface {
@@ -42,6 +44,12 @@ type MessageRepository interface {
 	Create(ctx context.Context, message *Message) error
 
 	GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*Message, int32, error)
+}
+
+type FileRepository interface {
+	Create(ctx context.Context, file *File) error
+
+	GetById(ctx context.Context, id string) (*File, error)
 }
 
 type LLMProvider interface {

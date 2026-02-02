@@ -3,13 +3,13 @@ package service
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/magomedcoder/legion/config"
 	"github.com/magomedcoder/legion/internal/domain"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type JWTService struct {
@@ -44,7 +44,7 @@ func (j *JWTService) GenerateAccessToken(user *domain.User) (string, time.Time, 
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			ID:        strconv.Itoa(user.Id),
+			ID:        uuid.New().String(),
 		},
 	}
 
@@ -67,7 +67,7 @@ func (j *JWTService) GenerateRefreshToken(user *domain.User) (string, time.Time,
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			ID:        strconv.Itoa(user.Id),
+			ID:        uuid.New().String(),
 		},
 	}
 

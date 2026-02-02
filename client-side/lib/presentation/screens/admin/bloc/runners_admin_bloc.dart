@@ -49,7 +49,7 @@ class RunnersAdminBloc extends Bloc<RunnersAdminEvent, RunnersAdminState> {
       await setRunnerEnabledUseCase(event.address, event.enabled);
       Logs().i('RunnersAdminBloc: состояние раннера обновлено');
       final runners = state.runners.map((r) => r.address == event.address
-        ? Runner(address: r.address, enabled: event.enabled)
+        ? Runner(address: r.address, enabled: event.enabled, connected: r.connected)
         : r
       ).toList();
       emit(state.copyWith(runners: runners));
