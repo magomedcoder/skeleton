@@ -34,6 +34,7 @@ class ChatState extends Equatable {
     bool? isLoading,
     bool? isStreaming,
     String? currentSessionId,
+    bool clearCurrentSessionId = false,
     List<ChatSession>? sessions,
     List<Message>? messages,
     String? currentStreamingText,
@@ -46,7 +47,9 @@ class ChatState extends Equatable {
       isConnected: isConnected ?? this.isConnected,
       isLoading: isLoading ?? this.isLoading,
       isStreaming: isStreaming ?? this.isStreaming,
-      currentSessionId: currentSessionId ?? this.currentSessionId,
+      currentSessionId: clearCurrentSessionId
+        ? null
+        : (currentSessionId ?? this.currentSessionId),
       sessions: sessions ?? this.sessions,
       messages: messages ?? this.messages,
       currentStreamingText: currentStreamingText,

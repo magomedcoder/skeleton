@@ -10,8 +10,9 @@ import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/auth/login_screen.dart';
 import 'package:legion/presentation/screens/auth/update_required_screen.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:legion/presentation/screens/chat/chat_screen.dart';
+import 'package:legion/presentation/screens/main_layout.dart';
 import 'package:legion/presentation/theme/theme_cubit.dart';
+import 'package:legion/presentation/theme/theme_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,14 +29,15 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => di.sl<ThemeCubit>(),
-      child: BlocBuilder<ThemeCubit, ThemeMode>(
-        builder: (context, themeMode) {
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, themeState) {
+          final primary = AppTheme.primaryFromId(themeState.accentColorId);
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Legion',
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: themeMode,
+            theme: AppTheme.themeLight(primary),
+            darkTheme: AppTheme.themeDark(primary),
+            themeMode: themeState.themeMode,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -62,7 +64,7 @@ class App extends StatelessWidget {
                     );
                   }
                   if (authState.isAuthenticated) {
-                    return const ChatScreen();
+                    return const MainLayout();
                   }
                   return const LoginScreen();
                 },

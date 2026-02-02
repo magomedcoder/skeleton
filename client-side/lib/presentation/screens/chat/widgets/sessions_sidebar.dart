@@ -6,10 +6,12 @@ import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 
+typedef ChatSessionCallback = void Function(ChatSession);
+
 class SessionsSidebar extends StatefulWidget {
   final VoidCallback onCreateNewSession;
-  final Function(ChatSession) onSelectSession;
-  final Function(String, String) onDeleteSession;
+  final ChatSessionCallback onSelectSession;
+  final void Function(String id, String title) onDeleteSession;
   final bool isInDrawer;
 
   const SessionsSidebar({
@@ -48,68 +50,62 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
   Widget _buildSessionItem(ChatSession session, ChatState state) {
     final isSelected = state.currentSessionId == session.id;
     final isDesktop = Breakpoints.isDesktop(context);
+    final theme = Theme.of(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer
+            ? theme.colorScheme.primary.withValues(alpha: 0.15)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: isSelected
-            ? Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                width: 1,
-              )
-            : null,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: GestureDetector(
-          onSecondaryTapDown: isDesktop
-              ? (TapDownDetails details) =>
-                  _showSessionContextMenuDesktop(session, details)
-              : null,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => widget.onSelectSession(session),
-            onLongPress: () => _showSessionContextMenu(session, context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onSecondaryTapDown: isDesktop
+                ? (TapDownDetails details) =>
+                    _showSessionContextMenuDesktop(session, details)
+                : null,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => widget.onSelectSession(session),
+              onLongPress: () => _showSessionContextMenu(session, context),
+              child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 20,
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          session.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimaryContainer
-                                : Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      session.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: isSelected
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  if (isSelected)
-                    Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
                 ],
               ),
             ),
           ),
+        ),
         ),
       ),
     );
@@ -369,7 +365,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
         ),
       ),
       child: ElevatedButton.icon(
-        icon: const Icon(Icons.add, size: 18),
+        icon: const Icon(Icons.add, size: 22),
         label: const Text('Новый чат'),
         onPressed: widget.onCreateNewSession,
         style: ElevatedButton.styleFrom(

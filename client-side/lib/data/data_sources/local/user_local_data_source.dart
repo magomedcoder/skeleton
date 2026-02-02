@@ -15,6 +15,9 @@ abstract class UserLocalDataSource {
   ThemeMode getThemeMode();
   Future<void> setThemeMode(ThemeMode mode);
 
+  int getAccentColorId();
+  Future<void> setAccentColorId(int id);
+
   Future<void> init();
 }
 
@@ -27,6 +30,7 @@ class UserLocalDataSourceImpl implements UserLocalDataSource {
   static const _keyUserSurname = 'legion_user_surname';
   static const _keyUserRole = 'legion_user_role';
   static const _keyThemeMode = 'legion_theme_mode';
+  static const _keyAccentColorId = 'legion_accent_color_id';
 
   SharedPreferences? _prefs;
   String? _accessToken;
@@ -118,5 +122,17 @@ class UserLocalDataSourceImpl implements UserLocalDataSource {
   @override
   Future<void> setThemeMode(ThemeMode mode) async {
     await _prefs?.setInt(_keyThemeMode, mode.index);
+  }
+
+  @override
+  int getAccentColorId() {
+    final id = _prefs?.getInt(_keyAccentColorId);
+    if (id == null || id < 0) return 0;
+    return id;
+  }
+
+  @override
+  Future<void> setAccentColorId(int id) async {
+    await _prefs?.setInt(_keyAccentColorId, id);
   }
 }

@@ -145,6 +145,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               isLoading: false,
               sessions: sessions,
               currentSessionId: currentSessionId,
+              clearCurrentSessionId: sessions.isEmpty,
               messages: messages,
               models: models,
               selectedModel: selectedModel ?? state.selectedModel,
@@ -192,43 +193,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatCreateSession event,
     Emitter<ChatState> emit,
   ) async {
-    Logs().d('ChatBloc: создание сессии "${event.title}"');
-    emit(state.copyWith(isLoading: true, error: null));
-
-    try {
-      final session = await createSessionUseCase(
-        title: event.title,
-        model: state.selectedModel ??
-            (state.models.isNotEmpty ? state.models.first : null),
-      );
-
-      final modelToSave = state.selectedModel ??
-          (state.models.isNotEmpty ? state.models.first : null);
-      if (modelToSave != null) {
-        try {
-          await setSessionModelUseCase(session.id, modelToSave);
-        } catch (_) {}
-      }
-
-      final updatedSessions = [session, ...state.sessions];
-
-      Logs().i('ChatBloc: сессия создана');
-      emit(
-        state.copyWith(
-          sessions: updatedSessions,
-          currentSessionId: session.id,
-          isLoading: false,
-          messages: const [],
-          error: null,
-        ),
-      );
-    } catch (e) {
-      Logs().e('ChatBloc: ошибка создания сессии', e);
-      requestLogoutIfUnauthorized(e, authBloc);
-      emit(
-        state.copyWith(isLoading: false, error: 'Ошибка создания сессии'),
-      );
-    }
+    Logs().d('ChatBloc: новый чат (сессия будет создана при отправке сообщения)');
+    emit(
+      state.copyWith(
+        currentSessionId: null,
+        clearCurrentSessionId: true,
+        messages: const [],
+        error: null,
+      ),
+    );
   }
 
   Future<void> _onLoadSessions(
@@ -373,7 +346,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _streamCompleter = null;
 
     String sessionId = state.currentSessionId ?? '';
-    if (sessionId.isEmpty) {
+    final sessionExists = sessionId.isNotEmpty && state.sessions.any((s) => s.id == sessionId);
+    if (sessionId.isEmpty || !sessionExists) {
       try {
         final session = await createSessionUseCase(
           model: state.selectedModel ??

@@ -31,7 +31,6 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _sessionTitleController = TextEditingController();
   bool _isSidebarExpanded = true;
   double get _sidebarWidth => Breakpoints.sidebarDefaultWidth;
 
@@ -71,41 +70,8 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void _createNewSession() async {
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Новая сессия'),
-        content: TextField(
-          controller: _sessionTitleController,
-          decoration: const InputDecoration(
-            hintText: 'Введите название сессии',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final title = _sessionTitleController.text.trim();
-              if (title.isNotEmpty) {
-                Navigator.of(context).pop(title);
-              }
-            },
-            child: const Text('Создать'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      context.read<ChatBloc>().add(ChatCreateSession(title: result));
-      _sessionTitleController.clear();
-    }
+  void _createNewSession() {
+    context.read<ChatBloc>().add(const ChatCreateSession());
   }
 
   void _selectSession(ChatSession session) {
@@ -471,7 +437,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _sessionTitleController.dispose();
     super.dispose();
   }
 
