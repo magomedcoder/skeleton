@@ -16,6 +16,10 @@ service RunnerService {
   rpc Register(RegisterRunnerRequest) returns (Empty);
 
   rpc Unregister(UnregisterRunnerRequest) returns (Empty);
+
+  rpc GetGpuInfo(Empty) returns (GetGpuInfoResponse);
+
+  rpc GetServerInfo(Empty) returns (ServerInfo);
 }
 
 service RunnerAdminService {
@@ -55,10 +59,33 @@ message UnregisterRunnerRequest {
   string address = 1;
 }
 
+message GpuInfo {
+  string name = 1;
+  int32 temperature_c = 2;
+  uint64 memory_total_mb = 3;
+  uint64 memory_used_mb = 4;
+  uint32 utilization_percent = 5;
+}
+
+message GetGpuInfoResponse {
+  repeated GpuInfo gpus = 1;
+}
+
+message ServerInfo {
+  string hostname = 1;
+  string os = 2;
+  string arch = 3;
+  int32 cpu_cores = 4;
+  uint64 memory_total_mb = 5;
+  repeated string models = 6;
+}
+
 message RunnerInfo {
   string address = 1;
   bool enabled = 2;
   bool connected = 3;
+  repeated GpuInfo gpus = 4;
+  ServerInfo server_info = 5;
 }
 
 message GetRunnersResponse {

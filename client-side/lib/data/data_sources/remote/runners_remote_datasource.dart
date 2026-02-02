@@ -3,7 +3,9 @@ import 'package:legion/core/auth_guard.dart';
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/log/logs.dart';
+import 'package:legion/domain/entities/gpu_info.dart';
 import 'package:legion/domain/entities/runner.dart';
+import 'package:legion/domain/entities/server_info.dart';
 import 'package:legion/generated/grpc_pb/runner.pb.dart' as runner_pb;
 
 abstract class IRunnersRemoteDataSource {
@@ -34,6 +36,8 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
           address: r.address,
           enabled: r.enabled,
           connected: r.hasConnected() ? r.connected : false,
+          gpus: r.gpus.map(_gpuFromProto).toList(),
+          serverInfo: r.hasServerInfo() ? _serverInfoFromProto(r.serverInfo) : null,
         ))
         .toList();
       Logs().i('RunnersRemoteDataSource: получено раннеров: ${runners.length}');
@@ -54,6 +58,27 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
       Logs().e('RunnersRemoteDataSource: ошибка получения раннеров', e);
       throw ApiFailure('Ошибка получения списка раннеров');
     }
+  }
+
+  static GpuInfo _gpuFromProto(runner_pb.GpuInfo p) {
+    return GpuInfo(
+      name: p.name,
+      temperatureC: p.temperatureC,
+      memoryTotalMb: p.memoryTotalMb.toInt(),
+      memoryUsedMb: p.memoryUsedMb.toInt(),
+      utilizationPercent: p.utilizationPercent,
+    );
+  }
+
+  static ServerInfo _serverInfoFromProto(runner_pb.ServerInfo p) {
+    return ServerInfo(
+      hostname: p.hostname,
+      os: p.os,
+      arch: p.arch,
+      cpuCores: p.cpuCores,
+      memoryTotalMb: p.memoryTotalMb.toInt(),
+      models: p.models.toList(),
+    );
   }
 
   @override

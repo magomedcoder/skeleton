@@ -11,6 +11,7 @@ import (
 
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/runner"
+	"github.com/magomedcoder/legion/internal/runner/gpu"
 	"github.com/magomedcoder/legion/internal/runner/provider"
 	"github.com/magomedcoder/legion/internal/runner/service"
 	"github.com/magomedcoder/legion/pkg/logger"
@@ -46,7 +47,8 @@ func main() {
 
 	ollamaSvc := service.NewOllamaService(cfg.ollamaBaseURL, cfg.ollamaModel)
 	textProvider := provider.NewText(ollamaSvc)
-	runnerServer := runner.NewServer(textProvider)
+	gpuCollector := gpu.NewCollector()
+	runnerServer := runner.NewServer(textProvider, gpuCollector)
 
 	lis, err := net.Listen("tcp", cfg.listenAddr)
 	if err != nil {

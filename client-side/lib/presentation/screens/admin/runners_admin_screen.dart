@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
-import 'package:legion/domain/entities/runner.dart';
 import 'package:legion/presentation/screens/admin/bloc/runners_admin_bloc.dart';
 import 'package:legion/presentation/screens/admin/bloc/runners_admin_event.dart';
 import 'package:legion/presentation/screens/admin/bloc/runners_admin_state.dart';
+import 'package:legion/presentation/screens/admin/widgets/runner_card.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 
@@ -72,7 +72,21 @@ class _RunnersAdminScreenState extends State<RunnersAdminScreen> {
               }
             },
             child: Scaffold(
-              appBar: AppBar(title: const Text('Раннеры')),
+              appBar: AppBar(
+                title: const Text('Раннеры'),
+                actions: [
+                  if (isAdminUser)
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () {
+                        _runnersAdminBloc.add(
+                          const RunnersAdminLoadRequested(),
+                        );
+                      },
+                      tooltip: 'Обновить',
+                    ),
+                ],
+              ),
               body: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -127,9 +141,9 @@ class _RunnersAdminScreenState extends State<RunnersAdminScreen> {
                                 separatorBuilder: (_, _) => const SizedBox(height: 8),
                                 itemBuilder: (ctx, index) {
                                   final runner = runnersState.runners[index];
-                                  return _RunnerTile(
+                                  return RunnerCard(
                                     runner: runner,
-                                    onToggle: () {
+                                    onToggleEnabled: () {
                                       if (!_isAdmin(authState)) {
                                         _showAccessDenied();
                                         return;
@@ -156,62 +170,6 @@ class _RunnersAdminScreenState extends State<RunnersAdminScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-String _runnerStatusText(Runner runner) {
-  if (!runner.enabled) return 'Отключён';
-  if (runner.connected) return 'Подключён';
-  return 'Ожидание подключения';
-}
-
-Color _runnerStatusColor(BuildContext context, Runner runner) {
-  if (runner.connected) return Theme.of(context).colorScheme.primary;
-  if (runner.enabled) return Theme.of(context).colorScheme.tertiary;
-  return Theme.of(context).colorScheme.outline;
-}
-
-class _RunnerTile extends StatelessWidget {
-  final Runner runner;
-  final VoidCallback onToggle;
-
-  const _RunnerTile({
-    required this.runner,
-    required this.onToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isConnected = runner.enabled && runner.connected;
-    return Card(
-      child: ListTile(
-        leading: Icon(
-          runner.enabled ? Icons.link : Icons.link_off,
-          color: isConnected
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.outline,
-        ),
-        title: Text(
-          runner.address,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: runner.enabled
-              ? null
-              : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        subtitle: Text(
-          _runnerStatusText(runner),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: _runnerStatusColor(context, runner),
-          ),
-        ),
-        trailing: Switch(
-          value: runner.enabled,
-          onChanged: (_) => onToggle(),
-        ),
       ),
     );
   }

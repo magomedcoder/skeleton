@@ -3,9 +3,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"sync"
-	"sync/atomic"
-
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/domain"
@@ -13,6 +10,8 @@ import (
 	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"sync"
+	"sync/atomic"
 )
 
 type Pool struct {
@@ -221,6 +220,34 @@ func (p *Pool) GetModels(ctx context.Context) ([]string, error) {
 	}
 
 	return nil, fmt.Errorf("ни один раннер не вернул список моделей")
+}
+
+func (p *Pool) GetGpuInfo(ctx context.Context, address string) *runnerpb.GetGpuInfoResponse {
+	client, err := p.getConn(ctx, address)
+	if err != nil {
+		return nil
+	}
+
+	resp, err := client.GetGpuInfo(ctx, &runnerpb.Empty{})
+	if err != nil || resp == nil {
+		return nil
+	}
+
+	return resp
+}
+
+func (p *Pool) GetServerInfo(ctx context.Context, address string) *runnerpb.ServerInfo {
+	client, err := p.getConn(ctx, address)
+	if err != nil {
+		return nil
+	}
+
+	resp, err := client.GetServerInfo(ctx, &runnerpb.Empty{})
+	if err != nil || resp == nil {
+		return nil
+	}
+
+	return resp
 }
 
 func (p *Pool) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.Message) (chan string, error) {

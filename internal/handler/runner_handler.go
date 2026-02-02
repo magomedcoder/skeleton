@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/runner"
 	"github.com/magomedcoder/legion/internal/usecase"
@@ -30,11 +29,20 @@ func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*run
 	items := r.pool.GetRunners()
 	runners := make([]*runnerpb.RunnerInfo, len(items))
 	for i := range items {
-		runners[i] = &runnerpb.RunnerInfo{
+		ri := &runnerpb.RunnerInfo{
 			Address:   items[i].Address,
 			Enabled:   items[i].Enabled,
 			Connected: items[i].Connected,
 		}
+		if items[i].Connected {
+			if gpuResp := r.pool.GetGpuInfo(ctx, items[i].Address); gpuResp != nil && len(gpuResp.Gpus) > 0 {
+				ri.Gpus = gpuResp.Gpus
+			}
+			if serverResp := r.pool.GetServerInfo(ctx, items[i].Address); serverResp != nil {
+				ri.ServerInfo = serverResp
+			}
+		}
+		runners[i] = ri
 	}
 	logger.V("RunnerHandler: раннеров: %d", len(runners))
 

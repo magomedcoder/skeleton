@@ -1,7 +1,25 @@
-.PHONY: install
-install:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
-	&& go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+.PHONY: run
+run:
+	go run ./cmd/legion
+
+.PHONY: run-runner
+run-runner:
+	go run -tags nvidia ./cmd/runner
+
+.PHONY: build
+build:
+	@mkdir -p build
+	go build -o build/legion ./cmd/legion
+
+.PHONY: build-runner
+build-runner:
+	@mkdir -p build
+	go build -o build/legion-runner ./cmd/runner
+
+.PHONY: build-runner-nvidia
+build-runner-nvidia:
+	@mkdir -p build
+	go build -tags nvidia -o build/legion-runner ./cmd/runner
 
 .PHONY: gen
 gen:
@@ -19,13 +37,10 @@ gen:
 		--dart_out=grpc:./client-side/lib/generated/grpc_pb \
 		./api/proto/*.proto
 
-.PHONY: run
-run:
-	go run ./cmd/legion
-
-.PHONY: run-runner
-run-runner:
-	go run ./cmd/runner
+.PHONY: install
+install:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
+	&& go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 .PHONY: deps
 deps:

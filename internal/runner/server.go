@@ -2,9 +2,9 @@ package runner
 
 import (
 	"context"
-
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/mappers"
+	"github.com/magomedcoder/legion/internal/runner/gpu"
 	"github.com/magomedcoder/legion/internal/runner/provider"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,11 +13,16 @@ import (
 type Server struct {
 	runnerpb.UnimplementedRunnerServiceServer
 	textProvider provider.TextProvider
+	gpuCollector gpu.Collector
 }
 
-func NewServer(textProvider provider.TextProvider) *Server {
+func NewServer(textProvider provider.TextProvider, gpuCollector gpu.Collector) *Server {
+	if gpuCollector == nil {
+		gpuCollector = gpu.NewCollector()
+	}
 	return &Server{
 		textProvider: textProvider,
+		gpuCollector: gpuCollector,
 	}
 }
 
@@ -87,4 +92,36 @@ func (s *Server) Generate(req *runnerpb.GenerateRequest, stream runnerpb.RunnerS
 	return stream.Send(&runnerpb.GenerateResponse{
 		Done: true,
 	})
+}
+
+func (s *Server) GetGpuInfo(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetGpuInfoResponse, error) {
+	list := s.gpuCollector.Collect()
+	gpus := make([]*runnerpb.GpuInfo, len(list))
+	for i := range list {
+		gpus[i] = &runnerpb.GpuInfo{
+			Name:               list[i].Name,
+			TemperatureC:       list[i].TemperatureC,
+			MemoryTotalMb:      list[i].MemoryTotalMB,
+			MemoryUsedMb:       list[i].MemoryUsedMB,
+			UtilizationPercent: list[i].UtilizationPercent,
+		}
+	}
+	return &runnerpb.GetGpuInfoResponse{Gpus: gpus}, nil
+}
+
+func (s *Server) GetServerInfo(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.ServerInfo, error) {
+	si := CollectSysInfo()
+	out := &runnerpb.ServerInfo{
+		Hostname:      si.Hostname,
+		Os:            si.OS,
+		Arch:          si.Arch,
+		CpuCores:      si.CPUCores,
+		MemoryTotalMb: si.MemoryTotalMB,
+	}
+	if s.textProvider != nil {
+		if models, err := s.textProvider.GetModels(ctx); err == nil && len(models) > 0 {
+			out.Models = models
+		}
+	}
+	return out, nil
 }
