@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/attachment_settings.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/session.dart';
@@ -239,6 +240,99 @@ class _ChatScreenState extends State<ChatScreen> {
       onSelected: (value) {
         context.read<ChatBloc>().add(ChatSelectModel(value));
       },
+    );
+  }
+
+  Widget _buildSupportedFormatsButton() {
+    final theme = Theme.of(context);
+    return Tooltip(
+      message: 'Поддерживаемые форматы вложений',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showSupportedFormatsDialog,
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              Icons.help_outline,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSupportedFormatsDialog() {
+    final theme = Theme.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+                Icons.insert_drive_file_outlined,
+                color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            const Text('Поддерживаемые форматы'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Текст',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AttachmentSettings.textFormatLabels.join(', '),
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Документы',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AttachmentSettings.documentFormatLabels.join(', '),
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Макс. размер: ${AttachmentSettings.maxFileSizeKb} КБ',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -609,6 +703,8 @@ class _ChatScreenState extends State<ChatScreen> {
                             child: Row(
                               children: [
                                 _buildModelSelector(state),
+                                const Spacer(),
+                                _buildSupportedFormatsButton(),
                               ],
                             ),
                           ),

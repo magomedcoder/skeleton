@@ -68,19 +68,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
         }
         return;
       }
-      try {
-        utf8.decode(bytes);
-      } on FormatException {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Поддерживаются только текстовые файлы (UTF-8)',
+      if (!AttachmentSettings.isBinaryDocument(file.name)) {
+        try {
+          utf8.decode(bytes);
+        } on FormatException {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Неподдерживаемый формат'),
               ),
-            ),
-          );
+            );
+          }
+          return;
         }
-        return;
       }
     }
 

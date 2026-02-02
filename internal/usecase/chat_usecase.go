@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/pkg/document"
 	"github.com/magomedcoder/legion/pkg/logger"
 )
 
@@ -188,7 +189,11 @@ func (c *ChatUseCase) UpdateSessionModel(ctx context.Context, userId int, sessio
 }
 
 func buildMessageWithFile(attachmentName string, attachmentContent []byte, userMessage string) string {
-	fileContent := string(attachmentContent)
+	fileContent, err := document.ExtractText(attachmentName, attachmentContent)
+	if err != nil {
+		logger.W("ChatUseCase: извлечение текста из вложения %q: %v, используем сырое содержимое", attachmentName, err)
+		fileContent = string(attachmentContent)
+	}
 	s := fmt.Sprintf("Файл «%s»:\n\n```\n%s\n```", attachmentName, fileContent)
 	if userMessage != "" {
 		s += "\n\n---\n\n" + userMessage
