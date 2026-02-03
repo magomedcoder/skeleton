@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/message.dart';
+import 'package:legion/presentation/widgets/code_block_builder.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class ChatBubble extends StatefulWidget {
   final Message message;
@@ -89,15 +91,54 @@ class _ChatBubbleState extends State<ChatBubble> {
                     ),
                   ),
                 if (message.content.isNotEmpty)
-                  SelectableText(
-                    message.content,
-                    style: TextStyle(
-                      color: isUser
+                  MarkdownBody(
+                    data: message.content,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(
+                        color: isUser
                           ? theme.colorScheme.onPrimary
                           : theme.colorScheme.onSurfaceVariant,
+                        fontSize: 15,
+                      ),
+                      listIndent: 24,
+                      blockquote: TextStyle(
+                        color: isUser
+                          ? theme.colorScheme.onPrimary.withValues(alpha: 0.9)
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+                      ),
+                      blockquoteDecoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: isUser
+                              ? theme.colorScheme.onPrimary.withValues(alpha: 0.5)
+                              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                            width: 4,
+                          ),
+                        ),
+                      ),
+                      code: TextStyle(
+                        color: isUser
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant,
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: (isUser
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    enableInteractiveSelection: true,
-                    selectionControls: materialTextSelectionControls,
+                    builders: {
+                      'pre': CodeBlockBuilder(
+                        textStyle: TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    },
                   ),
                 if (isStreaming)
                   Padding(

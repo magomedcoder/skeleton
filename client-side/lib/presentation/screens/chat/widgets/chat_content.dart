@@ -1,3 +1,5 @@
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/attachment_settings.dart';
@@ -28,6 +30,8 @@ class ChatContent extends StatefulWidget {
 
 class _ChatContentState extends State<ChatContent> {
   final _scrollController = ScrollController();
+  final _inputBarKey = GlobalKey<ChatInputBarState>();
+  bool _isDraggingFile = false;
 
   @override
   void dispose() {
@@ -51,6 +55,74 @@ class _ChatContentState extends State<ChatContent> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  Future<void> _onFilesDropped(DropDoneDetails details) async {
+    setState(() => _isDraggingFile = false);
+    if (details.files.isEmpty) return;
+
+    final item = details.files.first;
+    if (item is! DropItemFile) return;
+ 
+    try {
+      final bytes = await item.readAsBytes();
+      final name = item.name.isNotEmpty 
+        ? item.name
+        : item.path.split(RegExp(r'[/\\]')).last;
+      if (!mounted) return;
+      _inputBarKey.currentState?.setDroppedFile(
+        PlatformFile(
+          name: name,
+          size: bytes.length,
+          bytes: bytes,
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось прочитать файл')),
+        );
+      }
+    }
+  }
+
+  Widget _buildDropOverlay(BuildContext context) {
+    final theme = Theme.of(context);
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 1),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+              width: 2,
+              strokeAlign: BorderSide.strokeAlignInside,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.upload_file_rounded,
+                  size: 48,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Отпустите файл, чтобы прикрепить',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildModelSelector(ChatState state) {
@@ -190,56 +262,80 @@ class _ChatContentState extends State<ChatContent> {
 
   void _showSupportedFormatsDialog() {
     final theme = Theme.of(context);
+    final isMobile = Breakpoints.isMobile(context);
+    final maxWidth = isMobile
+      ? MediaQuery.sizeOf(context).width - 32
+      : 400.0;
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 16 : 40,
+          vertical: 24,
+        ),
+        contentPadding: EdgeInsets.fromLTRB(24, 20, 24, 0),
         title: Row(
           children: [
             Icon(
               Icons.insert_drive_file_outlined,
               color: theme.colorScheme.primary,
+              size: isMobile ? 22 : 24,
             ),
-            const SizedBox(width: 10),
-            const Text('Поддерживаемые форматы'),
+            SizedBox(width: isMobile ? 8 : 10),
+            Flexible(
+              child: Text(
+                'Поддерживаемые форматы',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Текст',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+        content: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Текст',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  AttachmentSettings.textFormatLabels.join(', '),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Документы',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  AttachmentSettings.documentFormatLabels.join(', '),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Макс. размер: ${AttachmentSettings.maxFileSizeKb} КБ',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              AttachmentSettings.textFormatLabels.join(', '),
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Документы',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              AttachmentSettings.documentFormatLabels.join(', '),
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Макс. размер: ${AttachmentSettings.maxFileSizeKb} КБ',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
         actions: [
           TextButton(
@@ -446,61 +542,81 @@ class _ChatContentState extends State<ChatContent> {
           if (state.isLoading && state.messages.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildChannelHeader(state),
-              if (state.hasActiveRunners == false)
-                Material(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.errorContainer.withValues(alpha: 0.6),
-                  child: SafeArea(
-                    top: true,
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 20,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onErrorContainer,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Нет активных раннеров',
-                              style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
+          final canDropFile = state.isConnected
+              && !state.isLoading
+              && (state.hasActiveRunners != false);
+          return DropTarget(
+            onDragEntered: canDropFile
+              ? (_) => setState(() => _isDraggingFile = true)
+              : null,
+            onDragExited: canDropFile
+              ? (_) => setState(() => _isDraggingFile = false)
+              : null,
+            onDragDone: canDropFile
+              ? (details) => _onFilesDropped(details)
+              : null,
+            enable: canDropFile,
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildChannelHeader(state),
+                    if (state.hasActiveRunners == false)
+                      Material(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.errorContainer.withValues(alpha: 0.6),
+                        child: SafeArea(
+                          top: true,
+                          bottom: false,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 20,
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onErrorContainer,
                                 ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Нет активных раннеров',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onErrorContainer,
+                                      ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
+                    Expanded(
+                      child: state.messages.isEmpty
+                          ? _buildEmptyState()
+                          : _buildMessageList(state),
                     ),
-                  ),
+                    const Divider(height: 1),
+                    ChatInputBar(
+                      key: _inputBarKey,
+                      isEnabled: canDropFile,
+                    ),
+                  ],
                 ),
-              Expanded(
-                child: state.messages.isEmpty
-                    ? _buildEmptyState()
-                    : _buildMessageList(state),
-              ),
-              const Divider(height: 1),
-              ChatInputBar(
-                isEnabled: state.isConnected
-                  && !state.isLoading
-                  && (state.hasActiveRunners != false),
-              ),
-            ],
+                if (_isDraggingFile)
+                  _buildDropOverlay(context),
+              ],
+            ),
           );
         },
       ),

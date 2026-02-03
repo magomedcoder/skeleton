@@ -16,10 +16,10 @@ class ChatInputBar extends StatefulWidget {
   const ChatInputBar({super.key, required this.isEnabled});
 
   @override
-  State<ChatInputBar> createState() => _ChatInputBarState();
+  State<ChatInputBar> createState() => ChatInputBarState();
 }
 
-class _ChatInputBarState extends State<ChatInputBar> {
+class ChatInputBarState extends State<ChatInputBar> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
   bool _isComposing = false;
@@ -137,6 +137,38 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   void _clearFile() {
     setState(() => _selectedFile = null);
+  }
+
+  void setDroppedFile(PlatformFile file) {
+    if (!widget.isEnabled) return;
+
+    if (file.bytes == null || file.bytes!.isEmpty) return;
+
+    if (file.bytes!.length > AttachmentSettings.maxFileSizeBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Файл слишком большой (макс. ${AttachmentSettings.maxFileSizeKb} КБ)',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    if (!AttachmentSettings.isBinaryDocument(file.name)) {
+      try {
+        utf8.decode(file.bytes!);
+      } on FormatException {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Неподдерживаемый формат')),
+          );
+        }
+        return;
+      }
+    }
+    setState(() => _selectedFile = file);
   }
 
   String _fileName(PlatformFile file) {
