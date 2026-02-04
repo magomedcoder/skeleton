@@ -120,7 +120,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             messages = sessionMessages;
 
             if (selectedModel == null
-                && currentSessionId != null
                 && models.isNotEmpty
                 && sessions.isNotEmpty) {
               final firstSession = sessions.first;

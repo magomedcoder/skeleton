@@ -11,6 +11,7 @@ import (
 	"github.com/magomedcoder/legion"
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
+	"github.com/magomedcoder/legion/api/pb/editorpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/api/pb/userpb"
 	"github.com/magomedcoder/legion/config"
@@ -75,16 +76,19 @@ func main() {
 	runnerPool := runner.NewPool(cfg.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
 	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, fileRepo, runnerPool, cfg.Attachments.SaveDir)
+	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
 	chatHandler := handler.NewChatHandler(chatUseCase, authUseCase)
+	editorHandler := handler.NewEditorHandler(editorUseCase, authUseCase)
 	userHandler := handler.NewUserHandler(userUseCase, authUseCase)
 
 	grpcServer := grpc.NewServer()
 
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
 	chatpb.RegisterChatServiceServer(grpcServer, chatHandler)
+	editorpb.RegisterEditorServiceServer(grpcServer, editorHandler)
 	userpb.RegisterUserServiceServer(grpcServer, userHandler)
 	runnerpb.RegisterRunnerAdminServiceServer(grpcServer, handler.NewRunnerHandler(runnerPool, authUseCase))
 	runnerpb.RegisterRunnerServiceServer(grpcServer, runner.NewRegistry(runnerPool))

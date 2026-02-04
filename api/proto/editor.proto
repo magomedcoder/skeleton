@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package editor;
+
+option go_package = "github.com/magomedcoder/legion/api/pb/editorpb;editorpb";
+
+service EditorService {
+  rpc Transform(TransformRequest) returns (TransformResponse);
+}
+
+message TransformRequest {
+  string text = 1;
+  string model = 2;
+}
+
+message TransformResponse {
+  string text = 1;
+}

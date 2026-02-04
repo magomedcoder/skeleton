@@ -7,14 +7,17 @@ import 'package:legion/data/data_sources/local/session_model_local_data_source.d
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
+import 'package:legion/data/data_sources/remote/editor_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/runners_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
 import 'package:legion/data/repositories/auth_repository_impl.dart';
 import 'package:legion/data/repositories/chat_repository_impl.dart';
+import 'package:legion/data/repositories/editor_repository_impl.dart';
 import 'package:legion/data/repositories/runners_repository_impl.dart';
 import 'package:legion/data/repositories/user_repository_impl.dart';
 import 'package:legion/domain/repositories/auth_repository.dart';
 import 'package:legion/domain/repositories/chat_repository.dart';
+import 'package:legion/domain/repositories/editor_repository.dart';
 import 'package:legion/domain/repositories/runners_repository.dart';
 import 'package:legion/domain/repositories/user_repository.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
@@ -32,6 +35,7 @@ import 'package:legion/domain/usecases/chat/send_message_usecase.dart';
 import 'package:legion/domain/usecases/chat/set_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/update_session_model_usecase.dart';
 import 'package:legion/domain/usecases/chat/update_session_title_usecase.dart';
+import 'package:legion/domain/usecases/editor/transform_text_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_usecase.dart';
 import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
@@ -42,6 +46,7 @@ import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/admin/bloc/runners_admin_bloc.dart';
 import 'package:legion/presentation/screens/admin/bloc/users_admin_bloc.dart';
+import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
 import 'package:legion/presentation/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -82,6 +87,10 @@ Future<void> init() async {
     () => ChatRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
 
+  sl.registerLazySingleton<IEditorRemoteDataSource>(
+    () => EditorRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
+  );
+
   sl.registerLazySingleton<SessionModelLocalDataSource>(
     () => SessionModelLocalDataSourceImpl(),
   );
@@ -101,6 +110,7 @@ Future<void> init() async {
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(sl(), sl<SessionModelLocalDataSource>()),
   );
+  sl.registerLazySingleton<EditorRepository>(() => EditorRepositoryImpl(sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
   sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(sl()));
   sl.registerLazySingleton<RunnersRepository>(
@@ -122,6 +132,7 @@ Future<void> init() async {
   sl.registerFactory(() => UpdateSessionModelUseCase(sl()));
   sl.registerFactory(() => DeleteSessionUseCase(sl()));
   sl.registerFactory(() => UpdateSessionTitleUseCase(sl()));
+  sl.registerFactory(() => TransformTextUseCase(sl()));
 
   sl.registerFactory(() => LoginUseCase(sl()));
   sl.registerFactory(() => RefreshTokenUseCase(sl()));
@@ -147,6 +158,14 @@ Future<void> init() async {
       deleteSessionUseCase: sl(),
       updateSessionTitleUseCase: sl(),
       getRunnersStatusUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => EditorBloc(
+      authBloc: sl<AuthBloc>(),
+      getModelsUseCase: sl(),
+      transformTextUseCase: sl(),
     ),
   );
 
