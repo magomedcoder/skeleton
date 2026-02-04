@@ -3,54 +3,60 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/runner"
+	"github.com/magomedcoder/legion/internal/runner/config"
 	"github.com/magomedcoder/legion/internal/runner/gpu"
 	"github.com/magomedcoder/legion/internal/runner/provider"
 	"github.com/magomedcoder/legion/internal/runner/service"
 	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
-type config struct {
-	ollamaBaseURL string
-	ollamaModel   string
-	coreAddr      string
-	listenAddr    string
-	logLevel      string
-}
-
-func loadConfig() *config {
-	c := &config{
-		ollamaBaseURL: "http://127.0.0.1:11434",
-		ollamaModel:   "llama3.2:1b",
-		coreAddr:      "127.0.0.1:50051",
-		listenAddr:    "127.0.0.1:50052",
-		logLevel:      "info",
+func newTextProvider(cfg *config.Config) (provider.TextProvider, error) {
+	switch cfg.Engine {
+	case config.EngineLlama:
+		if cfg.Llama.ModelPath == "" {
+			return nil, fmt.Errorf("движок %q: задайте llama.model_path", config.EngineLlama)
+		}
+		svc := service.NewLlamaService(cfg.Llama.ModelPath)
+		return provider.NewText(svc), nil
+	case config.EngineOllama, "":
+		svc := service.NewOllamaService(cfg.Ollama)
+		return provider.NewText(svc), nil
+	default:
+		return nil, fmt.Errorf("неизвестный движок %q (ожидается %q или %q)", cfg.Engine, config.EngineOllama, config.EngineLlama)
 	}
-
-	return c
 }
 
 func main() {
-	cfg := loadConfig()
-	logger.Default.SetLevel(logger.ParseLevel(cfg.logLevel))
+	cfg, err := config.Load()
+	if err != nil {
+		logger.Default.SetLevel(logger.LevelInfo)
+		logger.E("Ошибка загрузки конфигурации: %v", err)
+		os.Exit(1)
+	}
+
+	logger.Default.SetLevel(logger.ParseLevel(cfg.Log.Level))
 
 	logger.I("Запуск раннера")
 
-	ollamaSvc := service.NewOllamaService(cfg.ollamaBaseURL, cfg.ollamaModel)
-	textProvider := provider.NewText(ollamaSvc)
+	textProvider, err := newTextProvider(cfg)
+	if err != nil {
+		logger.E("Движок текста: %v", err)
+		os.Exit(1)
+	}
+
 	gpuCollector := gpu.NewCollector()
 	runnerServer := runner.NewServer(textProvider, gpuCollector)
 
-	lis, err := net.Listen("tcp", cfg.listenAddr)
+	lis, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
 		logger.E("Ошибка слушателя: %v", err)
 		os.Exit(1)
@@ -61,19 +67,19 @@ func main() {
 	runnerpb.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 	go func() {
-		logger.I("Раннер слушает на %s", cfg.listenAddr)
+		logger.I("Раннер слушает на %s", cfg.ListenAddr)
 		if err := grpcServer.Serve(lis); err != nil {
 			logger.E("Ошибка gRPC: %v", err)
 			os.Exit(1)
 		}
 	}()
 
-	if cfg.coreAddr != "" && cfg.listenAddr != "" {
-		if err := registerWithCore(cfg.coreAddr, cfg.listenAddr); err != nil {
+	if cfg.CoreAddr != "" && cfg.ListenAddr != "" {
+		if err := registerWithCore(cfg.CoreAddr, cfg.ListenAddr); err != nil {
 			logger.W("Регистрация в ядре не удалась: %v", err)
 		} else {
-			logger.I("Зарегистрирован в ядре %s как %s", cfg.coreAddr, cfg.listenAddr)
-			defer unregisterFromCore(cfg.coreAddr, cfg.listenAddr)
+			logger.I("Зарегистрирован в ядре %s как %s", cfg.CoreAddr, cfg.ListenAddr)
+			defer unregisterFromCore(cfg.CoreAddr, cfg.ListenAddr)
 		}
 	}
 

@@ -44,4 +44,21 @@ install:
 
 .PHONY: deps
 deps:
-	$(MAKE) -C third_party -f Makefile $(MAKECMDGOALS)
+	$(MAKE) -C third_party -f Makefile deps
+
+.PHONY: build-llama build-llama-cublas
+build-llama: deps
+	@if [ ! -L pkg/llama/llama_lib ] && [ ! -d pkg/llama/llama_lib ]; then \
+		ln -sf ../../third_party/llama.cpp pkg/llama/llama_lib; \
+		echo "Создан симлинк"; \
+	fi
+
+	$(MAKE) -C pkg/llama libllama.a
+
+build-llama-cublas: deps
+	@if [ ! -L pkg/llama/llama_lib ] && [ ! -d pkg/llama/llama_lib ]; then \
+		ln -sf ../../third_party/llama.cpp pkg/llama/llama_lib; \
+		echo "Создан симлинк"; \
+	fi
+
+	$(MAKE) -C pkg/llama libllama.a BUILD_TYPE=cublas

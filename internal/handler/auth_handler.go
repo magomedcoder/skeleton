@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/legion/internal/config"
 
 	"github.com/magomedcoder/legion/api/pb/authpb"
-	"github.com/magomedcoder/legion/config"
 	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg/logger"

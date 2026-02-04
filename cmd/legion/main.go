@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/magomedcoder/legion/internal/config"
 	"net"
 	"os"
 	"os/signal"
@@ -13,7 +14,6 @@ import (
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/api/pb/userpb"
-	"github.com/magomedcoder/legion/config"
 	"github.com/magomedcoder/legion/internal/bootstrap"
 	"github.com/magomedcoder/legion/internal/handler"
 	"github.com/magomedcoder/legion/internal/repository/postgres"

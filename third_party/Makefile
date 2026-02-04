@@ -1,7 +1,8 @@
 OLLAMA_TAG  ?= v0.15.2
+LLAMA_CPP_TAG ?= c55bce4
 
-.PHONY: deps deps-ollama
-deps: deps-ollama
+.PHONY: deps
+deps: deps-ollama deps-llama.cpp
 
 deps-ollama:
 	@if [ ! -d "ollama/.git" ]; then \
@@ -18,10 +19,17 @@ ollama-update:
 		&& git fetch --depth 1 origin tag $(OLLAMA_TAG) \
 		&& git checkout $(OLLAMA_TAG)
 
-.PHONY: run-ollama
-run-ollama: deps-ollama
-	#go generate ./...
-	#go build -tags cuda .
-	# OLLAMA_GPU=1
-	# CUDA_VISIBLE_DEVICES=0
-	OLLAMA_HOST=0.0.0.0:11434 go run ./ollama/main.go
+deps-llama.cpp:
+	@if [ ! -d "llama.cpp/.git" ]; then \
+		echo "Клонируем llama.cpp $(LLAMA_CPP_TAG) в llama.cpp..."; \
+		git clone --depth 1 --branch $(LLAMA_CPP_TAG) https://github.com/ggml-org/llama.cpp.git llama.cpp; \
+	else \
+		echo "llama.cpp уже существует"; \
+	fi
+
+.PHONY: llama.cpp-update
+llama.cpp-update:
+	@if [ ! -d "llama.cpp/.git" ]; then $(MAKE) deps-llama.cpp; exit 0; fi
+	cd llama.cpp \
+		&& git fetch --depth 1 origin tag $(LLAMA_CPP_TAG) \
+		&& git checkout $(LLAMA_CPP_TAG)

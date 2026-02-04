@@ -1,18 +1,6 @@
 package config
 
-import (
-	"time"
-)
-
-type Config struct {
-	Server         ServerConfig
-	Database       DatabaseConfig
-	JWT            JWTConfig
-	Runners        RunnersConfig
-	Attachments    AttachmentsConfig
-	Log            LogConfig
-	MinClientBuild int32
-}
+import "time"
 
 type LogConfig struct {
 	Level string
@@ -40,6 +28,17 @@ type JWTConfig struct {
 	RefreshSecret string
 	AccessTTL     time.Duration
 	RefreshTTL    time.Duration
+}
+
+type Config struct {
+	Server         ServerConfig
+	Database       DatabaseConfig
+	JWT            JWTConfig
+	Runners        RunnersConfig
+	Attachments    AttachmentsConfig
+	Log            LogConfig
+	MinClientBuild int32
+	logLevel       string
 }
 
 func Load() (*Config, error) {
@@ -70,6 +69,7 @@ func Load() (*Config, error) {
 			Level: "debug",
 		},
 		MinClientBuild: 1,
+		logLevel:       "info",
 	}
 
 	return config, nil

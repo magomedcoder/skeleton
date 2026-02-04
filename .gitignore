@@ -5,3 +5,5 @@ api/pb/
 client-side/lib/generated/
 .DS_Store
 uploads
+models
+vendor

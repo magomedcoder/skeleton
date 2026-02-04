@@ -1,0 +1,4 @@
+llama_lib
+/build
+/llama.o
+/libllama.a

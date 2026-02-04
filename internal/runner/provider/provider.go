@@ -5,6 +5,14 @@ import (
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
+type TextBackend interface {
+	CheckConnection(ctx context.Context) (bool, error)
+
+	GetModels(ctx context.Context) ([]string, error)
+
+	SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error)
+}
+
 type TextProvider interface {
 	CheckConnection(ctx context.Context) (bool, error)
 

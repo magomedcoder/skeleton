@@ -3,27 +3,26 @@ package provider
 import (
 	"context"
 	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/internal/runner/service"
 )
 
 type Text struct {
-	client *service.OllamaService
+	backend TextBackend
 }
 
-func NewText(client *service.OllamaService) *Text {
+func NewText(backend TextBackend) *Text {
 	return &Text{
-		client: client,
+		backend: backend,
 	}
 }
 
 func (t *Text) CheckConnection(ctx context.Context) (bool, error) {
-	return t.client.CheckConnection(ctx)
+	return t.backend.CheckConnection(ctx)
 }
 
 func (t *Text) GetModels(ctx context.Context) ([]string, error) {
-	return t.client.GetModels(ctx)
+	return t.backend.GetModels(ctx)
 }
 
 func (t *Text) SendMessage(ctx context.Context, sessionId string, model string, messages []*domain.Message) (chan string, error) {
-	return t.client.SendMessage(ctx, model, messages)
+	return t.backend.SendMessage(ctx, model, messages)
 }

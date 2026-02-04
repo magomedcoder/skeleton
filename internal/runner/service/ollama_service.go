@@ -6,23 +6,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/runner/config"
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type OllamaService struct {
 	baseURL string
-	model   string
 	client  *http.Client
 }
 
-func NewOllamaService(baseURL, model string) *OllamaService {
+func NewOllamaService(conf config.Ollama) *OllamaService {
 	return &OllamaService{
-		baseURL: baseURL,
-		model:   model,
+		baseURL: conf.BaseURL,
 		client: &http.Client{
 			Timeout: 150 * time.Second,
 		},
@@ -86,13 +84,8 @@ func (o *OllamaService) SendMessage(ctx context.Context, model string, messages 
 		ollamaMessages[i] = msg.ToMap()
 	}
 
-	modelName := model
-	if modelName == "" {
-		modelName = o.model
-	}
-
 	requestBody := map[string]interface{}{
-		"model":    modelName,
+		"model":    model,
 		"messages": ollamaMessages,
 		"stream":   true,
 	}
