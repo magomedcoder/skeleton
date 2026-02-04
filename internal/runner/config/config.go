@@ -36,9 +36,13 @@ func Load() (*Config, error) {
 		Ollama: Ollama{
 			BaseURL: "http://127.0.0.1:11434",
 		},
+		Llama: Llama{
+			ModelPath: "./models",
+		},
 	}
 
 	// EngineOllama или EngineLlama
 	c.Engine = EngineOllama
+
 	return c, nil
 }

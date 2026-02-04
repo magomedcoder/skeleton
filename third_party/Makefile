@@ -1,5 +1,5 @@
 OLLAMA_TAG  ?= v0.15.2
-LLAMA_CPP_TAG ?= c55bce4
+LLAMA_CPP_TAG ?= b7925
 
 .PHONY: deps
 deps: deps-ollama deps-llama.cpp

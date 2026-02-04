@@ -3,37 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/internal/runner"
-	"github.com/magomedcoder/legion/internal/runner/config"
-	"github.com/magomedcoder/legion/internal/runner/gpu"
-	"github.com/magomedcoder/legion/internal/runner/provider"
-	"github.com/magomedcoder/legion/internal/runner/service"
-	"github.com/magomedcoder/legion/pkg/logger"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-)
 
-func newTextProvider(cfg *config.Config) (provider.TextProvider, error) {
-	switch cfg.Engine {
-	case config.EngineLlama:
-		if cfg.Llama.ModelPath == "" {
-			return nil, fmt.Errorf("движок %q: задайте llama.model_path", config.EngineLlama)
-		}
-		svc := service.NewLlamaService(cfg.Llama.ModelPath)
-		return provider.NewText(svc), nil
-	case config.EngineOllama, "":
-		svc := service.NewOllamaService(cfg.Ollama)
-		return provider.NewText(svc), nil
-	default:
-		return nil, fmt.Errorf("неизвестный движок %q (ожидается %q или %q)", cfg.Engine, config.EngineOllama, config.EngineLlama)
-	}
-}
+	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/internal/runner"
+	"github.com/magomedcoder/legion/internal/runner/config"
+	"github.com/magomedcoder/legion/internal/runner/gpu"
+	"github.com/magomedcoder/legion/internal/runner/provider"
+	"github.com/magomedcoder/legion/pkg/logger"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+)
 
 func main() {
 	cfg, err := config.Load()
@@ -47,7 +32,7 @@ func main() {
 
 	logger.I("Запуск раннера")
 
-	textProvider, err := newTextProvider(cfg)
+	textProvider, err := provider.NewTextProvider(cfg)
 	if err != nil {
 		logger.E("Движок текста: %v", err)
 		os.Exit(1)

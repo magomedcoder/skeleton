@@ -3,21 +3,25 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/pkg/llama.cpp"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
+
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/pkg/llama.cpp"
 )
 
 const defaultChunkSize = 128
 
 type LlamaService struct {
-	modelPath   string
-	chunkSize   int
-	predictOpts []llama.PredictOption
-	mu          sync.Mutex
-	model       *llama.LLama
+	modelsDir        string
+	currentModelName string
+	chunkSize        int
+	predictOpts      []llama.PredictOption
+	mu               sync.Mutex
+	model            *llama.LLama
 }
 
 type LlamaOption func(*LlamaService)
@@ -37,8 +41,15 @@ func WithPredictOptions(opts ...llama.PredictOption) LlamaOption {
 }
 
 func NewLlamaService(modelPath string, opts ...LlamaOption) *LlamaService {
+	modelsDir := modelPath
+	if modelPath != "" {
+		if info, err := os.Stat(modelPath); err == nil && !info.IsDir() {
+			modelsDir = filepath.Dir(modelPath)
+		}
+	}
+
 	s := &LlamaService{
-		modelPath: modelPath,
+		modelsDir: modelsDir,
 		chunkSize: defaultChunkSize,
 	}
 
@@ -53,29 +64,71 @@ func NewLlamaService(modelPath string, opts ...LlamaOption) *LlamaService {
 	return s
 }
 
-func (s *LlamaService) ensureModel() error {
+func (s *LlamaService) ensureModel(modelName string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.model != nil {
+	if s.modelsDir == "" {
+		return fmt.Errorf("llama: путь к папке с моделями не задан")
+	}
+	if modelName == "" {
+		return fmt.Errorf("llama: укажите модель (доступные: %s)", strings.Join(s.modelNamesLocked(), ", "))
+	}
+
+	fullPath := filepath.Join(s.modelsDir, modelName)
+	if s.model != nil && s.currentModelName == modelName {
 		return nil
 	}
 
-	if s.modelPath == "" {
-		return fmt.Errorf("llama: путь к модели не задан")
+	if s.model != nil {
+		s.model.Free()
+		s.model = nil
+		s.currentModelName = ""
 	}
 
-	m, err := llama.New(s.modelPath)
+	m, err := llama.New(fullPath)
 	if err != nil {
-		return fmt.Errorf("llama: не удалось загрузить модель %q: %w", s.modelPath, err)
+		return fmt.Errorf("llama: не удалось загрузить модель %q: %w", modelName, err)
 	}
 
 	s.model = m
+	s.currentModelName = modelName
 	return nil
 }
 
+func (s *LlamaService) modelNamesLocked() []string {
+	if s.modelsDir == "" {
+		return nil
+	}
+
+	entries, err := os.ReadDir(s.modelsDir)
+	if err != nil {
+		return nil
+	}
+
+	var names []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		ext := strings.ToLower(filepath.Ext(e.Name()))
+		if ext == ".gguf" {
+			names = append(names, e.Name())
+		}
+	}
+
+	sort.Strings(names)
+
+	return names
+}
+
 func (s *LlamaService) CheckConnection(ctx context.Context) (bool, error) {
-	if err := s.ensureModel(); err != nil {
+	models, err := s.GetModels(ctx)
+	if err != nil || len(models) == 0 {
+		return false, fmt.Errorf("llama: нет моделей в папке %q", s.modelsDir)
+	}
+
+	if err := s.ensureModel(models[0]); err != nil {
 		return false, err
 	}
 
@@ -83,17 +136,13 @@ func (s *LlamaService) CheckConnection(ctx context.Context) (bool, error) {
 }
 
 func (s *LlamaService) GetModels(ctx context.Context) ([]string, error) {
-	if s.modelPath == "" {
-		return []string{}, nil
-	}
-
-	name := filepath.Base(s.modelPath)
-
-	return []string{name}, nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.modelNamesLocked(), nil
 }
 
 func (s *LlamaService) SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error) {
-	if err := s.ensureModel(); err != nil {
+	if err := s.ensureModel(model); err != nil {
 		return nil, err
 	}
 
