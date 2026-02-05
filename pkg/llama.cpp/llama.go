@@ -1,3 +1,6 @@
+//go:build llama
+// +build llama
+
 package llama
 
 // #cgo CXXFLAGS: -I${SRCDIR}/llama_lib/common -I${SRCDIR}/llama_lib/include -I${SRCDIR}/llama_lib/ggml/include -I${SRCDIR}/llama_lib -std=c++17

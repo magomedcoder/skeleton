@@ -6,6 +6,10 @@ run:
 run-runner:
 	go run -tags nvidia ./cmd/runner
 
+.PHONY: run-runner-llama
+run-runner-llama:
+	go run -tags llama ./cmd/runner
+
 .PHONY: build
 build:
 	@mkdir -p build

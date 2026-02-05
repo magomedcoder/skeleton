@@ -1,5 +1,5 @@
-//go:build cublas
-// +build cublas
+//go:build llama && cublas
+// +build llama,cublas
 
 package llama
 

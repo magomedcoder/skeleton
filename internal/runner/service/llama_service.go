@@ -1,9 +1,12 @@
+//go:build llama
+// +build llama
+
 package service
 
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/skeleton/pkg/llama.cpp"
+	llama "github.com/magomedcoder/skeleton/pkg/llama.cpp"
 	"os"
 	"path/filepath"
 	"sort"
