@@ -4,6 +4,7 @@ import 'package:legion/core/log/logs.dart';
 import 'package:legion/core/server_config.dart';
 import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as grpc_auth;
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as grpc_chat;
+import 'package:legion/generated/grpc_pb/editor.pbgrpc.dart' as grpc_editor;
 import 'package:legion/generated/grpc_pb/runner.pbgrpc.dart' as grpc_runner;
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc_user;
 
@@ -15,6 +16,7 @@ class GrpcChannelManager {
   grpc_auth.AuthServiceClient? _authClient;
   grpc_auth.AuthServiceClient? _authClientNoInterceptor;
   grpc_chat.ChatServiceClient? _chatClient;
+  grpc_editor.EditorServiceClient? _editorClient;
   grpc_user.UserServiceClient? _userClient;
   grpc_runner.RunnerAdminServiceClient? _runnerAdminClient;
 
@@ -51,6 +53,14 @@ class GrpcChannelManager {
     return _chatClient!;
   }
 
+  grpc_editor.EditorServiceClient get editorClient {
+    _editorClient ??= grpc_editor.EditorServiceClient(
+      channel,
+      interceptors: [_authInterceptor],
+    );
+    return _editorClient!;
+  }
+
   grpc_user.UserServiceClient get userClient {
     _userClient ??= grpc_user.UserServiceClient(
       channel,
@@ -84,6 +94,7 @@ class GrpcChannelManager {
     _authClient = null;
     _authClientNoInterceptor = null;
     _chatClient = null;
+    _editorClient = null;
     _userClient = null;
     _runnerAdminClient = null;
     if (ch != null) {

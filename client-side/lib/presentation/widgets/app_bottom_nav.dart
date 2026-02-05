@@ -40,6 +40,13 @@ class AppBottomNav extends StatelessWidget {
                 isSelected: selected == NavDestination.home,
                 onTap: () => onDestinationSelected(NavDestination.home),
               ),
+              _NavItem(
+                icon: Icons.edit_note_outlined,
+                selectedIcon: Icons.edit_note_rounded,
+                label: 'Редактор',
+                isSelected: selected == NavDestination.editor,
+                onTap: () => onDestinationSelected(NavDestination.editor),
+              ),
               if (showAdmin)
                 _NavItem(
                   icon: Icons.admin_panel_settings_outlined,
