@@ -1,4 +1,4 @@
-import 'package:legion/domain/repositories/editor_repository.dart';
+import 'package:skeleton/domain/repositories/editor_repository.dart';
 
 class TransformTextUseCase {
   final EditorRepository repository;

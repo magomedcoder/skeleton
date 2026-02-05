@@ -4,10 +4,10 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/magomedcoder/legion/api/pb/userpb"
-	"github.com/magomedcoder/legion/internal/mappers"
-	"github.com/magomedcoder/legion/internal/usecase"
-	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/skeleton/api/pb/userpb"
+	"github.com/magomedcoder/skeleton/internal/mappers"
+	"github.com/magomedcoder/skeleton/internal/usecase"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

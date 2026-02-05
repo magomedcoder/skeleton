@@ -1,4 +1,4 @@
-package ru.magomedcoder.legion
+package ru.magomedcoder.skeleton
 
 import io.flutter.embedding.android.FlutterActivity
 

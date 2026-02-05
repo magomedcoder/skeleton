@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package chat;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/chatpb;chatpb";
+option go_package = "github.com/magomedcoder/skeleton/api/pb/chatpb;chatpb";
 
 service ChatService {
   rpc CheckConnection(Empty) returns (ConnectionResponse);

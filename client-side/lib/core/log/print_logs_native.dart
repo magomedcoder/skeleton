@@ -1,4 +1,4 @@
-import 'package:legion/core/log/logs.dart';
+import 'package:skeleton/core/log/logs.dart';
 
 extension PrintLogs on LogEvent {
   void printOut() {
@@ -31,6 +31,6 @@ extension PrintLogs on LogEvent {
     }
 
     // ignore: avoid_print
-    print('[Legion] $logsStr');
+    print('[Skeleton] $logsStr');
   }
 }

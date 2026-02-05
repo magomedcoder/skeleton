@@ -3,9 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/internal/runner/config"
-	"github.com/magomedcoder/legion/internal/runner/service"
+	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/skeleton/internal/runner/config"
+	"github.com/magomedcoder/skeleton/internal/runner/service"
 )
 
 type TextBackend interface {

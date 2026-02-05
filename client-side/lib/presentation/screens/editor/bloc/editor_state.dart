@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:legion/generated/grpc_pb/editor.pb.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/editor.pb.dart' as grpc;
 
 class EditorState extends Equatable {
   final bool isLoading;

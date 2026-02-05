@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/NVIDIA/go-nvml/pkg/nvml"
-	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 )
 
 type nvmlCollector struct {

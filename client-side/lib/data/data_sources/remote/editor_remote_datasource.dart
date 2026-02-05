@@ -1,10 +1,10 @@
 import 'package:grpc/grpc.dart';
-import 'package:legion/core/auth_guard.dart';
-import 'package:legion/core/failures.dart';
-import 'package:legion/core/grpc_channel_manager.dart';
-import 'package:legion/core/grpc_error_handler.dart';
-import 'package:legion/core/log/logs.dart';
-import 'package:legion/generated/grpc_pb/editor.pbgrpc.dart' as grpc;
+import 'package:skeleton/core/auth_guard.dart';
+import 'package:skeleton/core/failures.dart';
+import 'package:skeleton/core/grpc_channel_manager.dart';
+import 'package:skeleton/core/grpc_error_handler.dart';
+import 'package:skeleton/core/log/logs.dart';
+import 'package:skeleton/generated/grpc_pb/editor.pbgrpc.dart' as grpc;
 
 abstract class IEditorRemoteDataSource {
   Future<String> transform({

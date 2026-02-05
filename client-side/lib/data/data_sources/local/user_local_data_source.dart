@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:legion/domain/entities/user.dart';
+import 'package:skeleton/domain/entities/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class UserLocalDataSource {
@@ -22,15 +22,15 @@ abstract class UserLocalDataSource {
 }
 
 class UserLocalDataSourceImpl implements UserLocalDataSource {
-  static const _keyAccessToken = 'legion_access_token';
-  static const _keyRefreshToken = 'legion_refresh_token';
-  static const _keyUserId = 'legion_user_id';
-  static const _keyUserUsername = 'legion_user_username';
-  static const _keyUserName = 'legion_user_name';
-  static const _keyUserSurname = 'legion_user_surname';
-  static const _keyUserRole = 'legion_user_role';
-  static const _keyThemeMode = 'legion_theme_mode';
-  static const _keyAccentColorId = 'legion_accent_color_id';
+  static const _keyAccessToken = 'skeleton_access_token';
+  static const _keyRefreshToken = 'skeleton_refresh_token';
+  static const _keyUserId = 'skeleton_user_id';
+  static const _keyUserUsername = 'skeleton_user_username';
+  static const _keyUserName = 'skeleton_user_name';
+  static const _keyUserSurname = 'skeleton_user_surname';
+  static const _keyUserRole = 'skeleton_user_role';
+  static const _keyThemeMode = 'skeleton_theme_mode';
+  static const _keyAccentColorId = 'skeleton_accent_color_id';
 
   SharedPreferences? _prefs;
   String? _accessToken;

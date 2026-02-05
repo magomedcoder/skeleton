@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/core/layout/responsive.dart';
-import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
-import 'package:legion/presentation/screens/editor/bloc/editor_event.dart';
-import 'package:legion/presentation/screens/editor/bloc/editor_state.dart';
+import 'package:skeleton/core/layout/responsive.dart';
+import 'package:skeleton/presentation/screens/editor/bloc/editor_bloc.dart';
+import 'package:skeleton/presentation/screens/editor/bloc/editor_event.dart';
+import 'package:skeleton/presentation/screens/editor/bloc/editor_state.dart';
 
 class EditorScreen extends StatefulWidget {
   const EditorScreen({super.key});

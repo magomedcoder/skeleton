@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/internal/service"
-	"github.com/magomedcoder/legion/pkg/logger"
-	"github.com/magomedcoder/legion/pkg"
+	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/skeleton/internal/service"
+	"github.com/magomedcoder/skeleton/pkg"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 )
 
 type AuthUseCase struct {

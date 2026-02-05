@@ -3,8 +3,8 @@ package mappers
 import (
 	"time"
 
-	"github.com/magomedcoder/legion/api/pb/chatpb"
-	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/skeleton/api/pb/chatpb"
+	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
 func MessageToProto(msg *domain.Message) *chatpb.ChatMessage {

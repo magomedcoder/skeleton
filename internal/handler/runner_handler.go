@@ -2,10 +2,10 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/internal/runner"
-	"github.com/magomedcoder/legion/internal/usecase"
-	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
+	"github.com/magomedcoder/skeleton/internal/runner"
+	"github.com/magomedcoder/skeleton/internal/usecase"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 )
 
 type RunnerHandler struct {

@@ -1,5 +1,5 @@
-import 'package:legion/domain/entities/runner.dart';
-import 'package:legion/domain/repositories/runners_repository.dart';
+import 'package:skeleton/domain/entities/runner.dart';
+import 'package:skeleton/domain/repositories/runners_repository.dart';
 
 class GetRunnersUseCase {
   final RunnersRepository _repo;

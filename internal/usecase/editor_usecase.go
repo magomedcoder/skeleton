@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
 type EditorUseCase struct {

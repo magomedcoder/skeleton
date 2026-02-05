@@ -3,12 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/skeleton/internal/config"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/skeleton/internal/domain"
 	"golang.org/x/crypto/bcrypt"
 )
 

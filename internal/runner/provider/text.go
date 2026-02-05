@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
 type Text struct {

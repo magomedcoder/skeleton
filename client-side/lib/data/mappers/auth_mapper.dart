@@ -1,7 +1,7 @@
-import 'package:legion/domain/entities/auth_result.dart';
-import 'package:legion/domain/entities/auth_tokens.dart';
-import 'package:legion/generated/grpc_pb/auth.pb.dart' as grpc;
-import 'package:legion/data/mappers/user_mapper.dart';
+import 'package:skeleton/domain/entities/auth_result.dart';
+import 'package:skeleton/domain/entities/auth_tokens.dart';
+import 'package:skeleton/generated/grpc_pb/auth.pb.dart' as grpc;
+import 'package:skeleton/data/mappers/user_mapper.dart';
 
 abstract class AuthMapper {
   AuthMapper._();

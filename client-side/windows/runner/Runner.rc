@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "ru.magomedcoder.legion" "\0"
-            VALUE "FileDescription", "legion" "\0"
+            VALUE "CompanyName", "ru.magomedcoder.skeleton" "\0"
+            VALUE "FileDescription", "skeleton" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "legion" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 ru.magomedcoder.legion. All rights reserved." "\0"
-            VALUE "OriginalFilename", "legion.exe" "\0"
-            VALUE "ProductName", "legion" "\0"
+            VALUE "InternalName", "skeleton" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 ru.magomedcoder.skeleton. All rights reserved." "\0"
+            VALUE "OriginalFilename", "skeleton.exe" "\0"
+            VALUE "ProductName", "skeleton" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

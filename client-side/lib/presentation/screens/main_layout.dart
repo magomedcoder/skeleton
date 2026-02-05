@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/core/layout/responsive.dart';
-import 'package:legion/core/theme/app_theme.dart';
-import 'package:legion/domain/entities/session.dart';
-import 'package:legion/presentation/screens/admin/admin_menu_screen.dart';
-import 'package:legion/presentation/screens/admin/runners_admin_screen.dart';
-import 'package:legion/presentation/screens/admin/users_admin_screen.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
-import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
-import 'package:legion/presentation/screens/editor/editor_screen.dart';
-import 'package:legion/presentation/screens/chat/widgets/chat_content.dart';
-import 'package:legion/presentation/screens/chat/widgets/sessions_sidebar.dart';
-import 'package:legion/presentation/screens/profile/profile_screen.dart';
-import 'package:legion/presentation/widgets/app_bottom_nav.dart';
-import 'package:legion/presentation/widgets/side_navigation.dart';
+import 'package:skeleton/core/layout/responsive.dart';
+import 'package:skeleton/core/theme/app_theme.dart';
+import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/presentation/screens/admin/admin_menu_screen.dart';
+import 'package:skeleton/presentation/screens/admin/runners_admin_screen.dart';
+import 'package:skeleton/presentation/screens/admin/users_admin_screen.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
+import 'package:skeleton/presentation/screens/chat/bloc/chat_event.dart';
+import 'package:skeleton/presentation/screens/editor/editor_screen.dart';
+import 'package:skeleton/presentation/screens/chat/widgets/chat_content.dart';
+import 'package:skeleton/presentation/screens/chat/widgets/sessions_sidebar.dart';
+import 'package:skeleton/presentation/screens/profile/profile_screen.dart';
+import 'package:skeleton/presentation/widgets/app_bottom_nav.dart';
+import 'package:skeleton/presentation/widgets/side_navigation.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:legion/domain/entities/gpu_info.dart';
+import 'package:skeleton/domain/entities/gpu_info.dart';
 
 class RunnerGpuSection extends StatelessWidget {
   final List<GpuInfo> gpus;

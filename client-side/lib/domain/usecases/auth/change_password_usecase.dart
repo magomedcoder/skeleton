@@ -1,4 +1,4 @@
-import 'package:legion/domain/repositories/auth_repository.dart';
+import 'package:skeleton/domain/repositories/auth_repository.dart';
 
 class ChangePasswordUseCase {
   final AuthRepository repository;

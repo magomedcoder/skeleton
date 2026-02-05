@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:legion/domain/entities/user.dart';
+import 'package:skeleton/domain/entities/user.dart';
 
 class AuthState extends Equatable {
   final bool isLoading;

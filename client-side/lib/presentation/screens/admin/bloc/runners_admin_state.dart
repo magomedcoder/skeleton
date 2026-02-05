@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:legion/domain/entities/runner.dart';
+import 'package:skeleton/domain/entities/runner.dart';
 
 class RunnersAdminState extends Equatable {
   static const Object _noChange = Object();

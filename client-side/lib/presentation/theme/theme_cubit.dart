@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/data/data_sources/local/user_local_data_source.dart';
-import 'package:legion/presentation/theme/theme_state.dart';
+import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
+import 'package:skeleton/presentation/theme/theme_state.dart';
 
 class ThemeCubit extends Cubit<ThemeState> {
   ThemeCubit(this._dataSource): super(ThemeState(

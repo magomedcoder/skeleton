@@ -1,4 +1,4 @@
-import 'package:legion/domain/entities/user.dart';
+import 'package:skeleton/domain/entities/user.dart';
 
 abstract interface class UserRepository {
   Future<List<User>> getUsers({required int page, required int pageSize});

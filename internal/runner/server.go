@@ -2,10 +2,10 @@ package runner
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/internal/mappers"
-	"github.com/magomedcoder/legion/internal/runner/gpu"
-	"github.com/magomedcoder/legion/internal/runner/provider"
+	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
+	"github.com/magomedcoder/skeleton/internal/mappers"
+	"github.com/magomedcoder/skeleton/internal/runner/gpu"
+	"github.com/magomedcoder/skeleton/internal/runner/provider"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

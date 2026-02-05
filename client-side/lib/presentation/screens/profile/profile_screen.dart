@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/core/injector.dart' as di;
-import 'package:legion/domain/usecases/auth/change_password_usecase.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
-import 'package:legion/core/theme/app_theme.dart';
-import 'package:legion/presentation/theme/theme_cubit.dart';
-import 'package:legion/presentation/theme/theme_state.dart';
+import 'package:skeleton/core/injector.dart' as di;
+import 'package:skeleton/domain/usecases/auth/change_password_usecase.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:skeleton/core/theme/app_theme.dart';
+import 'package:skeleton/presentation/theme/theme_cubit.dart';
+import 'package:skeleton/presentation/theme/theme_state.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

@@ -1,4 +1,4 @@
-import 'package:legion/domain/repositories/chat_repository.dart';
+import 'package:skeleton/domain/repositories/chat_repository.dart';
 
 class GetModelsUseCase {
   final ChatRepository repository;

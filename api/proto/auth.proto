@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package legion;
+package skeleton;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/authpb;authpb";
+option go_package = "github.com/magomedcoder/skeleton/api/pb/authpb;authpb";
 
 import "common.proto";
 
@@ -24,7 +24,7 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  legion.User user = 1;
+  skeleton.User user = 1;
   string access_token = 2;
   string refresh_token = 3;
 }

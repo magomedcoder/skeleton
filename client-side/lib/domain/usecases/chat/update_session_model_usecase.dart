@@ -1,5 +1,5 @@
-import 'package:legion/domain/entities/session.dart';
-import 'package:legion/domain/repositories/chat_repository.dart';
+import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/repositories/chat_repository.dart';
 
 class UpdateSessionModelUseCase {
   final ChatRepository repository;

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

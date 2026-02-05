@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/core/injector.dart';
-import 'package:legion/core/layout/responsive.dart';
-import 'package:legion/core/server_config.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:skeleton/core/injector.dart';
+import 'package:skeleton/core/layout/responsive.dart';
+import 'package:skeleton/core/server_config.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Legion',
+                        'Skeleton',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

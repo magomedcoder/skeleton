@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:legion/core/layout/responsive.dart';
-import 'package:legion/domain/entities/message.dart';
-import 'package:legion/presentation/widgets/code_block_builder.dart';
+import 'package:skeleton/core/layout/responsive.dart';
+import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/presentation/widgets/code_block_builder.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class ChatBubble extends StatefulWidget {

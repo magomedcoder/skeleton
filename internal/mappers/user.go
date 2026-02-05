@@ -3,8 +3,8 @@ package mappers
 import (
 	"strconv"
 
-	"github.com/magomedcoder/legion/api/pb/commonpb"
-	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/skeleton/api/pb/commonpb"
+	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
 func UserToProto(user *domain.User) *commonpb.User {

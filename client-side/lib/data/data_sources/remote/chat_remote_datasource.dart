@@ -1,16 +1,16 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
-import 'package:legion/core/auth_guard.dart';
-import 'package:legion/core/failures.dart';
-import 'package:legion/core/grpc_channel_manager.dart';
-import 'package:legion/core/grpc_error_handler.dart';
-import 'package:legion/core/log/logs.dart';
-import 'package:legion/data/mappers/message_mapper.dart';
-import 'package:legion/data/mappers/session_mapper.dart';
-import 'package:legion/domain/entities/message.dart';
-import 'package:legion/domain/entities/session.dart';
-import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as grpc;
+import 'package:skeleton/core/auth_guard.dart';
+import 'package:skeleton/core/failures.dart';
+import 'package:skeleton/core/grpc_channel_manager.dart';
+import 'package:skeleton/core/grpc_error_handler.dart';
+import 'package:skeleton/core/log/logs.dart';
+import 'package:skeleton/data/mappers/message_mapper.dart';
+import 'package:skeleton/data/mappers/session_mapper.dart';
+import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/generated/grpc_pb/chat.pbgrpc.dart' as grpc;
 
 abstract class IChatRemoteDataSource {
   Future<bool> checkConnection();

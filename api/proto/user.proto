@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package legion;
+package skeleton;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/userpb;userpb";
+option go_package = "github.com/magomedcoder/skeleton/api/pb/userpb;userpb";
 
 import "common.proto";
 
@@ -20,7 +20,7 @@ message GetUsersRequest {
 }
 
 message GetUsersResponse {
-  repeated legion.User users = 1;
+  repeated skeleton.User users = 1;
   int32 total = 2;
 }
 
@@ -33,7 +33,7 @@ message CreateUserRequest {
 }
 
 message CreateUserResponse {
-  legion.User user = 1;
+  skeleton.User user = 1;
 }
 
 message EditUserRequest {
@@ -46,5 +46,5 @@ message EditUserRequest {
 }
 
 message EditUserResponse {
-  legion.User user = 1;
+  skeleton.User user = 1;
 }

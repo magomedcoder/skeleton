@@ -1,5 +1,5 @@
-import 'package:legion/domain/entities/session.dart';
-import 'package:legion/generated/grpc_pb/chat.pb.dart' as grpc;
+import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/generated/grpc_pb/chat.pb.dart' as grpc;
 
 abstract class SessionMapper {
   SessionMapper._();

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package legion;
+package skeleton;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/commonpb;commonpb";
+option go_package = "github.com/magomedcoder/skeleton/api/pb/commonpb;commonpb";
 
 message User {
   string id = 1;

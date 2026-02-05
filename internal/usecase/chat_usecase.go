@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/pkg/document"
-	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/skeleton/pkg/document"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 )
 
 type ChatUseCase struct {

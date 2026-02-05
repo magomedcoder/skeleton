@@ -1,6 +1,6 @@
 .PHONY: run
 run:
-	go run ./cmd/legion
+	go run ./cmd/skeleton
 
 .PHONY: run-runner
 run-runner:
@@ -9,17 +9,17 @@ run-runner:
 .PHONY: build
 build:
 	@mkdir -p build
-	go build -o build/legion ./cmd/legion
+	go build -o build/skeleton ./cmd/skeleton
 
 .PHONY: build-runner
 build-runner:
 	@mkdir -p build
-	go build -o build/legion-runner ./cmd/runner
+	go build -o build/skeleton-runner ./cmd/runner
 
 .PHONY: build-runner-nvidia
 build-runner-nvidia:
 	@mkdir -p build
-	go build -tags nvidia -o build/legion-runner ./cmd/runner
+	go build -tags nvidia -o build/skeleton-runner ./cmd/runner
 
 .PHONY: gen
 gen:

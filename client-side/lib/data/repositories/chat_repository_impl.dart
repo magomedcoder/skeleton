@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:legion/core/failures.dart';
-import 'package:legion/core/log/logs.dart';
-import 'package:legion/data/data_sources/local/session_model_local_data_source.dart';
-import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
-import 'package:legion/domain/entities/message.dart';
-import 'package:legion/domain/entities/session.dart';
-import 'package:legion/domain/repositories/chat_repository.dart';
+import 'package:skeleton/core/failures.dart';
+import 'package:skeleton/core/log/logs.dart';
+import 'package:skeleton/data/data_sources/local/session_model_local_data_source.dart';
+import 'package:skeleton/data/data_sources/remote/chat_remote_datasource.dart';
+import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/repositories/chat_repository.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final IChatRemoteDataSource dataSource;

@@ -1,8 +1,8 @@
-import 'package:legion/core/failures.dart';
-import 'package:legion/core/log/logs.dart';
-import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
-import 'package:legion/domain/entities/user.dart';
-import 'package:legion/domain/repositories/user_repository.dart';
+import 'package:skeleton/core/failures.dart';
+import 'package:skeleton/core/log/logs.dart';
+import 'package:skeleton/data/data_sources/remote/user_remote_datasource.dart';
+import 'package:skeleton/domain/entities/user.dart';
+import 'package:skeleton/domain/repositories/user_repository.dart';
 
 class UserRepositoryImpl implements UserRepository {
   final IUserRemoteDataSource dataSource;

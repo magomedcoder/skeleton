@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/core/log/logs.dart';
-import 'package:legion/domain/usecases/users/create_user_usecase.dart';
-import 'package:legion/domain/usecases/users/get_users_usecase.dart';
-import 'package:legion/domain/usecases/users/edit_user_usecase.dart';
-import 'package:legion/presentation/screens/admin/bloc/users_admin_event.dart';
-import 'package:legion/presentation/screens/admin/bloc/users_admin_state.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:legion/presentation/utils/request_logout_on_unauthorized.dart';
+import 'package:skeleton/core/log/logs.dart';
+import 'package:skeleton/domain/usecases/users/create_user_usecase.dart';
+import 'package:skeleton/domain/usecases/users/get_users_usecase.dart';
+import 'package:skeleton/domain/usecases/users/edit_user_usecase.dart';
+import 'package:skeleton/presentation/screens/admin/bloc/users_admin_event.dart';
+import 'package:skeleton/presentation/screens/admin/bloc/users_admin_state.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:skeleton/presentation/utils/request_logout_on_unauthorized.dart';
 
 class UsersAdminBloc extends Bloc<UsersAdminEvent, UsersAdminState> {
   final AuthBloc authBloc;

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:legion/domain/entities/message.dart';
-import 'package:legion/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/session.dart';
 
 abstract interface class ChatRepository {
   Future<bool> checkConnection();

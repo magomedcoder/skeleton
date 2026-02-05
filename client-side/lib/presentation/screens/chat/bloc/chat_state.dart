@@ -1,5 +1,5 @@
-import 'package:legion/domain/entities/message.dart';
-import 'package:legion/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/session.dart';
 import 'package:equatable/equatable.dart';
 
 class ChatState extends Equatable {

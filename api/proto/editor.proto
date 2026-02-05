@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package editor;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/editorpb;editorpb";
+option go_package = "github.com/magomedcoder/skeleton/api/pb/editorpb;editorpb";
 
 service EditorService {
   rpc Transform(TransformRequest) returns (TransformResponse);

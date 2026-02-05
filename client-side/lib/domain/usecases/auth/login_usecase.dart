@@ -1,5 +1,5 @@
-import 'package:legion/domain/entities/auth_result.dart';
-import 'package:legion/domain/repositories/auth_repository.dart';
+import 'package:skeleton/domain/entities/auth_result.dart';
+import 'package:skeleton/domain/repositories/auth_repository.dart';
 
 class LoginUseCase {
   final AuthRepository repository;

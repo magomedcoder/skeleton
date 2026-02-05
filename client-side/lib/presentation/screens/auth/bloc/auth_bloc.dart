@@ -1,19 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/core/app_version.dart' as app_version;
-import 'package:legion/core/auth_guard.dart';
-import 'package:legion/core/failures.dart';
-import 'package:legion/core/grpc_channel_manager.dart';
-import 'package:legion/core/jwt_util.dart';
-import 'package:legion/core/log/logs.dart';
-import 'package:legion/data/data_sources/local/user_local_data_source.dart';
-import 'package:legion/domain/usecases/auth/login_usecase.dart';
-import 'package:legion/domain/usecases/auth/logout_usecase.dart';
-import 'package:legion/domain/usecases/auth/refresh_token_usecase.dart';
-import 'package:legion/generated/grpc_pb/auth.pb.dart' as auth_pb;
-import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:skeleton/core/app_version.dart' as app_version;
+import 'package:skeleton/core/auth_guard.dart';
+import 'package:skeleton/core/failures.dart';
+import 'package:skeleton/core/grpc_channel_manager.dart';
+import 'package:skeleton/core/jwt_util.dart';
+import 'package:skeleton/core/log/logs.dart';
+import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
+import 'package:skeleton/domain/usecases/auth/login_usecase.dart';
+import 'package:skeleton/domain/usecases/auth/logout_usecase.dart';
+import 'package:skeleton/domain/usecases/auth/refresh_token_usecase.dart';
+import 'package:skeleton/generated/grpc_pb/auth.pb.dart' as auth_pb;
+import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
+import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;

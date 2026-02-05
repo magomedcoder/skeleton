@@ -48,11 +48,11 @@ func Load() (*Config, error) {
 			Host: "0.0.0.0",
 		},
 		Database: DatabaseConfig{
-			DSN: "postgres://postgres:postgres@127.0.0.1:5432/legion",
+			DSN: "postgres://postgres:postgres@127.0.0.1:5432/skeleton",
 		},
 		JWT: JWTConfig{
-			AccessSecret:  "legion",
-			RefreshSecret: "legion",
+			AccessSecret:  "skeleton",
+			RefreshSecret: "skeleton",
 			AccessTTL:     15 * time.Minute,
 			RefreshTTL:    7 * 24 * time.Hour,
 		},

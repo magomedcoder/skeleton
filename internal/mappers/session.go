@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/magomedcoder/legion/api/pb/chatpb"
-	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/skeleton/api/pb/chatpb"
+	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
 func SessionToProto(session *domain.ChatSession) *chatpb.ChatSession {

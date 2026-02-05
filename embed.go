@@ -1,4 +1,4 @@
-package legion
+package skeleton
 
 import "embed"
 

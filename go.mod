@@ -1,4 +1,4 @@
-module github.com/magomedcoder/legion
+module github.com/magomedcoder/skeleton
 
 go 1.25.2
 

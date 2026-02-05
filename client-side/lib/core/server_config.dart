@@ -1,8 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServerConfig {
-  static const _keyHost = 'legion_server_host';
-  static const _keyPort = 'legion_server_port';
+  static const _keyHost = 'skeleton_server_host';
+  static const _keyPort = 'skeleton_server_port';
 
   static const int defaultPort = 50051;
 

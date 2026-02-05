@@ -3,8 +3,8 @@ package runner
 import (
 	"context"
 
-	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
+	"github.com/magomedcoder/skeleton/pkg/logger"
 )
 
 type Registry struct {

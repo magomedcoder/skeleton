@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:legion/domain/entities/runner.dart';
+import 'package:skeleton/domain/entities/runner.dart';
 
 enum RunnerStatus { connected, waiting, disabled }
 

@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/magomedcoder/skeleton/pkg/llama.cpp"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/pkg/llama.cpp"
+	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
 const defaultChunkSize = 128

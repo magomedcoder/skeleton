@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:legion/domain/entities/runner.dart';
-import 'package:legion/presentation/screens/admin/widgets/runner_card_header.dart';
-import 'package:legion/presentation/screens/admin/widgets/runner_gpu_section.dart';
-import 'package:legion/presentation/screens/admin/widgets/runner_server_info_section.dart';
-import 'package:legion/presentation/screens/admin/widgets/runner_status.dart';
+import 'package:skeleton/domain/entities/runner.dart';
+import 'package:skeleton/presentation/screens/admin/widgets/runner_card_header.dart';
+import 'package:skeleton/presentation/screens/admin/widgets/runner_gpu_section.dart';
+import 'package:skeleton/presentation/screens/admin/widgets/runner_server_info_section.dart';
+import 'package:skeleton/presentation/screens/admin/widgets/runner_status.dart';
 
 class RunnerCard extends StatelessWidget {
   final Runner runner;
