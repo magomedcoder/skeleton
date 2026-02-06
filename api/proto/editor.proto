@@ -8,9 +8,24 @@ service EditorService {
   rpc Transform(TransformRequest) returns (TransformResponse);
 }
 
+enum TransformType {
+  TRANSFORM_TYPE_UNSPECIFIED = 0;
+  TRANSFORM_TYPE_FIX = 1;
+  TRANSFORM_TYPE_IMPROVE = 2;
+  TRANSFORM_TYPE_BEAUTIFY = 3;
+  TRANSFORM_TYPE_PARAPHRASE = 4;
+  TRANSFORM_TYPE_SHORTEN = 5;
+  TRANSFORM_TYPE_SIMPLIFY = 6;
+  TRANSFORM_TYPE_MAKE_COMPLEX = 7;
+  TRANSFORM_TYPE_MORE_FORMAL = 8;
+  TRANSFORM_TYPE_MORE_CASUAL = 9;
+}
+
 message TransformRequest {
   string text = 1;
-  string model = 2;
+  TransformType type = 2;
+  string model = 3;
+  bool preserve_markdown = 4;
 }
 
 message TransformResponse {

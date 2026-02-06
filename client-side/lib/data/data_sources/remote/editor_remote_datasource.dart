@@ -9,7 +9,9 @@ import 'package:skeleton/generated/grpc_pb/editor.pbgrpc.dart' as grpc;
 abstract class IEditorRemoteDataSource {
   Future<String> transform({
     required String text,
+    required grpc.TransformType type,
     String? model,
+    bool preserveMarkdown,
   });
 }
 
@@ -22,16 +24,26 @@ class EditorRemoteDataSource implements IEditorRemoteDataSource {
   grpc.EditorServiceClient get _client => _channelManager.editorClient;
 
   @override
-  Future<String> transform({required String text, String? model}) async {
-    Logs().d('EditorRemoteDataSource: transform model=$model');
+  Future<String> transform({
+    required String text,
+    required grpc.TransformType type,
+    String? model,
+    bool preserveMarkdown = false,
+  }) async {
+    Logs().d('EditorRemoteDataSource: transform type=$type model=$model');
     try {
-      final request = grpc.TransformRequest(text: text);
-
+      final request = grpc.TransformRequest(
+        text: text,
+        type: type,
+        preserveMarkdown: preserveMarkdown,
+      );
       if (model != null && model.isNotEmpty) {
         request.model = model;
       }
 
-      final resp = await _authGuard.execute(() => _client.transform(request));
+      final resp = await _authGuard.execute(
+        () => _client.transform(request),
+      );
       return resp.text;
     } on GrpcError catch (e) {
       Logs().e('EditorRemoteDataSource: ошибка transform', e);

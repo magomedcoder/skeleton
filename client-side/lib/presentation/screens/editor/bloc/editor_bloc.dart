@@ -19,14 +19,16 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   }) : super(const EditorState()) {
     on<EditorStarted>(_onStarted);
     on<EditorInputChanged>(_onInputChanged);
+    on<EditorTypeChanged>(_onTypeChanged);
     on<EditorModelChanged>(_onModelChanged);
+    on<EditorPreserveMarkdownChanged>(_onPreserveChanged);
     on<EditorTransformPressed>(_onTransformPressed);
     on<EditorClearError>(_onClearError);
   }
 
   Future<void> _onStarted(
     EditorStarted event,
-    Emitter<EditorState> emit,
+    Emitter<EditorState> emit
   ) async {
     Logs().d('EditorBloc: старт, загрузка моделей');
     try {
@@ -46,8 +48,19 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     emit(state.copyWith(inputText: event.text));
   }
 
+  void _onTypeChanged(EditorTypeChanged event, Emitter<EditorState> emit) {
+    emit(state.copyWith(type: event.type));
+  }
+
   void _onModelChanged(EditorModelChanged event, Emitter<EditorState> emit) {
     emit(state.copyWith(selectedModel: event.model));
+  }
+
+  void _onPreserveChanged(
+    EditorPreserveMarkdownChanged event,
+    Emitter<EditorState> emit,
+  ) {
+    emit(state.copyWith(preserveMarkdown: event.preserve));
   }
 
   Future<void> _onTransformPressed(
@@ -64,7 +77,9 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     try {
       final out = await transformTextUseCase(
         text: input,
+        type: state.type,
         model: state.selectedModel,
+        preserveMarkdown: state.preserveMarkdown,
       );
       emit(state.copyWith(isLoading: false, outputText: out));
     } catch (e) {

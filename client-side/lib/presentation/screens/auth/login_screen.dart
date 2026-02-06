@@ -27,7 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     final config = sl<ServerConfig>();
     _hostController.text = config.host;
-    _portController.text = config.port.toString();
+    if (config.port > 0) {
+      _portController.text = config.port.toString();
+    }
   }
 
   @override
@@ -42,14 +44,16 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
       final port = int.tryParse(_portController.text.trim());
-      context.read<AuthBloc>().add(
-            AuthLoginRequested(
-              username: _usernameController.text.trim(),
-              password: _passwordController.text,
-              host: _hostController.text.trim(),
-              port: port ?? ServerConfig.defaultPort,
-            ),
-          );
+      if (port != null) {
+        context.read<AuthBloc>().add(
+          AuthLoginRequested(
+            username: _usernameController.text.trim(),
+            password: _passwordController.text,
+            host: _hostController.text.trim(),
+            port: port,
+          ),
+        );
+      }
     }
   }
 
@@ -122,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
                           labelText: 'Порт сервера',
-                          hintText: 'Например: ${ServerConfig.defaultPort}',
+                          hintText: 'Введите порт сервера',
                           prefixIcon: const Icon(Icons.settings_ethernet_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),

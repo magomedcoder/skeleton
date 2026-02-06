@@ -1,4 +1,5 @@
 import 'package:skeleton/domain/repositories/editor_repository.dart';
+import 'package:skeleton/generated/grpc_pb/editor.pb.dart' as grpc;
 
 class TransformTextUseCase {
   final EditorRepository repository;
@@ -7,11 +8,15 @@ class TransformTextUseCase {
 
   Future<String> call({
     required String text,
+    required grpc.TransformType type,
     String? model,
+    bool preserveMarkdown = false,
   }) {
     return repository.transform(
       text: text,
+      type: type,
       model: model,
+      preserveMarkdown: preserveMarkdown,
     );
   }
 }

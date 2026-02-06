@@ -4,10 +4,8 @@ class ServerConfig {
   static const _keyHost = 'skeleton_server_host';
   static const _keyPort = 'skeleton_server_port';
 
-  static const int defaultPort = 50051;
-
   String _host = '';
-  int _port = defaultPort;
+  int _port = 0;
   SharedPreferences? _prefs;
 
   String get host => _host;
@@ -16,7 +14,7 @@ class ServerConfig {
   Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
     _host = _prefs!.getString(_keyHost) ?? '';
-    _port = _prefs!.getInt(_keyPort) ?? defaultPort;
+    _port = _prefs!.getInt(_keyPort) ?? 0;
   }
 
   Future<void> setServer(String host, int port) async {

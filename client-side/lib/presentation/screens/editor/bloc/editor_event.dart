@@ -21,6 +21,14 @@ final class EditorInputChanged extends EditorEvent {
   List<Object?> get props => [text];
 }
 
+final class EditorTypeChanged extends EditorEvent {
+  final grpc.TransformType type;
+  const EditorTypeChanged(this.type);
+
+  @override
+  List<Object?> get props => [type];
+}
+
 final class EditorModelChanged extends EditorEvent {
   final String? model;
 
@@ -28,6 +36,15 @@ final class EditorModelChanged extends EditorEvent {
 
   @override
   List<Object?> get props => [model];
+}
+
+final class EditorPreserveMarkdownChanged extends EditorEvent {
+  final bool preserve;
+
+  const EditorPreserveMarkdownChanged(this.preserve);
+
+  @override
+  List<Object?> get props => [preserve];
 }
 
 final class EditorTransformPressed extends EditorEvent {

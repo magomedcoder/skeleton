@@ -37,9 +37,9 @@ func (e *EditorHandler) Transform(ctx context.Context, req *editorpb.TransformRe
 		return nil, status.Error(codes.InvalidArgument, "текст не предоставлен")
 	}
 
-	logger.D("EditorHandler: transform model=%q", req.Model)
+	logger.D("EditorHandler: transform type=%v model=%q", req.Type, req.Model)
 
-	out, err := e.editorUseCase.Transform(ctx, req.GetModel(), req.GetText())
+	out, err := e.editorUseCase.Transform(ctx, req.GetModel(), req.GetText(), req.GetType(), req.GetPreserveMarkdown())
 	if err != nil {
 		return nil, ToStatusError(codes.Internal, err)
 	}

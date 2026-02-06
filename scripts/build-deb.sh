@@ -19,8 +19,16 @@ mkdir -p "$PKG_DIR/DEBIAN"
 mkdir -p "$PKG_DIR/opt/skeleton"
 mkdir -p "$PKG_DIR/usr/bin"
 mkdir -p "$PKG_DIR/usr/share/applications"
+mkdir -p "$PKG_DIR/usr/share/pixmaps"
 
 cp -a "$BUNDLE_DIR"/* "$PKG_DIR/opt/skeleton"
+
+ICON_SRC="client-side/linux/runner/resources/app_icon.png"
+if [ -f "$ICON_SRC" ]; then
+  cp "$ICON_SRC" "$PKG_DIR/usr/share/pixmaps/skeleton.png"
+else
+  echo "Warning: Icon file not found at $ICON_SRC"
+fi
 
 cat > "$PKG_DIR/usr/bin/skeleton" << 'WRAPPER'
 #!/bin/sh
