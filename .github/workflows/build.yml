@@ -1,0 +1,228 @@
+# Сборка платформ (Linux, Windows, macOS, Android, iOS)
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version/tag for build'
+        required: true
+        type: string
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev protobuf-compiler
+
+      - name: Install Dart protoc plugin
+        run: dart pub global activate protoc_plugin
+      - run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+      - name: Generate Dart gRPC code
+        run: |
+          mkdir -p ./client-side/lib/generated/grpc_pb
+          protoc --proto_path=./api/proto \
+            --dart_out=grpc:./client-side/lib/generated/grpc_pb \
+            ./api/proto/*.proto
+
+      - run: flutter pub get
+        working-directory: client-side
+      - run: flutter build linux --release
+        working-directory: client-side
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: client-side/build/linux/x64/release/bundle/
+
+      - name: Create Linux archive installer (tar.gz)
+        run: |
+          mkdir -p linux-installer
+          tar -czf linux-installer/skeleton-linux.tar.gz -C client-side/build/linux/x64/release/bundle .
+
+      - name: Build .deb package
+        run: |
+          chmod +x scripts/build-deb.sh
+          scripts/build-deb.sh "client-side/build/linux/x64/release/bundle" "linux-installer/skeleton_amd64.deb"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: linux-installer/
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-2022
+    env:
+      RELEASE_TAG: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+
+      - name: Install protoc (Windows)
+        run: choco install protoc -y
+      - name: Install Dart protoc plugin
+        run: dart pub global activate protoc_plugin
+      - run: echo "$env:LOCALAPPDATA\Pub\Cache\bin" >> $env:GITHUB_PATH
+      - name: Generate Dart gRPC code
+        run: |
+          New-Item -ItemType Directory -Force -Path ./client-side/lib/generated/grpc_pb
+          protoc --proto_path=./api/proto `
+            --dart_out=grpc:./client-side/lib/generated/grpc_pb `
+            ./api/proto/*.proto
+
+      - run: flutter pub get
+        working-directory: client-side
+      - run: flutter build windows --release
+        working-directory: client-side
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Build Windows installer (NSIS)
+        run: |
+          $tag = "$env:RELEASE_TAG"
+          $ver = if ($tag -match '^v(.+)$') { $Matches[1] } else { '1.0.0' }
+          makensis /DAPP_VERSION=$ver scripts/windows-installer.nsi
+
+      - name: Prepare windows-installer artifact
+        run: |
+          New-Item -ItemType Directory -Force -Path windows-installer
+          Move-Item -Path scripts/SkeletonSetup.exe -Destination windows-installer/SkeletonSetup.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: client-side/build/windows/x64/runner/Release/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: windows-installer/
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-14
+    env:
+      RELEASE_TAG: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+
+      - name: Install protoc (macOS)
+        run: brew install protobuf
+      - name: Install Dart protoc plugin
+        run: dart pub global activate protoc_plugin
+      - run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+      - name: Generate Dart gRPC code
+        run: |
+          mkdir -p ./client-side/lib/generated/grpc_pb
+          protoc --proto_path=./api/proto \
+            --dart_out=grpc:./client-side/lib/generated/grpc_pb \
+            ./api/proto/*.proto
+
+      - run: flutter pub get
+        working-directory: client-side
+      - run: flutter build macos --release
+        working-directory: client-side
+
+      - name: Create macOS DMG installer
+        run: |
+          mkdir -p dist
+          ver="${RELEASE_TAG#v}"
+          [[ "$ver" =~ ^[0-9] ]] || ver="1.0.0"
+          hdiutil create -volname "Skeleton" \
+            -srcfolder "client-side/build/macos/Build/Products/Release/skeleton.app" \
+            -ov -format UDZO "dist/skeleton-${ver}-macos.dmg"
+          cp "dist/skeleton-${ver}-macos.dmg" dist/skeleton-macos.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: client-side/build/macos/Build/Products/Release/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-installer
+          path: dist/skeleton-macos.dmg
+
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+
+      - name: Install protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: Install Dart protoc plugin
+        run: dart pub global activate protoc_plugin
+      - run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+      - name: Generate Dart gRPC code
+        run: |
+          mkdir -p ./client-side/lib/generated/grpc_pb
+          protoc --proto_path=./api/proto \
+            --dart_out=grpc:./client-side/lib/generated/grpc_pb \
+            ./api/proto/*.proto
+
+      - run: flutter pub get
+        working-directory: client-side
+      - run: flutter build apk --release
+        working-directory: client-side
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: client-side/build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios:
+    name: Build iOS (.app)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+
+      - name: Install protoc (macOS)
+        run: brew install protobuf
+      - name: Install Dart protoc plugin
+        run: dart pub global activate protoc_plugin
+      - run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+      - name: Generate Dart gRPC code
+        run: |
+          mkdir -p ./client-side/lib/generated/grpc_pb
+          protoc --proto_path=./api/proto \
+            --dart_out=grpc:./client-side/lib/generated/grpc_pb \
+            ./api/proto/*.proto
+
+      - run: flutter pub get
+        working-directory: client-side
+      - run: flutter build ios --release --no-codesign
+        working-directory: client-side
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-app
+          path: client-side/build/ios/iphoneos/Runner.app

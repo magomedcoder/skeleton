@@ -1,0 +1,93 @@
+# Сборка и публикация при создании тега v*
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ github.ref_name }}
+    secrets: inherit
+
+  release:
+    name: Upload GitHub Release
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          [[ "$VER" =~ ^[0-9] ]] || VER="1.0.0"
+          echo "VER=$VER" >> $GITHUB_ENV
+
+          cd artifacts
+
+          if [ -f android-apk/app-release.apk ]; then
+            mv android-apk/app-release.apk ../skeleton-android-$VER.apk
+          else
+            echo "APK not found!" && exit 1
+          fi
+
+          if [ -d ios-app ]; then
+            mv ios-app ../skeleton-ios-$VER.app
+          else
+            echo "ios-app not found!" && exit 1
+          fi
+
+          if [ -f linux-installer/skeleton-linux.tar.gz ]; then
+            mv linux-installer/skeleton-linux.tar.gz ../skeleton-linux-$VER.tar.gz
+          else
+            echo "linux-installer artifact not found!" && exit 1
+          fi
+
+          DEB=$(find linux-installer -maxdepth 1 -name 'skeleton_*_amd64.deb' -print -quit)
+          if [ -z "$DEB" ] || [ ! -f "$DEB" ]; then
+            DEB="linux-installer/skeleton_amd64.deb"
+          fi
+          if [ -n "$DEB" ] && [ -f "$DEB" ]; then
+            cp "$DEB" ../skeleton-linux-$VER.deb
+          else
+            echo "linux .deb not found! Contents of linux-installer:"
+            ls -la linux-installer/
+            exit 1
+          fi
+
+          if [ -f windows-installer/SkeletonSetup.exe ]; then
+            mv windows-installer/SkeletonSetup.exe ../skeleton-windows-$VER.exe
+          elif [ -f SkeletonSetup.exe ]; then
+            mv SkeletonSetup.exe ../skeleton-windows-$VER.exe
+          else
+            echo "windows-installer artifact not found!" && exit 1
+          fi
+
+          if [ -f macos-installer/skeleton-macos.dmg ]; then
+            mv macos-installer/skeleton-macos.dmg ../skeleton-macos-$VER.dmg
+          else
+            echo "macos-installer artifact not found!" && exit 1
+          fi
+
+      - name: Upload Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            skeleton-android-${{ env.VER }}.apk
+            skeleton-ios-${{ env.VER }}.app
+            skeleton-linux-${{ env.VER }}.tar.gz
+            skeleton-linux-${{ env.VER }}.deb
+            skeleton-windows-${{ env.VER }}.exe
+            skeleton-macos-${{ env.VER }}.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

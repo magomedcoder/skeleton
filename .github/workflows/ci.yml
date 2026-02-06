@@ -1,0 +1,119 @@
+# Сборка при push в main и обновление тега dev
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ github.event_name == 'push' && 'dev' || (github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number)) || 'dev' }}
+    secrets: inherit
+
+  update-dev-tag:
+    name: Update dev tag
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete and recreate dev tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -d dev 2>/dev/null || true
+          git push origin :refs/tags/dev 2>/dev/null || true
+          git tag dev
+          git push origin dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dev-release:
+    name: Upload Dev Release
+    needs: [build, update-dev-tag]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare dev artifacts
+        run: |
+          cd artifacts
+
+          if [ -f android-apk/app-release.apk ]; then
+            mv android-apk/app-release.apk ../skeleton-android-dev.apk
+          else
+            echo "APK not found!" && exit 1
+          fi
+
+          if [ -d ios-app ]; then
+            mv ios-app ../skeleton-ios-dev.app
+          else
+            echo "ios-app not found!" && exit 1
+          fi
+
+          if [ -f linux-installer/skeleton-linux.tar.gz ]; then
+            mv linux-installer/skeleton-linux.tar.gz ../skeleton-linux-dev.tar.gz
+          else
+            echo "linux-installer artifact not found!" && exit 1
+          fi
+
+          DEB=$(find linux-installer -maxdepth 1 -name 'skeleton_*_amd64.deb' -print -quit)
+          if [ -z "$DEB" ] || [ ! -f "$DEB" ]; then
+            DEB="linux-installer/skeleton_amd64.deb"
+          fi
+          if [ -n "$DEB" ] && [ -f "$DEB" ]; then
+            cp "$DEB" ../skeleton-linux-dev.deb
+          else
+            echo "linux .deb not found! Contents of linux-installer:"
+            ls -la linux-installer/
+            exit 1
+          fi
+
+          if [ -f windows-installer/SkeletonSetup.exe ]; then
+            mv windows-installer/SkeletonSetup.exe ../skeleton-windows-dev.exe
+          elif [ -f SkeletonSetup.exe ]; then
+            mv SkeletonSetup.exe ../skeleton-windows-dev.exe
+          else
+            echo "windows-installer artifact not found!" && exit 1
+          fi
+
+          if [ -f macos-installer/skeleton-macos.dmg ]; then
+            mv macos-installer/skeleton-macos.dmg ../skeleton-macos-dev.dmg
+          else
+            echo "macos-installer artifact not found!" && exit 1
+          fi
+
+      - name: Upload Dev Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev
+          name: "Dev build"
+          draft: false
+          prerelease: true
+          files: |
+            skeleton-android-dev.apk
+            skeleton-ios-dev.app
+            skeleton-linux-dev.tar.gz
+            skeleton-linux-dev.deb
+            skeleton-windows-dev.exe
+            skeleton-macos-dev.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
