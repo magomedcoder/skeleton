@@ -33,13 +33,6 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 	return err
 }
 
-func nullIfEmpty(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
-
 func nullUUID(s string) interface{} {
 	if s == "" {
 		return nil

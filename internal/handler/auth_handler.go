@@ -79,7 +79,7 @@ func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePass
 		return nil, err
 	}
 	logger.D("AuthHandler: смена пароля пользователя %d", user.Id)
-	if err := a.authUseCase.ChangePassword(ctx, user.Id, req.OldPassword, req.NewPassword); err != nil {
+	if err := a.authUseCase.ChangePassword(ctx, user.Id, req.OldPassword, req.NewPassword, req.GetCurrentRefreshToken()); err != nil {
 		logger.W("AuthHandler: ошибка смены пароля: %v", err)
 		return nil, ToStatusError(codes.InvalidArgument, err)
 	}
@@ -101,4 +101,42 @@ func (a *AuthHandler) CheckVersion(ctx context.Context, req *authpb.CheckVersion
 		Compatible: compatible,
 		Message:    msg,
 	}, nil
+}
+
+func (a *AuthHandler) GetDevices(ctx context.Context, req *authpb.GetDevicesRequest) (*authpb.GetDevicesResponse, error) {
+	user, err := GetUserFromContext(ctx, a.authUseCase)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens, err := a.authUseCase.GetDevices(ctx, user.Id)
+	if err != nil {
+		logger.E("AuthHandler: ошибка списка устройств: %v", err)
+		return nil, status.Error(codes.Internal, "не удалось получить список устройств")
+	}
+
+	devices := make([]*authpb.Device, 0, len(tokens))
+	for _, t := range tokens {
+		devices = append(devices, &authpb.Device{
+			Id:               int32(t.Id),
+			CreatedAtSeconds: t.CreatedAt.Unix(),
+		})
+	}
+
+	return &authpb.GetDevicesResponse{Devices: devices}, nil
+}
+
+func (a *AuthHandler) RevokeDevice(ctx context.Context, req *authpb.RevokeDeviceRequest) (*authpb.RevokeDeviceResponse, error) {
+	user, err := GetUserFromContext(ctx, a.authUseCase)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.authUseCase.RevokeDevice(ctx, user.Id, int(req.GetDeviceId())); err != nil {
+		logger.W("AuthHandler: ошибка отзыва устройства: %v", err)
+		return nil, ToStatusError(codes.NotFound, err)
+	}
+
+	logger.I("AuthHandler: устройство %d отозвано", req.GetDeviceId())
+	return &authpb.RevokeDeviceResponse{Success: true}, nil
 }

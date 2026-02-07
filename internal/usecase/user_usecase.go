@@ -13,16 +13,16 @@ import (
 )
 
 type UserUseCase struct {
-	userRepo   domain.UserRepository
-	tokenRepo  domain.TokenRepository
-	jwtService *service.JWTService
+	userRepo        domain.UserRepository
+	userSessionRepo domain.UserSessionRepository
+	jwtService      *service.JWTService
 }
 
-func NewUserUseCase(userRepo domain.UserRepository, tokenRepo domain.TokenRepository, jwtService *service.JWTService) *UserUseCase {
+func NewUserUseCase(userRepo domain.UserRepository, userSessionRepo domain.UserSessionRepository, jwtService *service.JWTService) *UserUseCase {
 	return &UserUseCase{
-		userRepo:   userRepo,
-		tokenRepo:  tokenRepo,
-		jwtService: jwtService,
+		userRepo:        userRepo,
+		userSessionRepo: userSessionRepo,
+		jwtService:      jwtService,
 	}
 }
 
@@ -138,8 +138,8 @@ func (u *UserUseCase) EditUser(ctx context.Context, id string, username, passwor
 	updated.Password = ""
 
 	if roleChanged {
-		_ = u.tokenRepo.DeleteByUserId(ctx, intID, domain.TokenTypeAccess)
-		_ = u.tokenRepo.DeleteByUserId(ctx, intID, domain.TokenTypeRefresh)
+		_ = u.userSessionRepo.DeleteByUserId(ctx, intID, domain.TokenTypeAccess)
+		_ = u.userSessionRepo.DeleteByUserId(ctx, intID, domain.TokenTypeRefresh)
 	}
 
 	return updated, nil

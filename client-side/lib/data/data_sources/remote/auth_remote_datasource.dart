@@ -6,6 +6,8 @@ import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/data/mappers/auth_mapper.dart';
 import 'package:skeleton/domain/entities/auth_result.dart';
 import 'package:skeleton/domain/entities/auth_tokens.dart';
+import 'package:skeleton/domain/entities/device.dart';
+import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
 import 'package:skeleton/generated/grpc_pb/auth.pbgrpc.dart' as grpc;
 
 abstract class IAuthRemoteDataSource {
@@ -15,13 +17,18 @@ abstract class IAuthRemoteDataSource {
 
   Future<void> logout();
 
-  Future<void> changePassword(String oldPassword, String newPassword);
+  Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]);
+
+  Future<List<Device>> getDevices();
+
+  Future<void> revokeDevice(int deviceId);
 }
 
 class AuthRemoteDataSource implements IAuthRemoteDataSource {
   final GrpcChannelManager _channelManager;
+  final UserLocalDataSourceImpl _tokenStorage;
 
-  AuthRemoteDataSource(this._channelManager);
+  AuthRemoteDataSource(this._channelManager, this._tokenStorage);
 
   grpc.AuthServiceClient get _client => _channelManager.authClient;
 
@@ -90,13 +97,17 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   }
 
   @override
-  Future<void> changePassword(String oldPassword, String newPassword) async {
+  Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]) async {
     Logs().d('AuthRemoteDataSource: смена пароля');
     try {
       final request = grpc.ChangePasswordRequest(
         oldPassword: oldPassword,
-        newPassword: newPassword
+        newPassword: newPassword,
       );
+      final refreshToken = currentRefreshToken ?? _tokenStorage.refreshToken;
+      if (refreshToken != null && refreshToken.trim().isNotEmpty) {
+        request.currentRefreshToken = refreshToken.trim();
+      }
 
       await _client.changePassword(request);
       Logs().i('AuthRemoteDataSource: пароль изменён');
@@ -110,6 +121,50 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     } catch (e) {
       Logs().e('AuthRemoteDataSource: ошибка смены пароля', e);
       throw ApiFailure('Ошибка смены пароля');
+    }
+  }
+
+  @override
+  Future<List<Device>> getDevices() async {
+    Logs().d('AuthRemoteDataSource: список устройств');
+    try {
+      final request = grpc.GetDevicesRequest();
+      final response = await _client.getDevices(request);
+      final devices = response.devices
+        .map((d) => Device(
+          id: d.id,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(
+            d.createdAtSeconds.toInt() * 1000,
+          ),
+        ))
+        .toList();
+      Logs().i('AuthRemoteDataSource: получено ${devices.length} устройств');
+      return devices;
+    } on GrpcError catch (e) {
+      Logs().e('AuthRemoteDataSource: ошибка списка устройств', e);
+      throwGrpcError(e, 'Ошибка загрузки устройств');
+    } catch (e) {
+      Logs().e('AuthRemoteDataSource: ошибка списка устройств', e);
+      throw ApiFailure('Ошибка загрузки устройств');
+    }
+  }
+
+  @override
+  Future<void> revokeDevice(int deviceId) async {
+    Logs().d('AuthRemoteDataSource: отзыв устройства $deviceId');
+    try {
+      final request = grpc.RevokeDeviceRequest(deviceId: deviceId);
+      await _client.revokeDevice(request);
+      Logs().i('AuthRemoteDataSource: устройство отозвано');
+    } on GrpcError catch (e) {
+      Logs().e('AuthRemoteDataSource: ошибка отзыва устройства', e);
+      if (e.code == StatusCode.notFound) {
+        throw NetworkFailure('Устройство не найдено');
+      }
+      throwGrpcError(e, 'Ошибка отзыва устройства');
+    } catch (e) {
+      Logs().e('AuthRemoteDataSource: ошибка отзыва устройства', e);
+      throw ApiFailure('Ошибка отзыва устройства');
     }
   }
 }

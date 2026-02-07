@@ -60,7 +60,7 @@ func main() {
 	logger.D("Миграции применены")
 
 	userRepo := postgres.NewUserRepository(db)
-	tokenRepo := postgres.NewTokenRepository(db)
+	userSessionRepo := postgres.NewUserSessionRepository(db)
 	sessionRepo := postgres.NewChatSessionRepository(db)
 	messageRepo := postgres.NewMessageRepository(db)
 	fileRepo := postgres.NewFileRepository(db)
@@ -74,10 +74,10 @@ func main() {
 	logger.D("Первый пользователь проверен/создан")
 
 	runnerPool := runner.NewPool(cfg.Runners.Addresses)
-	authUseCase := usecase.NewAuthUseCase(userRepo, tokenRepo, jwtService)
+	authUseCase := usecase.NewAuthUseCase(userRepo, userSessionRepo, jwtService)
 	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, fileRepo, runnerPool, cfg.Attachments.SaveDir)
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
-	userUseCase := usecase.NewUserUseCase(userRepo, tokenRepo, jwtService)
+	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
 	chatHandler := handler.NewChatHandler(chatUseCase, authUseCase)

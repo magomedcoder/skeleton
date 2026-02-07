@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/magomedcoder/skeleton/internal/domain"
 	"github.com/magomedcoder/skeleton/internal/service"
@@ -10,21 +11,23 @@ import (
 	"github.com/magomedcoder/skeleton/pkg/logger"
 )
 
+const maxDevicesPerUser = 4
+
 type AuthUseCase struct {
-	userRepo   domain.UserRepository
-	tokenRepo  domain.TokenRepository
-	jwtService *service.JWTService
+	userRepo        domain.UserRepository
+	userSessionRepo domain.UserSessionRepository
+	jwtService      *service.JWTService
 }
 
 func NewAuthUseCase(
 	userRepo domain.UserRepository,
-	tokenRepo domain.TokenRepository,
+	userSessionRepo domain.UserSessionRepository,
 	jwtService *service.JWTService,
 ) *AuthUseCase {
 	return &AuthUseCase{
-		userRepo:   userRepo,
-		tokenRepo:  tokenRepo,
-		jwtService: jwtService,
+		userRepo:        userRepo,
+		userSessionRepo: userSessionRepo,
+		jwtService:      jwtService,
 	}
 }
 
@@ -52,17 +55,18 @@ func (a *AuthUseCase) Login(ctx context.Context, username, password string) (*do
 		return nil, "", "", err
 	}
 
-	_ = a.tokenRepo.DeleteByUserId(ctx, user.Id, domain.TokenTypeAccess)
-	_ = a.tokenRepo.DeleteByUserId(ctx, user.Id, domain.TokenTypeRefresh)
+	if err := a.ensureMaxDevices(ctx, user.Id); err != nil {
+		return nil, "", "", err
+	}
 
 	accessTokenEntity := domain.NewToken(user.Id, accessToken, domain.TokenTypeAccess, accessExpires)
 	refreshTokenEntity := domain.NewToken(user.Id, refreshToken, domain.TokenTypeRefresh, refreshExpires)
 
-	if err := a.tokenRepo.Create(ctx, accessTokenEntity); err != nil {
+	if err := a.userSessionRepo.Create(ctx, accessTokenEntity); err != nil {
 		return nil, "", "", err
 	}
 
-	if err := a.tokenRepo.Create(ctx, refreshTokenEntity); err != nil {
+	if err := a.userSessionRepo.Create(ctx, refreshTokenEntity); err != nil {
 		return nil, "", "", err
 	}
 
@@ -77,7 +81,7 @@ func (a *AuthUseCase) RefreshToken(ctx context.Context, refreshToken string) (st
 		return "", "", errors.New("неверный токен обновления")
 	}
 
-	token, err := a.tokenRepo.GetByToken(ctx, refreshToken)
+	token, err := a.userSessionRepo.GetByToken(ctx, refreshToken)
 	if err != nil || token.IsExpired() {
 		return "", "", errors.New("неверный токен обновления")
 	}
@@ -97,21 +101,40 @@ func (a *AuthUseCase) RefreshToken(ctx context.Context, refreshToken string) (st
 		return "", "", err
 	}
 
-	_ = a.tokenRepo.DeleteByUserId(ctx, user.Id, domain.TokenTypeAccess)
-	_ = a.tokenRepo.DeleteByToken(ctx, refreshToken)
+	_ = a.userSessionRepo.DeleteByToken(ctx, refreshToken)
+
+	if err := a.ensureMaxDevices(ctx, user.Id); err != nil {
+		return "", "", err
+	}
 
 	accessTokenEntity := domain.NewToken(user.Id, accessToken, domain.TokenTypeAccess, accessExpires)
 	refreshTokenEntity := domain.NewToken(user.Id, newRefreshToken, domain.TokenTypeRefresh, refreshExpires)
 
-	if err := a.tokenRepo.Create(ctx, accessTokenEntity); err != nil {
+	if err := a.userSessionRepo.Create(ctx, accessTokenEntity); err != nil {
 		return "", "", err
 	}
 
-	if err := a.tokenRepo.Create(ctx, refreshTokenEntity); err != nil {
+	if err := a.userSessionRepo.Create(ctx, refreshTokenEntity); err != nil {
 		return "", "", err
 	}
 
 	return accessToken, newRefreshToken, nil
+}
+
+func (a *AuthUseCase) ensureMaxDevices(ctx context.Context, userID int) error {
+	count, err := a.userSessionRepo.CountByUserIdAndType(ctx, userID, domain.TokenTypeRefresh)
+	if err != nil {
+		return err
+	}
+
+	if count >= maxDevicesPerUser {
+		toRemove := count - maxDevicesPerUser + 1
+		if err := a.userSessionRepo.DeleteOldestByUserIdAndType(ctx, userID, domain.TokenTypeRefresh, toRemove); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *AuthUseCase) ValidateToken(ctx context.Context, token string) (*domain.User, error) {
@@ -120,7 +143,7 @@ func (a *AuthUseCase) ValidateToken(ctx context.Context, token string) (*domain.
 		return nil, errors.New("неверный токен")
 	}
 
-	tokenEntity, err := a.tokenRepo.GetByToken(ctx, token)
+	tokenEntity, err := a.userSessionRepo.GetByToken(ctx, token)
 	if err != nil || tokenEntity.IsExpired() {
 		return nil, errors.New("неверный токен")
 	}
@@ -138,18 +161,31 @@ func (a *AuthUseCase) ValidateToken(ctx context.Context, token string) (*domain.
 }
 
 func (a *AuthUseCase) Logout(ctx context.Context, UserId int) error {
-	if err := a.tokenRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeAccess); err != nil {
+	if err := a.userSessionRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeAccess); err != nil {
 		return err
 	}
 
-	if err := a.tokenRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeRefresh); err != nil {
+	if err := a.userSessionRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeRefresh); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (a *AuthUseCase) ChangePassword(ctx context.Context, UserId int, oldPassword, newPassword string) error {
+func (a *AuthUseCase) GetDevices(ctx context.Context, userID int) ([]*domain.Token, error) {
+	tokens, err := a.userSessionRepo.ListByUserIdAndType(ctx, userID, domain.TokenTypeRefresh)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+func (a *AuthUseCase) RevokeDevice(ctx context.Context, userID int, deviceID int) error {
+	return a.userSessionRepo.DeleteByIdAndUserId(ctx, deviceID, userID)
+}
+
+func (a *AuthUseCase) ChangePassword(ctx context.Context, UserId int, oldPassword, newPassword, currentRefreshToken string) error {
 	if oldPassword == "" {
 		return errors.New("текущий пароль не может быть пустым")
 	}
@@ -176,8 +212,11 @@ func (a *AuthUseCase) ChangePassword(ctx context.Context, UserId int, oldPasswor
 		return err
 	}
 
-	_ = a.tokenRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeAccess)
-	_ = a.tokenRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeRefresh)
+	_ = a.userSessionRepo.DeleteByUserId(ctx, UserId, domain.TokenTypeAccess)
+
+	if keepToken := strings.TrimSpace(currentRefreshToken); keepToken != "" {
+		_ = a.userSessionRepo.DeleteRefreshTokensByUserIdExcept(ctx, UserId, keepToken)
+	}
 
 	return nil
 }

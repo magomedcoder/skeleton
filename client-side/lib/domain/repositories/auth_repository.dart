@@ -1,5 +1,6 @@
 import 'package:skeleton/domain/entities/auth_result.dart';
 import 'package:skeleton/domain/entities/auth_tokens.dart';
+import 'package:skeleton/domain/entities/device.dart';
 
 abstract interface class AuthRepository {
   Future<AuthResult> login(String username, String password);
@@ -8,5 +9,9 @@ abstract interface class AuthRepository {
 
   Future<void> logout();
 
-  Future<void> changePassword(String oldPassword, String newPassword);
+  Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]);
+
+  Future<List<Device>> getDevices();
+
+  Future<void> revokeDevice(int deviceId);
 }

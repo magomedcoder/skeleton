@@ -3,6 +3,7 @@ import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:skeleton/domain/entities/auth_result.dart';
 import 'package:skeleton/domain/entities/auth_tokens.dart';
+import 'package:skeleton/domain/entities/device.dart';
 import 'package:skeleton/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -44,13 +45,35 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> changePassword(String oldPassword, String newPassword) async {
+  Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]) async {
     try {
-      await dataSource.changePassword(oldPassword, newPassword);
+      await dataSource.changePassword(oldPassword, newPassword, currentRefreshToken);
     } catch (e) {
       if (e is Failure) rethrow;
       Logs().e('AuthRepository: неожиданная ошибка смены пароля', e);
       throw ApiFailure('Ошибка смены пароля');
+    }
+  }
+
+  @override
+  Future<List<Device>> getDevices() async {
+    try {
+      return await dataSource.getDevices();
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('AuthRepository: неожиданная ошибка списка устройств', e);
+      throw ApiFailure('Ошибка загрузки устройств');
+    }
+  }
+
+  @override
+  Future<void> revokeDevice(int deviceId) async {
+    try {
+      await dataSource.revokeDevice(deviceId);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('AuthRepository: неожиданная ошибка отзыва устройства', e);
+      throw ApiFailure('Ошибка отзыва устройства');
     }
   }
 }

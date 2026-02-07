@@ -5,6 +5,7 @@ import 'package:skeleton/domain/usecases/auth/change_password_usecase.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:skeleton/presentation/screens/devices/devices_screen.dart';
 import 'package:skeleton/core/theme/app_theme.dart';
 import 'package:skeleton/presentation/theme/theme_cubit.dart';
 import 'package:skeleton/presentation/theme/theme_state.dart';
@@ -46,14 +47,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Пароль изменён. Войдите снова'),
+          content: const Text('Пароль изменён. Остальные сессии сброшены.'),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
 
-      context.read<AuthBloc>().add(const AuthLogoutRequested());
-      Navigator.of(context).pop();
+      _oldPasswordController.clear();
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +140,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.devices_rounded),
+                  title: const Text('Устройства и сессии'),
+                  subtitle: const Text(
+                    'Список авторизованных устройств, завершение сессий',
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DevicesScreen(),
+                    ),
                   ),
                 ),
               ),

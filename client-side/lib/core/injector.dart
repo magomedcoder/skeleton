@@ -22,8 +22,10 @@ import 'package:skeleton/domain/repositories/runners_repository.dart';
 import 'package:skeleton/domain/repositories/user_repository.dart';
 import 'package:skeleton/domain/usecases/auth/login_usecase.dart';
 import 'package:skeleton/domain/usecases/auth/change_password_usecase.dart';
+import 'package:skeleton/domain/usecases/auth/get_devices_usecase.dart';
 import 'package:skeleton/domain/usecases/auth/logout_usecase.dart';
 import 'package:skeleton/domain/usecases/auth/refresh_token_usecase.dart';
+import 'package:skeleton/domain/usecases/auth/revoke_device_usecase.dart';
 import 'package:skeleton/domain/usecases/chat/connect_usecase.dart';
 import 'package:skeleton/domain/usecases/chat/create_session_usecase.dart';
 import 'package:skeleton/domain/usecases/chat/delete_session_usecase.dart';
@@ -46,6 +48,7 @@ import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/users_admin_bloc.dart';
+import 'package:skeleton/presentation/screens/devices/bloc/devices_bloc.dart';
 import 'package:skeleton/presentation/screens/editor/bloc/editor_bloc.dart';
 import 'package:skeleton/presentation/theme/theme_cubit.dart';
 
@@ -96,7 +99,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<IAuthRemoteDataSource>(
-    () => AuthRemoteDataSource(sl<GrpcChannelManager>()),
+    () => AuthRemoteDataSource(sl<GrpcChannelManager>(), sl<UserLocalDataSourceImpl>()),
   );
 
   sl.registerLazySingleton<IUserRemoteDataSource>(
@@ -137,7 +140,9 @@ Future<void> init() async {
   sl.registerFactory(() => LoginUseCase(sl()));
   sl.registerFactory(() => RefreshTokenUseCase(sl()));
   sl.registerFactory(() => LogoutUseCase(sl()));
-  sl.registerFactory(() => ChangePasswordUseCase(sl()));
+  sl.registerFactory(() => ChangePasswordUseCase(sl(), sl<UserLocalDataSourceImpl>()));
+  sl.registerFactory(() => GetDevicesUseCase(sl()));
+  sl.registerFactory(() => RevokeDeviceUseCase(sl()));
 
   sl.registerFactory(() => GetUsersUseCase(sl()));
   sl.registerFactory(() => CreateUserUseCase(sl()));
@@ -193,6 +198,13 @@ Future<void> init() async {
     () => RunnersAdminBloc(
       getRunnersUseCase: sl(),
       setRunnerEnabledUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => DevicesBloc(
+      getDevicesUseCase: sl(),
+      revokeDeviceUseCase: sl(),
     ),
   );
 

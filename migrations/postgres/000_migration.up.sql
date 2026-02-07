@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users
     deleted_at     TIMESTAMP           NULL
 );
 
-CREATE TABLE IF NOT EXISTS tokens
+CREATE TABLE IF NOT EXISTS user_sessions
 (
     id         SERIAL PRIMARY KEY,
     user_id    INTEGER     NOT NULL REFERENCES users (id),
@@ -61,10 +61,10 @@ CREATE TABLE IF NOT EXISTS messages
 CREATE INDEX idx_users_username ON users (username);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users (deleted_at);
-CREATE INDEX IF NOT EXISTS idx_tokens_user_id ON tokens (user_id);
-CREATE INDEX IF NOT EXISTS idx_tokens_token ON tokens (token);
-CREATE INDEX IF NOT EXISTS idx_tokens_expires_at ON tokens (expires_at);
-CREATE INDEX IF NOT EXISTS idx_tokens_deleted_at ON tokens (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions (token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions (expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_deleted_at ON user_sessions (deleted_at);
 CREATE INDEX idx_chat_sessions_user_id ON chat_sessions (user_id);
 CREATE INDEX idx_chat_sessions_created_at ON chat_sessions (created_at);
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_deleted_at ON chat_sessions (deleted_at);

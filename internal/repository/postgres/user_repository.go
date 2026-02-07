@@ -16,8 +16,7 @@ func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
 }
 
 func (u *userRepository) Create(ctx context.Context, user *domain.User) error {
-	err := u.db.QueryRow(ctx,
-		`
+	err := u.db.QueryRow(ctx, `
 		INSERT INTO users (username, password, name, surname, role, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
@@ -34,8 +33,11 @@ func (u *userRepository) Create(ctx context.Context, user *domain.User) error {
 }
 
 func (u *userRepository) UpdateLastVisitedAt(ctx context.Context, userID int) error {
-	_, err := u.db.Exec(ctx,
-		`UPDATE users SET last_visited_at = NOW() WHERE id = $1 AND deleted_at IS NULL`,
+	_, err := u.db.Exec(ctx, `
+		UPDATE users
+		SET last_visited_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`,
 		userID,
 	)
 	return err
@@ -44,8 +46,7 @@ func (u *userRepository) UpdateLastVisitedAt(ctx context.Context, userID int) er
 func (u *userRepository) GetById(ctx context.Context, id int) (*domain.User, error) {
 	var user domain.User
 	var role int16
-	err := u.db.QueryRow(ctx,
-		`
+	err := u.db.QueryRow(ctx, `
 		SELECT id, username, password, name, surname, role, created_at, last_visited_at, deleted_at
 		FROM users
 		WHERE id = $1 AND deleted_at IS NULL
@@ -73,8 +74,7 @@ func (u *userRepository) GetById(ctx context.Context, id int) (*domain.User, err
 func (u *userRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
 	var user domain.User
 	var role int16
-	err := u.db.QueryRow(ctx,
-		`
+	err := u.db.QueryRow(ctx, `
 		SELECT id, username, password, name, surname, role, created_at, last_visited_at, deleted_at
 		FROM users
 		WHERE username = $1 AND deleted_at IS NULL
@@ -99,8 +99,7 @@ func (u *userRepository) GetByUsername(ctx context.Context, username string) (*d
 }
 
 func (u *userRepository) Update(ctx context.Context, user *domain.User) error {
-	_, err := u.db.Exec(ctx,
-		`
+	_, err := u.db.Exec(ctx, `
 		UPDATE users SET
 		    username = $2,
 		    password = CASE WHEN $3 = '' THEN password ELSE $3 END,
@@ -132,8 +131,7 @@ func (u *userRepository) List(ctx context.Context, page, pageSize int32) ([]*dom
 		return nil, 0, err
 	}
 
-	rows, err := u.db.Query(ctx,
-		`
+	rows, err := u.db.Query(ctx, `
 		SELECT id, username, password, name, surname, role, created_at, last_visited_at, deleted_at
 		FROM users
 		WHERE deleted_at IS NULL

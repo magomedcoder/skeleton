@@ -18,7 +18,7 @@ type UserRepository interface {
 	UpdateLastVisitedAt(ctx context.Context, userID int) error
 }
 
-type TokenRepository interface {
+type UserSessionRepository interface {
 	Create(ctx context.Context, token *Token) error
 
 	GetByToken(ctx context.Context, token string) (*Token, error)
@@ -26,6 +26,16 @@ type TokenRepository interface {
 	DeleteByToken(ctx context.Context, token string) error
 
 	DeleteByUserId(ctx context.Context, userId int, tokenType TokenType) error
+
+	CountByUserIdAndType(ctx context.Context, userId int, tokenType TokenType) (int, error)
+
+	DeleteOldestByUserIdAndType(ctx context.Context, userId int, tokenType TokenType, limit int) error
+
+	ListByUserIdAndType(ctx context.Context, userId int, tokenType TokenType) ([]*Token, error)
+
+	DeleteByIdAndUserId(ctx context.Context, id, userId int) error
+
+	DeleteRefreshTokensByUserIdExcept(ctx context.Context, userId int, keepRefreshToken string) error
 }
 
 type ChatSessionRepository interface {
