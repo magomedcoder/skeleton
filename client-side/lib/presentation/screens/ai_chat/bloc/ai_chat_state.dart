@@ -2,7 +2,7 @@ import 'package:skeleton/domain/entities/message.dart';
 import 'package:skeleton/domain/entities/session.dart';
 import 'package:equatable/equatable.dart';
 
-class ChatState extends Equatable {
+class AIChatState extends Equatable {
   final bool isConnected;
   final bool isLoading;
   final bool isStreaming;
@@ -15,7 +15,7 @@ class ChatState extends Equatable {
   final String? selectedModel;
   final bool? hasActiveRunners;
 
-  const ChatState({
+  const AIChatState({
     this.isConnected = false,
     this.isLoading = false,
     this.isStreaming = false,
@@ -29,7 +29,7 @@ class ChatState extends Equatable {
     this.hasActiveRunners,
   });
 
-  ChatState copyWith({
+  AIChatState copyWith({
     bool? isConnected,
     bool? isLoading,
     bool? isStreaming,
@@ -43,7 +43,7 @@ class ChatState extends Equatable {
     String? selectedModel,
     bool? hasActiveRunners,
   }) {
-    return ChatState(
+    return AIChatState(
       isConnected: isConnected ?? this.isConnected,
       isLoading: isLoading ?? this.isLoading,
       isStreaming: isStreaming ?? this.isStreaming,

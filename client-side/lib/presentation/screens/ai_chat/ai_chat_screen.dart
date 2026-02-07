@@ -9,11 +9,11 @@ import 'package:skeleton/presentation/screens/admin/bloc/users_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/users_admin_event.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_event.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_state.dart';
-import 'package:skeleton/presentation/screens/chat/widgets/chat_input_bar.dart';
-import 'package:skeleton/presentation/screens/chat/widgets/sessions_sidebar.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
+import 'package:skeleton/presentation/screens/ai_chat/widgets/chat_input_bar.dart';
+import 'package:skeleton/presentation/screens/ai_chat/widgets/sessions_sidebar.dart';
 import 'package:skeleton/presentation/screens/profile/profile_screen.dart';
 import 'package:skeleton/presentation/widgets/chat_bubble.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_bloc.dart';
@@ -38,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatBloc>().add(ChatStarted());
+      context.read<AIChatBloc>().add(ChatStarted());
     });
   }
 
@@ -71,11 +71,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _createNewSession() {
-    context.read<ChatBloc>().add(const ChatCreateSession());
+    context.read<AIChatBloc>().add(const ChatCreateSession());
   }
 
   void _selectSession(ChatSession session) {
-    context.read<ChatBloc>().add(ChatSelectSession(session.id));
+    context.read<AIChatBloc>().add(ChatSelectSession(session.id));
   }
 
   void _selectSessionAndCloseDrawer(ChatSession session) {
@@ -86,7 +86,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _deleteSession(String sessionId, String sessionTitle) {
-    final chatBloc = context.read<ChatBloc>();
+    final chatBloc = context.read<AIChatBloc>();
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -109,7 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildModelSelector(ChatState state) {
+  Widget _buildModelSelector(AIChatState state) {
     final theme = Theme.of(context);
     final models = state.models;
     final selected = state.selectedModel;
@@ -193,7 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       onOpened: () {
         if (state.models.isEmpty) {
-          context.read<ChatBloc>().add(const ChatLoadModels());
+          context.read<AIChatBloc>().add(const ChatLoadModels());
         }
       },
       itemBuilder: (context) => [
@@ -204,7 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
       ],
       onSelected: (value) {
-        context.read<ChatBloc>().add(ChatSelectModel(value));
+        context.read<AIChatBloc>().add(ChatSelectModel(value));
       },
     );
   }
@@ -326,7 +326,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildAppBarTitle(ChatState state) {
+  Widget _buildAppBarTitle(AIChatState state) {
     final useDrawer = Breakpoints.useDrawerForSessions(context);
     final currentSession = state.sessions.firstWhere(
       (session) => session.id == state.currentSessionId,
@@ -427,7 +427,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessageList(ChatState state) {
+  Widget _buildMessageList(AIChatState state) {
     final horizontalPadding =
         Breakpoints.isMobile(context) ? 12.0 : 16.0;
     return ListView.builder(
@@ -466,7 +466,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChatBloc, ChatState>(
+    return BlocListener<AIChatBloc, AIChatState>(
       listener: (context, state) {
         if (state.messages.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -516,11 +516,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     tooltip: 'Меню сессий',
                   )
                 : null,
-              title: BlocBuilder<ChatBloc, ChatState>(
+              title: BlocBuilder<AIChatBloc, AIChatState>(
                 builder: (context, state) => _buildAppBarTitle(state),
               ),
               actions: [
-                BlocBuilder<ChatBloc, ChatState>(
+                BlocBuilder<AIChatBloc, AIChatState>(
                   builder: (context, state) {
                     if (state.isLoading && !state.isStreaming) {
                       return const Padding(
@@ -639,7 +639,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         : const SizedBox.shrink(),
                   ),
                 Expanded(
-                  child: BlocBuilder<ChatBloc, ChatState>(
+                  child: BlocBuilder<AIChatBloc, AIChatState>(
                     builder: (context, state) {
                       if (state.isLoading && state.messages.isEmpty) {
                         return const Center(child: CircularProgressIndicator());

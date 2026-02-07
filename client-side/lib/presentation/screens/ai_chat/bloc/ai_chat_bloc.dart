@@ -3,28 +3,28 @@ import 'dart:typed_data';
 
 import 'package:skeleton/domain/entities/message.dart';
 import 'package:skeleton/domain/entities/session.dart';
-import 'package:skeleton/domain/usecases/chat/connect_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/create_session_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/delete_session_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_models_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_session_messages_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_session_model_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_sessions_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/send_message_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/set_session_model_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/update_session_model_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/update_session_title_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/connect_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/create_session_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/delete_session_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_models_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_session_messages_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_session_model_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_sessions_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/send_message_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/set_session_model_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/update_session_model_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/update_session_title_usecase.dart';
 import 'package:skeleton/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_event.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
 import 'package:skeleton/presentation/utils/request_logout_on_unauthorized.dart';
 import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_state.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
-class ChatBloc extends Bloc<ChatEvent, ChatState> {
+class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
   final AuthBloc authBloc;
   final ConnectUseCase connectUseCase;
   final GetModelsUseCase getModelsUseCase;
@@ -43,7 +43,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   StreamSubscription<String>? _streamSubscription;
   Completer<bool>? _streamCompleter;
 
-  ChatBloc({
+  AIChatBloc({
     required this.authBloc,
     required this.connectUseCase,
     required this.getModelsUseCase,
@@ -57,7 +57,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     required this.deleteSessionUseCase,
     required this.updateSessionTitleUseCase,
     required this.getRunnersStatusUseCase,
-  }) : super(const ChatState()) {
+  }) : super(const AIChatState()) {
     on<ChatStarted>(_onChatStarted);
     on<ChatCreateSession>(_onCreateSession);
     on<ChatLoadSessions>(_onLoadSessions);
@@ -73,9 +73,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onChatStarted(
-    ChatStarted event,
-    Emitter<ChatState> emit,
-) async {
+      ChatStarted event,
+      Emitter<AIChatState> emit,
+  ) async {
     Logs().i('ChatBloc: старт чата, проверка подключения');
     emit(state.copyWith(isLoading: true));
 
@@ -190,7 +190,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onCreateSession(
     ChatCreateSession event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     Logs().d('ChatBloc: новый чат (сессия будет создана при отправке сообщения)');
     emit(
@@ -205,7 +205,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onLoadSessions(
     ChatLoadSessions event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
 
@@ -227,7 +227,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSelectSession(
     ChatSelectSession event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     if (state.currentSessionId == event.sessionId) {
       return;
@@ -299,7 +299,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onLoadSessionMessages(
     ChatLoadSessionMessages event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
 
@@ -329,7 +329,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onChatSendMessage(
     ChatSendMessage event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     final text = event.text.trim();
     final hasAttachment = event.attachmentFileName != null
@@ -486,7 +486,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onDeleteSession(
     ChatDeleteSession event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     Logs().d('ChatBloc: удаление сессии ${event.sessionId}');
     emit(state.copyWith(isLoading: true, error: null));
@@ -521,7 +521,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onUpdateSessionTitle(
     ChatUpdateSessionTitle event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
 
@@ -559,7 +559,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onLoadModels(
     ChatLoadModels event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     Logs().d('ChatBloc: загрузка списка моделей');
     try {
@@ -586,7 +586,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSelectModel(
     ChatSelectModel event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     final sessionId = state.currentSessionId;
     if (sessionId != null && sessionId.isNotEmpty) {
@@ -615,13 +615,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
   }
 
-  void _onChatClearError(ChatClearError event, Emitter<ChatState> emit) {
+  void _onChatClearError(ChatClearError event, Emitter<AIChatState> emit) {
     emit(state.copyWith(error: null));
   }
 
   Future<void> _onChatStopGeneration(
     ChatStopGeneration event,
-    Emitter<ChatState> emit,
+    Emitter<AIChatState> emit,
   ) async {
     Logs().d('ChatBloc: остановка генерации');
     await _streamSubscription?.cancel();

@@ -1,7 +1,7 @@
-import 'package:skeleton/domain/repositories/chat_repository.dart';
+import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 
 class ConnectUseCase {
-  final ChatRepository repository;
+  final AIChatRepository repository;
 
   ConnectUseCase(this.repository);
 

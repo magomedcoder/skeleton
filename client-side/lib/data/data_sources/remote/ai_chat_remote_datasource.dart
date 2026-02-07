@@ -10,9 +10,10 @@ import 'package:skeleton/data/mappers/message_mapper.dart';
 import 'package:skeleton/data/mappers/session_mapper.dart';
 import 'package:skeleton/domain/entities/message.dart';
 import 'package:skeleton/domain/entities/session.dart';
-import 'package:skeleton/generated/grpc_pb/chat.pbgrpc.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/aichat.pbgrpc.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/common.pb.dart' as commonpb;
 
-abstract class IChatRemoteDataSource {
+abstract class IAIChatRemoteDataSource {
   Future<bool> checkConnection();
 
   Future<List<String>> getModels();
@@ -42,19 +43,19 @@ abstract class IChatRemoteDataSource {
   Future<ChatSession> updateSessionModel(String sessionId, String model);
 }
 
-class ChatRemoteDataSource implements IChatRemoteDataSource {
+class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   final GrpcChannelManager _channelManager;
   final AuthGuard _authGuard;
 
-  ChatRemoteDataSource(this._channelManager, this._authGuard);
+  AIChatRemoteDataSource(this._channelManager, this._authGuard);
 
-  grpc.ChatServiceClient get _client => _channelManager.chatClient;
+  grpc.AIChatServiceClient get _client => _channelManager.chatClient;
 
   @override
   Future<bool> checkConnection() async {
     Logs().d('ChatRemoteDataSource: проверка подключения');
     try {
-      final response = await _client.checkConnection(grpc.Empty());
+      final response = await _client.checkConnection(commonpb.Empty());
       Logs().i('ChatRemoteDataSource: подключение ${response.isConnected ? "установлено" : "нет"}');
       return response.isConnected;
     } on GrpcError catch (e) {
@@ -74,7 +75,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
   Future<List<String>> getModels() async {
     Logs().d('ChatRemoteDataSource: получение списка моделей');
     try {
-      final response = await _client.getModels(grpc.Empty());
+      final response = await _client.getModels(commonpb.Empty());
       Logs().i('ChatRemoteDataSource: получено моделей: ${response.models.length}');
       return response.models;
     } on GrpcError catch (e) {

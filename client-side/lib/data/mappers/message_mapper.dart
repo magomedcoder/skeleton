@@ -1,6 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/generated/grpc_pb/chat.pb.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/aichat.pb.dart' as grpc;
 
 abstract class MessageMapper {
   MessageMapper._();

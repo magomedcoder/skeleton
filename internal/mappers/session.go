@@ -1,16 +1,16 @@
 package mappers
 
 import (
-	"github.com/magomedcoder/skeleton/api/pb/chatpb"
+	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
 	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
-func SessionToProto(session *domain.ChatSession) *chatpb.ChatSession {
+func SessionToProto(session *domain.ChatSession) *aichatpb.ChatSession {
 	if session == nil {
 		return nil
 	}
 
-	return &chatpb.ChatSession{
+	return &aichatpb.ChatSession{
 		Id:        session.Id,
 		Title:     session.Title,
 		Model:     session.Model,

@@ -3,7 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/skeleton/api/pb/chatpb"
+	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
 	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
 	"github.com/magomedcoder/skeleton/internal/domain"
 	"github.com/magomedcoder/skeleton/internal/mappers"
@@ -263,7 +263,7 @@ func (p *Pool) SendMessage(ctx context.Context, sessionID string, model string, 
 		return nil, err
 	}
 
-	protoMessages := make([]*chatpb.ChatMessage, len(messages))
+	protoMessages := make([]*aichatpb.ChatMessage, len(messages))
 	for i, m := range messages {
 		protoMessages[i] = mappers.MessageToProto(m)
 	}

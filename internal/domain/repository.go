@@ -38,7 +38,7 @@ type UserSessionRepository interface {
 	DeleteRefreshTokensByUserIdExcept(ctx context.Context, userId int, keepRefreshToken string) error
 }
 
-type ChatSessionRepository interface {
+type AIChatRepository interface {
 	Create(ctx context.Context, session *ChatSession) error
 
 	GetById(ctx context.Context, id string) (*ChatSession, error)
@@ -50,7 +50,7 @@ type ChatSessionRepository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type MessageRepository interface {
+type AIChatMessageRepository interface {
 	Create(ctx context.Context, message *Message) error
 
 	GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*Message, int32, error)

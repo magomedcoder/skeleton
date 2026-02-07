@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:skeleton/domain/entities/message.dart';
 import 'package:skeleton/domain/entities/session.dart';
 
-abstract interface class ChatRepository {
+abstract interface class AIChatRepository {
   Future<bool> checkConnection();
 
   Future<List<String>> getModels();

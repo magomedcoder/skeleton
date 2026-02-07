@@ -8,16 +8,16 @@ import (
 	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
-type chatSessionRepository struct {
+type aiChatSessionRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewChatSessionRepository(db *pgxpool.Pool) domain.ChatSessionRepository {
-	return &chatSessionRepository{db: db}
+func NewAIChatSessionRepository(db *pgxpool.Pool) domain.AIChatRepository {
+	return &aiChatSessionRepository{db: db}
 }
 
-func (r *chatSessionRepository) Create(ctx context.Context, session *domain.ChatSession) error {
-	err := r.db.QueryRow(ctx, `
+func (ai *aiChatSessionRepository) Create(ctx context.Context, session *domain.ChatSession) error {
+	err := ai.db.QueryRow(ctx, `
 		INSERT INTO chat_sessions (id, user_id, title, model, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
@@ -33,9 +33,9 @@ func (r *chatSessionRepository) Create(ctx context.Context, session *domain.Chat
 	return err
 }
 
-func (r *chatSessionRepository) GetById(ctx context.Context, id string) (*domain.ChatSession, error) {
+func (ai *aiChatSessionRepository) GetById(ctx context.Context, id string) (*domain.ChatSession, error) {
 	var session domain.ChatSession
-	err := r.db.QueryRow(ctx, `
+	err := ai.db.QueryRow(ctx, `
 		SELECT id, user_id, title, model, created_at, updated_at, deleted_at
 		FROM chat_sessions
 		WHERE id = $1 AND deleted_at IS NULL
@@ -56,11 +56,11 @@ func (r *chatSessionRepository) GetById(ctx context.Context, id string) (*domain
 	return &session, nil
 }
 
-func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
+func (ai *aiChatSessionRepository) GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
 	_, pageSize, offset := normalizePagination(page, pageSize)
 
 	var total int32
-	err := r.db.QueryRow(ctx, `
+	err := ai.db.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM chat_sessions
 		WHERE user_id = $1 AND deleted_at IS NULL
@@ -69,7 +69,7 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 		return nil, 0, err
 	}
 
-	rows, err := r.db.Query(ctx, `
+	rows, err := ai.db.Query(ctx, `
 		SELECT id, user_id, title, model, created_at, updated_at, deleted_at
 		FROM chat_sessions
 		WHERE user_id = $1 AND deleted_at IS NULL
@@ -105,9 +105,9 @@ func (r *chatSessionRepository) GetByUserId(ctx context.Context, userID int, pag
 	return sessions, total, nil
 }
 
-func (r *chatSessionRepository) Update(ctx context.Context, session *domain.ChatSession) error {
+func (ai *aiChatSessionRepository) Update(ctx context.Context, session *domain.ChatSession) error {
 	session.UpdatedAt = time.Now()
-	_, err := r.db.Exec(ctx, `
+	_, err := ai.db.Exec(ctx, `
 		UPDATE chat_sessions
 		SET title = $2, model = $3, updated_at = $4
 		WHERE id = $1 AND deleted_at IS NULL
@@ -121,8 +121,8 @@ func (r *chatSessionRepository) Update(ctx context.Context, session *domain.Chat
 	return err
 }
 
-func (r *chatSessionRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `
+func (ai *aiChatSessionRepository) Delete(ctx context.Context, id string) error {
+	_, err := ai.db.Exec(ctx, `
 		UPDATE chat_sessions
 		SET deleted_at = NOW()
 		WHERE id = $1 AND deleted_at IS NULL

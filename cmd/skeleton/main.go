@@ -4,18 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/magomedcoder/skeleton"
-	"github.com/magomedcoder/skeleton/internal/config"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
-
+	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
 	"github.com/magomedcoder/skeleton/api/pb/authpb"
-	"github.com/magomedcoder/skeleton/api/pb/chatpb"
 	"github.com/magomedcoder/skeleton/api/pb/editorpb"
 	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
 	"github.com/magomedcoder/skeleton/api/pb/userpb"
 	"github.com/magomedcoder/skeleton/internal/bootstrap"
+	"github.com/magomedcoder/skeleton/internal/config"
 	"github.com/magomedcoder/skeleton/internal/handler"
 	"github.com/magomedcoder/skeleton/internal/repository/postgres"
 	"github.com/magomedcoder/skeleton/internal/runner"
@@ -24,6 +19,10 @@ import (
 	"github.com/magomedcoder/skeleton/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -61,7 +60,7 @@ func main() {
 
 	userRepo := postgres.NewUserRepository(db)
 	userSessionRepo := postgres.NewUserSessionRepository(db)
-	sessionRepo := postgres.NewChatSessionRepository(db)
+	aiChatSessionRepo := postgres.NewAIChatSessionRepository(db)
 	messageRepo := postgres.NewMessageRepository(db)
 	fileRepo := postgres.NewFileRepository(db)
 
@@ -75,19 +74,19 @@ func main() {
 
 	runnerPool := runner.NewPool(cfg.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, userSessionRepo, jwtService)
-	chatUseCase := usecase.NewChatUseCase(sessionRepo, messageRepo, fileRepo, runnerPool, cfg.Attachments.SaveDir)
+	chatUseCase := usecase.NewAIChatUseCase(aiChatSessionRepo, messageRepo, fileRepo, runnerPool, cfg.Attachments.SaveDir)
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
-	chatHandler := handler.NewChatHandler(chatUseCase, authUseCase)
+	chatHandler := handler.NewAIChatHandler(chatUseCase, authUseCase)
 	editorHandler := handler.NewEditorHandler(editorUseCase, authUseCase)
 	userHandler := handler.NewUserHandler(userUseCase, authUseCase)
 
 	grpcServer := grpc.NewServer()
 
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
-	chatpb.RegisterChatServiceServer(grpcServer, chatHandler)
+	aichatpb.RegisterAIChatServiceServer(grpcServer, chatHandler)
 	editorpb.RegisterEditorServiceServer(grpcServer, editorHandler)
 	userpb.RegisterUserServiceServer(grpcServer, userHandler)
 	runnerpb.RegisterRunnerAdminServiceServer(grpcServer, handler.NewRunnerHandler(runnerPool, authUseCase))

@@ -4,6 +4,8 @@ package skeleton;
 
 option go_package = "github.com/magomedcoder/skeleton/api/pb/commonpb;commonpb";
 
+message Empty {}
+
 message User {
   string id = 1;
   string username = 2;

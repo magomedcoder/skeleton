@@ -6,9 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/attachment_settings.dart';
 import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_event.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_state.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 
 class ChatInputBar extends StatefulWidget {
   final bool isEnabled;
@@ -84,7 +84,7 @@ class ChatInputBarState extends State<ChatInputBar> {
       }
     }
 
-    context.read<ChatBloc>().add(
+    context.read<AIChatBloc>().add(
       ChatSendMessage(
         text,
         attachmentFileName: hasFile ? _selectedFile!.name : null,
@@ -97,7 +97,7 @@ class ChatInputBarState extends State<ChatInputBar> {
   }
 
   void _stopGeneration() {
-    context.read<ChatBloc>().add(const ChatStopGeneration());
+    context.read<AIChatBloc>().add(const ChatStopGeneration());
   }
 
   Future<void> _pickFile() async {
@@ -214,7 +214,7 @@ class ChatInputBarState extends State<ChatInputBar> {
     );
   }
 
-  Widget _buildSendButton(ChatState state) {
+  Widget _buildSendButton(AIChatState state) {
     final theme = Theme.of(context);
     if (state.isStreaming) {
       return Material(
@@ -277,7 +277,7 @@ class ChatInputBarState extends State<ChatInputBar> {
     final horizontal = Breakpoints.isMobile(context) ? 12.0 : 20.0;
     final theme = Theme.of(context);
 
-    return BlocBuilder<ChatBloc, ChatState>(
+    return BlocBuilder<AIChatBloc, AIChatState>(
       builder: (context, state) {
         return Container(
           padding: EdgeInsets.fromLTRB(horizontal, 12, horizontal, 16),

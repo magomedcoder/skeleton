@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/domain/usecases/chat/get_models_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_models_usecase.dart';
 import 'package:skeleton/domain/usecases/editor/transform_text_usecase.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:skeleton/presentation/screens/editor/bloc/editor_event.dart';

@@ -6,17 +6,17 @@ import 'package:skeleton/core/server_config.dart';
 import 'package:skeleton/data/data_sources/local/session_model_local_data_source.dart';
 import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
 import 'package:skeleton/data/data_sources/remote/auth_remote_datasource.dart';
-import 'package:skeleton/data/data_sources/remote/chat_remote_datasource.dart';
+import 'package:skeleton/data/data_sources/remote/ai_chat_remote_datasource.dart';
 import 'package:skeleton/data/data_sources/remote/editor_remote_datasource.dart';
 import 'package:skeleton/data/data_sources/remote/runners_remote_datasource.dart';
 import 'package:skeleton/data/data_sources/remote/user_remote_datasource.dart';
 import 'package:skeleton/data/repositories/auth_repository_impl.dart';
-import 'package:skeleton/data/repositories/chat_repository_impl.dart';
+import 'package:skeleton/data/repositories/ai_chat_repository_impl.dart';
 import 'package:skeleton/data/repositories/editor_repository_impl.dart';
 import 'package:skeleton/data/repositories/runners_repository_impl.dart';
 import 'package:skeleton/data/repositories/user_repository_impl.dart';
 import 'package:skeleton/domain/repositories/auth_repository.dart';
-import 'package:skeleton/domain/repositories/chat_repository.dart';
+import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 import 'package:skeleton/domain/repositories/editor_repository.dart';
 import 'package:skeleton/domain/repositories/runners_repository.dart';
 import 'package:skeleton/domain/repositories/user_repository.dart';
@@ -26,17 +26,17 @@ import 'package:skeleton/domain/usecases/auth/get_devices_usecase.dart';
 import 'package:skeleton/domain/usecases/auth/logout_usecase.dart';
 import 'package:skeleton/domain/usecases/auth/refresh_token_usecase.dart';
 import 'package:skeleton/domain/usecases/auth/revoke_device_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/connect_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/create_session_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/delete_session_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_models_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_session_messages_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_session_model_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/get_sessions_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/send_message_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/set_session_model_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/update_session_model_usecase.dart';
-import 'package:skeleton/domain/usecases/chat/update_session_title_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/connect_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/create_session_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/delete_session_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_models_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_session_messages_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_session_model_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/get_sessions_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/send_message_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/set_session_model_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/update_session_model_usecase.dart';
+import 'package:skeleton/domain/usecases/ai_chat/update_session_title_usecase.dart';
 import 'package:skeleton/domain/usecases/editor/transform_text_usecase.dart';
 import 'package:skeleton/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:skeleton/domain/usecases/runners/get_runners_usecase.dart';
@@ -45,7 +45,7 @@ import 'package:skeleton/domain/usecases/users/create_user_usecase.dart';
 import 'package:skeleton/domain/usecases/users/get_users_usecase.dart';
 import 'package:skeleton/domain/usecases/users/edit_user_usecase.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/users_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/devices/bloc/devices_bloc.dart';
@@ -86,8 +86,8 @@ Future<void> init() async {
     () => GrpcChannelManager(sl<ServerConfig>(), sl<AuthInterceptor>()),
   );
 
-  sl.registerLazySingleton<IChatRemoteDataSource>(
-    () => ChatRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
+  sl.registerLazySingleton<IAIChatRemoteDataSource>(
+    () => AIChatRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
 
   sl.registerLazySingleton<IEditorRemoteDataSource>(
@@ -110,8 +110,8 @@ Future<void> init() async {
     () => RunnersRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
 
-  sl.registerLazySingleton<ChatRepository>(
-    () => ChatRepositoryImpl(sl(), sl<SessionModelLocalDataSource>()),
+  sl.registerLazySingleton<AIChatRepository>(
+    () => AIChatRepositoryImpl(sl(), sl<SessionModelLocalDataSource>()),
   );
   sl.registerLazySingleton<EditorRepository>(() => EditorRepositoryImpl(sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
@@ -149,7 +149,7 @@ Future<void> init() async {
   sl.registerFactory(() => EditUserUseCase(sl()));
 
   sl.registerFactory(
-    () => ChatBloc(
+    () => AIChatBloc(
       authBloc: sl<AuthBloc>(),
       connectUseCase: sl(),
       getModelsUseCase: sl(),

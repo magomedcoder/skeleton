@@ -3,7 +3,7 @@ import 'package:skeleton/core/auth_interceptor.dart';
 import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/core/server_config.dart';
 import 'package:skeleton/generated/grpc_pb/auth.pbgrpc.dart' as grpc_auth;
-import 'package:skeleton/generated/grpc_pb/chat.pbgrpc.dart' as grpc_chat;
+import 'package:skeleton/generated/grpc_pb/aichat.pbgrpc.dart' as grpc_chat;
 import 'package:skeleton/generated/grpc_pb/editor.pbgrpc.dart' as grpc_editor;
 import 'package:skeleton/generated/grpc_pb/runner.pbgrpc.dart' as grpc_runner;
 import 'package:skeleton/generated/grpc_pb/user.pbgrpc.dart' as grpc_user;
@@ -15,7 +15,7 @@ class GrpcChannelManager {
   ClientChannel? _channel;
   grpc_auth.AuthServiceClient? _authClient;
   grpc_auth.AuthServiceClient? _authClientNoInterceptor;
-  grpc_chat.ChatServiceClient? _chatClient;
+  grpc_chat.AIChatServiceClient? _aiChatClient;
   grpc_editor.EditorServiceClient? _editorClient;
   grpc_user.UserServiceClient? _userClient;
   grpc_runner.RunnerAdminServiceClient? _runnerAdminClient;
@@ -45,12 +45,12 @@ class GrpcChannelManager {
     return _authClient!;
   }
 
-  grpc_chat.ChatServiceClient get chatClient {
-    _chatClient ??= grpc_chat.ChatServiceClient(
+  grpc_chat.AIChatServiceClient get chatClient {
+    _aiChatClient ??= grpc_chat.AIChatServiceClient(
       channel,
       interceptors: [_authInterceptor],
     );
-    return _chatClient!;
+    return _aiChatClient!;
   }
 
   grpc_editor.EditorServiceClient get editorClient {
@@ -93,7 +93,7 @@ class GrpcChannelManager {
     _channel = null;
     _authClient = null;
     _authClientNoInterceptor = null;
-    _chatClient = null;
+    _aiChatClient = null;
     _editorClient = null;
     _userClient = null;
     _runnerAdminClient = null;

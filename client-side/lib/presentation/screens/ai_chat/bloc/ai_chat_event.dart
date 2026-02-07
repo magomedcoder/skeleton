@@ -1,17 +1,17 @@
 import 'package:equatable/equatable.dart';
 
-abstract class ChatEvent extends Equatable {
-  const ChatEvent();
+abstract class AIChatEvent extends Equatable {
+  const AIChatEvent();
 
   @override
   List<Object?> get props => [];
 }
 
-class ChatStarted extends ChatEvent {
+class ChatStarted extends AIChatEvent {
   const ChatStarted();
 }
 
-class ChatCreateSession extends ChatEvent {
+class ChatCreateSession extends AIChatEvent {
   final String? title;
 
   const ChatCreateSession({this.title});
@@ -20,7 +20,7 @@ class ChatCreateSession extends ChatEvent {
   List<Object?> get props => [title];
 }
 
-class ChatLoadSessions extends ChatEvent {
+class ChatLoadSessions extends AIChatEvent {
   final int page;
   final int pageSize;
 
@@ -30,7 +30,7 @@ class ChatLoadSessions extends ChatEvent {
   List<Object?> get props => [page, pageSize];
 }
 
-class ChatSelectSession extends ChatEvent {
+class ChatSelectSession extends AIChatEvent {
   final String sessionId;
 
   const ChatSelectSession(this.sessionId);
@@ -39,7 +39,7 @@ class ChatSelectSession extends ChatEvent {
   List<Object?> get props => [sessionId];
 }
 
-class ChatLoadSessionMessages extends ChatEvent {
+class ChatLoadSessionMessages extends AIChatEvent {
   final String sessionId;
   final int page;
   final int pageSize;
@@ -54,7 +54,7 @@ class ChatLoadSessionMessages extends ChatEvent {
   List<Object?> get props => [sessionId, page, pageSize];
 }
 
-class ChatSendMessage extends ChatEvent {
+class ChatSendMessage extends AIChatEvent {
   final String text;
   final String? attachmentFileName;
   final List<int>? attachmentContent;
@@ -69,19 +69,19 @@ class ChatSendMessage extends ChatEvent {
   List<Object?> get props => [text, attachmentFileName];
 }
 
-class ChatClearError extends ChatEvent {
+class ChatClearError extends AIChatEvent {
   const ChatClearError();
 }
 
-class ChatStopGeneration extends ChatEvent {
+class ChatStopGeneration extends AIChatEvent {
   const ChatStopGeneration();
 }
 
-class ChatLoadModels extends ChatEvent {
+class ChatLoadModels extends AIChatEvent {
   const ChatLoadModels();
 }
 
-class ChatSelectModel extends ChatEvent {
+class ChatSelectModel extends AIChatEvent {
   final String model;
 
   const ChatSelectModel(this.model);
@@ -90,7 +90,7 @@ class ChatSelectModel extends ChatEvent {
   List<Object?> get props => [model];
 }
 
-class ChatDeleteSession extends ChatEvent {
+class ChatDeleteSession extends AIChatEvent {
   final String sessionId;
 
   const ChatDeleteSession(this.sessionId);
@@ -99,7 +99,7 @@ class ChatDeleteSession extends ChatEvent {
   List<Object?> get props => [sessionId];
 }
 
-class ChatUpdateSessionTitle extends ChatEvent {
+class ChatUpdateSessionTitle extends AIChatEvent {
   final String sessionId;
   final String title;
 

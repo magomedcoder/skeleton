@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/layout/responsive.dart';
 import 'package:skeleton/domain/entities/session.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_event.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_state.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 
 typedef ChatSessionCallback = void Function(ChatSession);
 
@@ -44,10 +44,10 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
   }
 
   void _loadSessions() {
-    context.read<ChatBloc>().add(ChatLoadSessions());
+    context.read<AIChatBloc>().add(ChatLoadSessions());
   }
 
-  Widget _buildSessionItem(ChatSession session, ChatState state) {
+  Widget _buildSessionItem(ChatSession session, AIChatState state) {
     final isSelected = state.currentSessionId == session.id;
     final isDesktop = Breakpoints.isDesktop(context);
     final theme = Theme.of(context);
@@ -212,7 +212,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
   }
 
   void _showEditDialog(ChatSession session) {
-    final chatBloc = context.read<ChatBloc>();
+    final chatBloc = context.read<AIChatBloc>();
     final controller = TextEditingController(text: session.title);
     showDialog(
       context: context,
@@ -386,7 +386,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
         children: [
           _buildDrawerHeader(),
           Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
+            child: BlocBuilder<AIChatBloc, AIChatState>(
               builder: (context, state) {
                 if (state.isLoading) {
                   return _buildLoadingState();

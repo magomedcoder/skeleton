@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS files
     created_at   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS messages
+CREATE TABLE IF NOT EXISTS chat_session_messages
 (
     id                  UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
     session_id          UUID        NOT NULL REFERENCES chat_sessions (id),
@@ -69,8 +69,8 @@ CREATE INDEX idx_chat_sessions_user_id ON chat_sessions (user_id);
 CREATE INDEX idx_chat_sessions_created_at ON chat_sessions (created_at);
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_deleted_at ON chat_sessions (deleted_at);
 CREATE INDEX idx_files_created_at ON files (created_at);
-CREATE INDEX idx_messages_session_id ON messages (session_id);
-CREATE INDEX idx_messages_role ON messages (role);
-CREATE INDEX idx_messages_created_at ON messages (created_at);
-CREATE INDEX IF NOT EXISTS idx_messages_deleted_at ON messages (deleted_at);
-CREATE INDEX IF NOT EXISTS idx_messages_attachment_file_id ON messages (attachment_file_id);
+CREATE INDEX idx_chat_session_messages_session_id ON chat_session_messages (session_id);
+CREATE INDEX idx_chat_session_messages_role ON chat_session_messages (role);
+CREATE INDEX idx_chat_session_messages_created_at ON chat_session_messages (created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_session_messages_deleted_at ON chat_session_messages (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_chat_session_messages_attachment_file_id ON chat_session_messages (attachment_file_id);

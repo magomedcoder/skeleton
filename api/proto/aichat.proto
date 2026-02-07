@@ -2,12 +2,14 @@ syntax = "proto3";
 
 package chat;
 
-option go_package = "github.com/magomedcoder/skeleton/api/pb/chatpb;chatpb";
+option go_package = "github.com/magomedcoder/skeleton/api/pb/aichatpb;aichatpb";
 
-service ChatService {
-  rpc CheckConnection(Empty) returns (ConnectionResponse);
+import "common.proto";
 
-  rpc GetModels(Empty) returns (GetModelsResponse);
+service AIChatService {
+  rpc CheckConnection(skeleton.Empty) returns (ConnectionResponse);
+
+  rpc GetModels(skeleton.Empty) returns (GetModelsResponse);
 
   rpc SendMessage(SendMessageRequest) returns (stream ChatResponse);
 
@@ -19,14 +21,12 @@ service ChatService {
 
   rpc GetSessionMessages(GetSessionMessagesRequest) returns (GetSessionMessagesResponse);
 
-  rpc DeleteSession(DeleteSessionRequest) returns (Empty);
+  rpc DeleteSession(DeleteSessionRequest) returns (skeleton.Empty);
 
   rpc UpdateSessionTitle(UpdateSessionTitleRequest) returns (ChatSession);
 
   rpc UpdateSessionModel(UpdateSessionModelRequest) returns (ChatSession);
 }
-
-message Empty {}
 
 message ConnectionResponse {
   bool is_connected = 1;

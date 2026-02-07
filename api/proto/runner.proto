@@ -4,7 +4,7 @@ package runner;
 
 option go_package = "github.com/magomedcoder/skeleton/api/pb/runnerpb;runnerpb";
 
-import "chat.proto";
+import "aichat.proto";
 
 service RunnerService {
   rpc Ping(Empty) returns (PingResponse);

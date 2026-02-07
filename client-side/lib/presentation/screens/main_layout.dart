@@ -8,11 +8,11 @@ import 'package:skeleton/presentation/screens/admin/runners_admin_screen.dart';
 import 'package:skeleton/presentation/screens/admin/users_admin_screen.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_event.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
 import 'package:skeleton/presentation/screens/editor/editor_screen.dart';
-import 'package:skeleton/presentation/screens/chat/widgets/chat_content.dart';
-import 'package:skeleton/presentation/screens/chat/widgets/sessions_sidebar.dart';
+import 'package:skeleton/presentation/screens/ai_chat/widgets/chat_content.dart';
+import 'package:skeleton/presentation/screens/ai_chat/widgets/sessions_sidebar.dart';
 import 'package:skeleton/presentation/screens/profile/profile_screen.dart';
 import 'package:skeleton/presentation/widgets/app_bottom_nav.dart';
 import 'package:skeleton/presentation/widgets/side_navigation.dart';
@@ -33,16 +33,16 @@ class _MainLayoutState extends State<MainLayout> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatBloc>().add(ChatStarted());
+      context.read<AIChatBloc>().add(ChatStarted());
     });
   }
 
   void _createNewSession() {
-    context.read<ChatBloc>().add(const ChatCreateSession());
+    context.read<AIChatBloc>().add(const ChatCreateSession());
   }
 
   void _selectSession(ChatSession session) {
-    context.read<ChatBloc>().add(ChatSelectSession(session.id));
+    context.read<AIChatBloc>().add(ChatSelectSession(session.id));
   }
 
   void _selectSessionAndCloseDrawer(ChatSession session) {
@@ -53,7 +53,7 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   void _deleteSession(String sessionId, String sessionTitle) {
-    final chatBloc = context.read<ChatBloc>();
+    final chatBloc = context.read<AIChatBloc>();
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(

@@ -11,7 +11,7 @@ type messageRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewMessageRepository(db *pgxpool.Pool) domain.MessageRepository {
+func NewMessageRepository(db *pgxpool.Pool) domain.AIChatMessageRepository {
 	return &messageRepository{db: db}
 }
 

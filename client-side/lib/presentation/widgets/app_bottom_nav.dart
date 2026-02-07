@@ -36,7 +36,7 @@ class AppBottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.chat_bubble_outline_rounded,
                 selectedIcon: Icons.chat_bubble_rounded,
-                label: 'Чаты',
+                label: 'AI Чаты',
                 isSelected: selected == NavDestination.home,
                 onTap: () => onDestinationSelected(NavDestination.home),
               ),

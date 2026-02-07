@@ -1,18 +1,17 @@
 package mappers
 
 import (
-	"time"
-
-	"github.com/magomedcoder/skeleton/api/pb/chatpb"
+	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
 	"github.com/magomedcoder/skeleton/internal/domain"
+	"time"
 )
 
-func MessageToProto(msg *domain.Message) *chatpb.ChatMessage {
+func MessageToProto(msg *domain.Message) *aichatpb.ChatMessage {
 	if msg == nil {
 		return nil
 	}
 
-	p := &chatpb.ChatMessage{
+	p := &aichatpb.ChatMessage{
 		Id:        msg.Id,
 		Content:   msg.Content,
 		Role:      domain.ToProtoRole(msg.Role),
@@ -25,7 +24,7 @@ func MessageToProto(msg *domain.Message) *chatpb.ChatMessage {
 	return p
 }
 
-func MessageFromProto(proto *chatpb.ChatMessage, sessionID string) *domain.Message {
+func MessageFromProto(proto *aichatpb.ChatMessage, sessionID string) *domain.Message {
 	if proto == nil {
 		return nil
 	}
@@ -45,7 +44,7 @@ func MessageFromProto(proto *chatpb.ChatMessage, sessionID string) *domain.Messa
 	return msg
 }
 
-func MessagesFromProto(protos []*chatpb.ChatMessage, sessionID string) []*domain.Message {
+func MessagesFromProto(protos []*aichatpb.ChatMessage, sessionID string) []*domain.Message {
 	if len(protos) == 0 {
 		return nil
 	}

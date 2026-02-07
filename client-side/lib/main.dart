@@ -9,7 +9,7 @@ import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:skeleton/presentation/screens/auth/login_screen.dart';
 import 'package:skeleton/presentation/screens/auth/update_required_screen.dart';
-import 'package:skeleton/presentation/screens/chat/bloc/chat_bloc.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:skeleton/presentation/screens/editor/bloc/editor_bloc.dart';
 import 'package:skeleton/presentation/screens/main_layout.dart';
 import 'package:skeleton/presentation/theme/theme_cubit.dart';
@@ -51,7 +51,7 @@ class App extends StatelessWidget {
                   create: (context) => di.sl<AuthBloc>()..add(const AuthCheckRequested()),
                 ),
                 BlocProvider(
-                  create: (context) => di.sl<ChatBloc>(),
+                  create: (context) => di.sl<AIChatBloc>(),
                 ),
                 BlocProvider(
                   create: (context) => di.sl<EditorBloc>(),
