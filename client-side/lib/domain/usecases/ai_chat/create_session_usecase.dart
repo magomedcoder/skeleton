@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 
 class CreateSessionUseCase {
@@ -6,7 +6,7 @@ class CreateSessionUseCase {
 
   CreateSessionUseCase(this.repository);
 
-  Future<ChatSession> call({String? title, String? model}) async {
+  Future<AIChatSession> call({String? title, String? model}) async {
     final sessionTitle = title ?? _defaultSessionTitle();
     return await repository.createSession(sessionTitle, model: model);
   }

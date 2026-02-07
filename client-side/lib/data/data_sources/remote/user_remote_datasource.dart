@@ -6,7 +6,7 @@ import 'package:skeleton/core/grpc_error_handler.dart';
 import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/data/mappers/user_mapper.dart';
 import 'package:skeleton/domain/entities/user.dart';
-import 'package:skeleton/generated/grpc_pb/user.pbgrpc.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/user.pbgrpc.dart' as userpb;
 
 abstract class IUserRemoteDataSource {
   Future<List<User>> getUsers({required int page, required int pageSize});
@@ -35,13 +35,13 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
 
   UserRemoteDataSource(this._channelManager, this._authGuard);
 
-  grpc.UserServiceClient get _client => _channelManager.userClient;
+  userpb.UserServiceClient get _client => _channelManager.userClient;
 
   @override
   Future<List<User>> getUsers({required int page, required int pageSize}) async {
     Logs().d('UserRemoteDataSource: получение пользователей page=$page');
     try {
-      final req = grpc.GetUsersRequest(
+      final req = userpb.GetUsersRequest(
         page: page,
         pageSize: pageSize,
       );
@@ -72,7 +72,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
   }) async {
     Logs().d('UserRemoteDataSource: создание пользователя $username');
     try {
-      final req = grpc.CreateUserRequest(
+      final req = userpb.CreateUserRequest(
         username: username,
         password: password,
         name: name,
@@ -111,7 +111,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
   }) async {
     Logs().d('UserRemoteDataSource: обновление пользователя $id');
     try {
-      final req = grpc.EditUserRequest(
+      final req = userpb.EditUserRequest(
         id: id,
         username: username,
         password: password,

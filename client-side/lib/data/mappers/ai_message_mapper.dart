@@ -1,9 +1,9 @@
 import 'package:fixnum/fixnum.dart';
-import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
 import 'package:skeleton/generated/grpc_pb/aichat.pb.dart' as grpc;
 
-abstract class MessageMapper {
-  MessageMapper._();
+abstract class AIMessageMapper {
+  AIMessageMapper._();
 
   static DateTime _dateTimeFromUnixSeconds(int seconds) {
     return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
@@ -13,23 +13,23 @@ abstract class MessageMapper {
     return dt.millisecondsSinceEpoch ~/ 1000;
   }
 
-  static MessageRole _roleFromProto(String role) {
+  static AIMessageRole _roleFromProto(String role) {
     switch (role) {
       case 'user':
-        return MessageRole.user;
+        return AIMessageRole.user;
       case 'assistant':
-        return MessageRole.assistant;
+        return AIMessageRole.assistant;
       default:
-        return MessageRole.user;
+        return AIMessageRole.user;
     }
   }
 
-  static String _roleToProto(MessageRole role) {
-    return role == MessageRole.user ? 'user' : 'assistant';
+  static String _roleToProto(AIMessageRole role) {
+    return role == AIMessageRole.user ? 'user' : 'assistant';
   }
 
-  static Message fromProto(grpc.ChatMessage proto) {
-    return Message(
+  static AIMessage fromProto(grpc.ChatMessage proto) {
+    return AIMessage(
       id: proto.id,
       content: proto.content,
       role: _roleFromProto(proto.role),
@@ -40,7 +40,7 @@ abstract class MessageMapper {
     );
   }
 
-  static grpc.ChatMessage toProto(Message entity) {
+  static grpc.ChatMessage toProto(AIMessage entity) {
     final p = grpc.ChatMessage();
     p.id = entity.id;
     p.content = entity.content;
@@ -57,11 +57,11 @@ abstract class MessageMapper {
     return p;
   }
 
-  static List<Message> listFromProto(List<grpc.ChatMessage> protos) {
+  static List<AIMessage> listFromProto(List<grpc.ChatMessage> protos) {
     return protos.map(fromProto).toList();
   }
 
-  static List<grpc.ChatMessage> listToProto(List<Message> entities) {
+  static List<grpc.ChatMessage> listToProto(List<AIMessage> entities) {
     return entities.map(toProto).toList();
   }
 }

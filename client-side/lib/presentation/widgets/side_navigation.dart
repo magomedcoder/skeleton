@@ -38,8 +38,8 @@ class SideNavigation extends StatelessWidget {
         children: [
           const SizedBox(height: 12),
           _RailIcon(
-            icon: Icons.chat_bubble_outline_rounded,
-            selectedIcon: Icons.chat_bubble_rounded,
+            icon: Icons.smart_toy_outlined,
+            selectedIcon: Icons.smart_toy,
             isSelected: selected == NavDestination.home,
             tooltip: 'AI Чаты',
             onTap: () => onDestinationSelected(NavDestination.home),

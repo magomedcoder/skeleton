@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
 import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 
-typedef ChatSessionCallback = void Function(ChatSession);
+typedef ChatSessionCallback = void Function(AIChatSession);
 
 class SessionsSidebar extends StatefulWidget {
   final VoidCallback onCreateNewSession;
@@ -47,7 +47,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
     context.read<AIChatBloc>().add(ChatLoadSessions());
   }
 
-  Widget _buildSessionItem(ChatSession session, AIChatState state) {
+  Widget _buildSessionItem(AIChatSession session, AIChatState state) {
     final isSelected = state.currentSessionId == session.id;
     final isDesktop = Breakpoints.isDesktop(context);
     final theme = Theme.of(context);
@@ -112,7 +112,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
   }
 
   void _showSessionContextMenuDesktop(
-    ChatSession session,
+      AIChatSession session,
     TapDownDetails details,
   ) {
     final screenSize = MediaQuery.sizeOf(context);
@@ -158,7 +158,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
     });
   }
 
-  void _showSessionContextMenu(ChatSession session, BuildContext context) {
+  void _showSessionContextMenu(AIChatSession session, BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -211,7 +211,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
     );
   }
 
-  void _showEditDialog(ChatSession session) {
+  void _showEditDialog(AIChatSession session) {
     final chatBloc = context.read<AIChatBloc>();
     final controller = TextEditingController(text: session.title);
     showDialog(

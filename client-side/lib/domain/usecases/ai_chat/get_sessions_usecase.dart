@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 
 class GetSessionsUseCase {
@@ -6,7 +6,7 @@ class GetSessionsUseCase {
 
   GetSessionsUseCase(this.repository);
 
-  Future<List<ChatSession>> call({
+  Future<List<AIChatSession>> call({
     int page = 1,
     int pageSize = 20,
   }) {

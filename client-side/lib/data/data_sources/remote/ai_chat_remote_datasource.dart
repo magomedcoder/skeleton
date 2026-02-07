@@ -6,11 +6,11 @@ import 'package:skeleton/core/failures.dart';
 import 'package:skeleton/core/grpc_channel_manager.dart';
 import 'package:skeleton/core/grpc_error_handler.dart';
 import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/mappers/message_mapper.dart';
-import 'package:skeleton/data/mappers/session_mapper.dart';
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
-import 'package:skeleton/generated/grpc_pb/aichat.pbgrpc.dart' as grpc;
+import 'package:skeleton/data/mappers/ai_message_mapper.dart';
+import 'package:skeleton/data/mappers/ai_chat_session_mapper.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
+import 'package:skeleton/generated/grpc_pb/aichat.pbgrpc.dart' as aichatpb;
 import 'package:skeleton/generated/grpc_pb/common.pb.dart' as commonpb;
 
 abstract class IAIChatRemoteDataSource {
@@ -20,17 +20,17 @@ abstract class IAIChatRemoteDataSource {
 
   Stream<String> sendChatMessage(
     String sessionId,
-    List<Message> messages, {
+    List<AIMessage> messages, {
     String? model,
   });
 
-  Future<ChatSession> createSession(String title, {String? model});
+  Future<AIChatSession> createSession(String title, {String? model});
 
-  Future<ChatSession> getSession(String sessionId);
+  Future<AIChatSession> getSession(String sessionId);
 
-  Future<List<ChatSession>> getSessions(int page, int pageSize);
+  Future<List<AIChatSession>> getSessions(int page, int pageSize);
 
-  Future<List<Message>> getSessionMessages(
+  Future<List<AIMessage>> getSessionMessages(
     String sessionId,
     int page,
     int pageSize,
@@ -38,9 +38,9 @@ abstract class IAIChatRemoteDataSource {
 
   Future<void> deleteSession(String sessionId);
 
-  Future<ChatSession> updateSessionTitle(String sessionId, String title);
+  Future<AIChatSession> updateSessionTitle(String sessionId, String title);
 
-  Future<ChatSession> updateSessionModel(String sessionId, String model);
+  Future<AIChatSession> updateSessionModel(String sessionId, String model);
 }
 
 class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
@@ -49,7 +49,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
 
   AIChatRemoteDataSource(this._channelManager, this._authGuard);
 
-  grpc.AIChatServiceClient get _client => _channelManager.chatClient;
+  aichatpb.AIChatServiceClient get _client => _channelManager.chatClient;
 
   @override
   Future<bool> checkConnection() async {
@@ -94,14 +94,14 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   @override
   Stream<String> sendChatMessage(
     String sessionId,
-    List<Message> messages, {
+    List<AIMessage> messages, {
     String? model,
   }) async* {
     Logs().d('ChatRemoteDataSource: отправка сообщения в сессию $sessionId');
     try {
-      final chatMessages = MessageMapper.listToProto(messages);
+      final chatMessages = AIMessageMapper.listToProto(messages);
 
-      final request = grpc.SendMessageRequest()
+      final request = aichatpb.SendMessageRequest()
         ..sessionId = sessionId
         ..messages.addAll(chatMessages);
       if (model != null && model.isNotEmpty) {
@@ -134,10 +134,10 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   }
 
   @override
-  Future<ChatSession> createSession(String title, {String? model}) async {
+  Future<AIChatSession> createSession(String title, {String? model}) async {
     Logs().d('ChatRemoteDataSource: создание сессии "$title"');
     try {
-      final request = grpc.CreateSessionRequest(
+      final request = aichatpb.CreateSessionRequest(
         title: title,
       );
       if (model != null && model.isNotEmpty) {
@@ -148,7 +148,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
         () => _client.createSession(request),
       );
       Logs().i('ChatRemoteDataSource: сессия создана');
-      return SessionMapper.fromProto(response);
+      return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка создания сессии', e);
       throwGrpcError(e, 'Ошибка создания сессии');
@@ -159,17 +159,15 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   }
 
   @override
-  Future<ChatSession> getSession(String sessionId) async {
+  Future<AIChatSession> getSession(String sessionId) async {
     Logs().v('ChatRemoteDataSource: получение сессии $sessionId');
     try {
-      final request = grpc.GetSessionRequest(
-        sessionId: sessionId
-      );
+      final request = aichatpb.GetSessionRequest(sessionId: sessionId);
 
       final response = await _authGuard.execute(
         () => _client.getSession(request),
       );
-      return SessionMapper.fromProto(response);
+      return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка получения сессии', e);
       throwGrpcError(e, 'Ошибка получения сессии');
@@ -180,13 +178,13 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   }
 
   @override
-  Future<List<ChatSession>> getSessions(
+  Future<List<AIChatSession>> getSessions(
     int page,
     int pageSize,
   ) async {
     Logs().d('ChatRemoteDataSource: получение сессий page=$page pageSize=$pageSize');
     try {
-      final request = grpc.GetSessionsRequest(
+      final request = aichatpb.GetSessionsRequest(
         page: page,
         pageSize: pageSize,
       );
@@ -194,7 +192,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
       final response = await _authGuard.execute(
         () => _client.getSessions(request),
       );
-      final sessions = SessionMapper.listFromProto(response.sessions);
+      final sessions = AIChatSessionMapper.listFromProto(response.sessions);
       Logs().i('ChatRemoteDataSource: получено сессий: ${sessions.length}');
       return sessions;
     } on GrpcError catch (e) {
@@ -207,14 +205,14 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   }
 
   @override
-  Future<List<Message>> getSessionMessages(
+  Future<List<AIMessage>> getSessionMessages(
     String sessionId,
     int page,
     int pageSize,
   ) async {
     Logs().v('ChatRemoteDataSource: получение сообщений сессии $sessionId');
     try {
-      final request = grpc.GetSessionMessagesRequest(
+      final request = aichatpb.GetSessionMessagesRequest(
         sessionId: sessionId,
         page: page,
         pageSize: pageSize,
@@ -223,7 +221,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
       final response = await _authGuard.execute(
         () => _client.getSessionMessages(request),
       );
-      return MessageMapper.listFromProto(response.messages);
+      return AIMessageMapper.listFromProto(response.messages);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка получения сообщений', e);
       throwGrpcError(e, 'Ошибка получения сообщений');
@@ -237,9 +235,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   Future<void> deleteSession(String sessionId) async {
     Logs().d('ChatRemoteDataSource: удаление сессии $sessionId');
     try {
-      final request = grpc.DeleteSessionRequest(
-        sessionId: sessionId
-      );
+      final request = aichatpb.DeleteSessionRequest(sessionId: sessionId);
 
       await _authGuard.execute(() => _client.deleteSession(request));
       Logs().i('ChatRemoteDataSource: сессия удалена');
@@ -253,10 +249,10 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   }
 
   @override
-  Future<ChatSession> updateSessionTitle(String sessionId, String title) async {
+  Future<AIChatSession> updateSessionTitle(String sessionId, String title) async {
     Logs().d('ChatRemoteDataSource: обновление заголовка сессии $sessionId');
     try {
-      final request = grpc.UpdateSessionTitleRequest(
+      final request = aichatpb.UpdateSessionTitleRequest(
         sessionId: sessionId,
         title: title,
       );
@@ -265,7 +261,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
         () => _client.updateSessionTitle(request),
       );
       Logs().i('ChatRemoteDataSource: заголовок обновлён');
-      return SessionMapper.fromProto(response);
+      return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка обновления заголовка', e);
       throwGrpcError(e, 'Ошибка обновления заголовка');
@@ -276,10 +272,10 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
   }
 
   @override
-  Future<ChatSession> updateSessionModel(String sessionId, String model) async {
+  Future<AIChatSession> updateSessionModel(String sessionId, String model) async {
     Logs().d('ChatRemoteDataSource: обновление модели сессии $sessionId');
     try {
-      final request = grpc.UpdateSessionModelRequest(
+      final request = aichatpb.UpdateSessionModelRequest(
         sessionId: sessionId,
         model: model,
       );
@@ -288,7 +284,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
         () => _client.updateSessionModel(request),
       );
       Logs().i('ChatRemoteDataSource: модель сессии обновлена');
-      return SessionMapper.fromProto(response);
+      return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка обновления модели сессии', e);
       throwGrpcError(e, 'Ошибка обновления модели сессии');

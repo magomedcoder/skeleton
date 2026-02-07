@@ -1,15 +1,15 @@
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/generated/grpc_pb/aichat.pb.dart' as grpc;
 
-abstract class SessionMapper {
-  SessionMapper._();
+abstract class AIChatSessionMapper {
+  AIChatSessionMapper._();
 
   static DateTime _dateTimeFromUnixSeconds(int seconds) {
     return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
   }
 
-  static ChatSession fromProto(grpc.ChatSession proto) {
-    return ChatSession(
+  static AIChatSession fromProto(grpc.ChatSession proto) {
+    return AIChatSession(
       id: proto.id,
       title: proto.title,
       createdAt: _dateTimeFromUnixSeconds(proto.createdAt.toInt()),
@@ -18,7 +18,7 @@ abstract class SessionMapper {
     );
   }
 
-  static List<ChatSession> listFromProto(List<grpc.ChatSession> protos) {
+  static List<AIChatSession> listFromProto(List<grpc.ChatSession> protos) {
     return protos.map(fromProto).toList();
   }
 }

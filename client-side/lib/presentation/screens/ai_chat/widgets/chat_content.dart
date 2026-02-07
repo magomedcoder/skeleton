@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/attachment_settings.dart';
 import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
 import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 import 'package:skeleton/presentation/screens/ai_chat/widgets/chat_input_bar.dart';
-import 'package:skeleton/presentation/widgets/chat_bubble.dart';
+import 'package:skeleton/presentation/widgets/ai_chat_bubble.dart';
 
 class ChatContent extends StatefulWidget {
   final VoidCallback? onOpenSessionsDrawer;
@@ -351,7 +351,7 @@ class _ChatContentState extends State<ChatContent> {
     final theme = Theme.of(context);
     final currentSession = state.sessions.firstWhere(
       (session) => session.id == state.currentSessionId,
-      orElse: () => ChatSession(
+      orElse: () => AIChatSession(
         id: '',
         title: 'Новый чат',
         createdAt: DateTime.now(),
@@ -498,10 +498,10 @@ class _ChatContentState extends State<ChatContent> {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: ChatBubble(
-            message: Message(
+            message: AIMessage(
               id: 'streaming',
               content: state.currentStreamingText ?? '',
-              role: MessageRole.assistant,
+              role: AIMessageRole.assistant,
               createdAt: DateTime.now(),
             ),
             isStreaming: true,

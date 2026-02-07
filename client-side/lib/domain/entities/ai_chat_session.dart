@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-class ChatSession extends Equatable {
+class AIChatSession extends Equatable {
   final String id;
   final String title;
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? model;
 
-  const ChatSession({
+  const AIChatSession({
     required this.id,
     required this.title,
     required this.createdAt,

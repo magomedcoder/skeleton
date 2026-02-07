@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/layout/responsive.dart';
 import 'package:skeleton/core/theme/app_theme.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/presentation/screens/admin/admin_menu_screen.dart';
 import 'package:skeleton/presentation/screens/admin/runners_admin_screen.dart';
 import 'package:skeleton/presentation/screens/admin/users_admin_screen.dart';
@@ -41,11 +41,11 @@ class _MainLayoutState extends State<MainLayout> {
     context.read<AIChatBloc>().add(const ChatCreateSession());
   }
 
-  void _selectSession(ChatSession session) {
+  void _selectSession(AIChatSession session) {
     context.read<AIChatBloc>().add(ChatSelectSession(session.id));
   }
 
-  void _selectSessionAndCloseDrawer(ChatSession session) {
+  void _selectSessionAndCloseDrawer(AIChatSession session) {
     _selectSession(session);
     if (Breakpoints.useDrawerForSessions(context)) {
       Navigator.of(context).pop();

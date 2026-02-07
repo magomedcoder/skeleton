@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
 import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 
 class GetSessionMessagesUseCase {
@@ -6,7 +6,7 @@ class GetSessionMessagesUseCase {
 
   GetSessionMessagesUseCase(this.repository);
 
-  Future<List<Message>> call(
+  Future<List<AIMessage>> call(
     String sessionId, {
     int page = 1,
     int pageSize = 50,

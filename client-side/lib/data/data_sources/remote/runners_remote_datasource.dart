@@ -6,7 +6,7 @@ import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/domain/entities/gpu_info.dart';
 import 'package:skeleton/domain/entities/runner.dart';
 import 'package:skeleton/domain/entities/server_info.dart';
-import 'package:skeleton/generated/grpc_pb/runner.pb.dart' as runner_pb;
+import 'package:skeleton/generated/grpc_pb/runner.pb.dart' as runnerpb;
 
 abstract class IRunnersRemoteDataSource {
   Future<List<Runner>> getRunners();
@@ -28,7 +28,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     try {
       final response = await _authGuard.execute(
         () => _channelManager.runnerAdminClient.getRunners(
-          runner_pb.Empty(),
+          runnerpb.Empty(),
         ),
       );
       final runners = response.runners
@@ -60,7 +60,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     }
   }
 
-  static GpuInfo _gpuFromProto(runner_pb.GpuInfo p) {
+  static GpuInfo _gpuFromProto(runnerpb.GpuInfo p) {
     return GpuInfo(
       name: p.name,
       temperatureC: p.temperatureC,
@@ -70,7 +70,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     );
   }
 
-  static ServerInfo _serverInfoFromProto(runner_pb.ServerInfo p) {
+  static ServerInfo _serverInfoFromProto(runnerpb.ServerInfo p) {
     return ServerInfo(
       hostname: p.hostname,
       os: p.os,
@@ -87,7 +87,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     try {
       await _authGuard.execute(
         () => _channelManager.runnerAdminClient.setRunnerEnabled(
-          runner_pb.SetRunnerEnabledRequest(
+          runnerpb.SetRunnerEnabledRequest(
             address: address,
             enabled: enabled
           ),
@@ -118,7 +118,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     try {
       final response = await _authGuard.execute(
         () => _channelManager.runnerAdminClient.getRunnersStatus(
-          runner_pb.Empty(),
+          runnerpb.Empty(),
         ),
       );
       return response.hasActiveRunners;

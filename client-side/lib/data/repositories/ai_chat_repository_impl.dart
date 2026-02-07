@@ -4,8 +4,8 @@ import 'package:skeleton/core/failures.dart';
 import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/data/data_sources/local/session_model_local_data_source.dart';
 import 'package:skeleton/data/data_sources/remote/ai_chat_remote_datasource.dart';
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 
 class AIChatRepositoryImpl implements AIChatRepository {
@@ -39,7 +39,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   @override
   Stream<String> sendMessage(
     String sessionId,
-    List<Message> messages, {
+    List<AIMessage> messages, {
     String? model,
   }) {
     try {
@@ -56,7 +56,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   }
 
   @override
-  Future<ChatSession> createSession(String title, {String? model}) async {
+  Future<AIChatSession> createSession(String title, {String? model}) async {
     try {
       return await dataSource.createSession(title, model: model);
     } catch (e) {
@@ -67,7 +67,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   }
 
   @override
-  Future<ChatSession> getSession(String sessionId) async {
+  Future<AIChatSession> getSession(String sessionId) async {
     try {
       return await dataSource.getSession(sessionId);
     } catch (e) {
@@ -78,7 +78,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   }
 
   @override
-  Future<List<ChatSession>> getSessions(int page, int pageSize) async {
+  Future<List<AIChatSession>> getSessions(int page, int pageSize) async {
     try {
       return await dataSource.getSessions(page, pageSize);
     } catch (e) {
@@ -89,7 +89,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   }
 
   @override
-  Future<List<Message>> getSessionMessages(
+  Future<List<AIMessage>> getSessionMessages(
     String sessionId,
     int page,
     int pageSize,
@@ -115,7 +115,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   }
 
   @override
-  Future<ChatSession> updateSessionTitle(String sessionId, String title) async {
+  Future<AIChatSession> updateSessionTitle(String sessionId, String title) async {
     try {
       return await dataSource.updateSessionTitle(sessionId, title);
     } catch (e) {
@@ -126,7 +126,7 @@ class AIChatRepositoryImpl implements AIChatRepository {
   }
 
   @override
-  Future<ChatSession> updateSessionModel(String sessionId, String model) async {
+  Future<AIChatSession> updateSessionModel(String sessionId, String model) async {
     try {
       return await dataSource.updateSessionModel(sessionId, model);
     } catch (e) {

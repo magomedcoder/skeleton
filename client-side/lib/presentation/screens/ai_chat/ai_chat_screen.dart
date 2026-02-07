@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/attachment_settings.dart';
 import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/core/injector.dart' as di;
 import 'package:skeleton/presentation/screens/admin/bloc/users_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/users_admin_event.dart';
@@ -15,7 +15,7 @@ import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 import 'package:skeleton/presentation/screens/ai_chat/widgets/chat_input_bar.dart';
 import 'package:skeleton/presentation/screens/ai_chat/widgets/sessions_sidebar.dart';
 import 'package:skeleton/presentation/screens/profile/profile_screen.dart';
-import 'package:skeleton/presentation/widgets/chat_bubble.dart';
+import 'package:skeleton/presentation/widgets/ai_chat_bubble.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_event.dart';
 import 'package:skeleton/presentation/screens/admin/runners_admin_screen.dart';
@@ -74,11 +74,11 @@ class _ChatScreenState extends State<ChatScreen> {
     context.read<AIChatBloc>().add(const ChatCreateSession());
   }
 
-  void _selectSession(ChatSession session) {
+  void _selectSession(AIChatSession session) {
     context.read<AIChatBloc>().add(ChatSelectSession(session.id));
   }
 
-  void _selectSessionAndCloseDrawer(ChatSession session) {
+  void _selectSessionAndCloseDrawer(AIChatSession session) {
     _selectSession(session);
     if (Breakpoints.useDrawerForSessions(context)) {
       Navigator.of(context).pop();
@@ -330,7 +330,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final useDrawer = Breakpoints.useDrawerForSessions(context);
     final currentSession = state.sessions.firstWhere(
       (session) => session.id == state.currentSessionId,
-      orElse: () => ChatSession(
+      orElse: () => AIChatSession(
         id: '',
         title: 'Новый чат',
         createdAt: DateTime.now(),
@@ -444,10 +444,10 @@ class _ChatScreenState extends State<ChatScreen> {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: ChatBubble(
-              message: Message(
+              message: AIMessage(
                 id: 'streaming',
                 content: state.currentStreamingText ?? '',
-                role: MessageRole.assistant,
+                role: AIMessageRole.assistant,
                 createdAt: DateTime.now(),
               ),
               isStreaming: true,

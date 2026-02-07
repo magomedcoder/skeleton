@@ -5,14 +5,14 @@ import 'package:skeleton/presentation/screens/devices/bloc/devices_bloc.dart';
 import 'package:skeleton/presentation/screens/devices/bloc/devices_event.dart';
 import 'package:skeleton/presentation/screens/devices/widgets/devices_content.dart';
 
-class DevicesScreen extends StatefulWidget {
-  const DevicesScreen({super.key});
+class ProfileDevicesWidget extends StatefulWidget {
+  const ProfileDevicesWidget({super.key});
 
   @override
-  State<DevicesScreen> createState() => _DevicesScreenState();
+  State<ProfileDevicesWidget> createState() => _ProfileDevicesWidgetState();
 }
 
-class _DevicesScreenState extends State<DevicesScreen> {
+class _ProfileDevicesWidgetState extends State<ProfileDevicesWidget> {
   late final DevicesBloc _bloc;
 
   @override
@@ -31,9 +31,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _bloc,
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Устройства и сессии')),
-        body: const DevicesContent(),
+      child: const Padding(
+        padding: EdgeInsets.all(24),
+        child: DevicesContent(),
       ),
     );
   }

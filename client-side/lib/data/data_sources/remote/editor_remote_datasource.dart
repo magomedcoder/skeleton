@@ -4,12 +4,12 @@ import 'package:skeleton/core/failures.dart';
 import 'package:skeleton/core/grpc_channel_manager.dart';
 import 'package:skeleton/core/grpc_error_handler.dart';
 import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/generated/grpc_pb/editor.pbgrpc.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/editor.pbgrpc.dart' as editorpb;
 
 abstract class IEditorRemoteDataSource {
   Future<String> transform({
     required String text,
-    required grpc.TransformType type,
+    required editorpb.TransformType type,
     String? model,
     bool preserveMarkdown,
   });
@@ -21,18 +21,18 @@ class EditorRemoteDataSource implements IEditorRemoteDataSource {
 
   EditorRemoteDataSource(this._channelManager, this._authGuard);
 
-  grpc.EditorServiceClient get _client => _channelManager.editorClient;
+  editorpb.EditorServiceClient get _client => _channelManager.editorClient;
 
   @override
   Future<String> transform({
     required String text,
-    required grpc.TransformType type,
+    required editorpb.TransformType type,
     String? model,
     bool preserveMarkdown = false,
   }) async {
     Logs().d('EditorRemoteDataSource: transform type=$type model=$model');
     try {
-      final request = grpc.TransformRequest(
+      final request = editorpb.TransformRequest(
         text: text,
         type: type,
         preserveMarkdown: preserveMarkdown,

@@ -6,13 +6,13 @@ class AppTheme {
   static const int defaultAccentColorId = 0;
 
   static const List<AccentColorOption> accentColorOptions = [
-    AccentColorOption(0, Color(0xFF4A6FA5), 'Синий'),
-    AccentColorOption(1, Color(0xFF5865F2), 'Discord'),
-    AccentColorOption(2, Color(0xFF0088CC), 'Telegram'),
-    AccentColorOption(3, Color(0xFF25D366), 'WhatsApp'),
-    AccentColorOption(4, Color(0xFF1DB954), 'Spotify'),
-    AccentColorOption(5, Color(0xFF2EB886), 'Slack'),
-    AccentColorOption(6, Color(0xFF0366D6), 'GitHub'),
+    AccentColorOption(0, Color(0xFF4A6FA5)), // Синий
+    AccentColorOption(1, Color(0xFF5865F2)), // Discord
+    AccentColorOption(2, Color(0xFF0088CC)), // Telegram
+    AccentColorOption(3, Color(0xFF25D366)), // WhatsApp
+    AccentColorOption(4, Color(0xFF1DB954)), // Spotify
+    AccentColorOption(5, Color(0xFF2EB886)), // Slack
+    AccentColorOption(6, Color(0xFF0366D6)), // GitHub
   ];
 
   static Color primaryFromId(int id) {
@@ -203,7 +203,6 @@ class AppTheme {
 class AccentColorOption {
   final int id;
   final Color color;
-  final String label;
 
-  const AccentColorOption(this.id, this.color, this.label);
+  const AccentColorOption(this.id, this.color);
 }

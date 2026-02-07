@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 
 abstract interface class AIChatRepository {
   Future<bool> checkConnection();
@@ -10,17 +10,17 @@ abstract interface class AIChatRepository {
 
   Stream<String> sendMessage(
     String sessionId,
-    List<Message> messages, {
+    List<AIMessage> messages, {
     String? model,
   });
 
-  Future<ChatSession> createSession(String title, {String? model});
+  Future<AIChatSession> createSession(String title, {String? model});
 
-  Future<ChatSession> getSession(String sessionId);
+  Future<AIChatSession> getSession(String sessionId);
 
-  Future<List<ChatSession>> getSessions(int page, int pageSize);
+  Future<List<AIChatSession>> getSessions(int page, int pageSize);
 
-  Future<List<Message>> getSessionMessages(
+  Future<List<AIMessage>> getSessionMessages(
     String sessionId,
     int page,
     int pageSize,
@@ -28,9 +28,9 @@ abstract interface class AIChatRepository {
 
   Future<void> deleteSession(String sessionId);
 
-  Future<ChatSession> updateSessionTitle(String sessionId, String title);
+  Future<AIChatSession> updateSessionTitle(String sessionId, String title);
 
-  Future<ChatSession> updateSessionModel(String sessionId, String model);
+  Future<AIChatSession> updateSessionModel(String sessionId, String model);
 
   Future<String?> getSessionModel(String sessionId);
 

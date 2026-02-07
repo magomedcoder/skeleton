@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:equatable/equatable.dart';
 
 class AIChatState extends Equatable {
@@ -7,8 +7,8 @@ class AIChatState extends Equatable {
   final bool isLoading;
   final bool isStreaming;
   final String? currentSessionId;
-  final List<ChatSession> sessions;
-  final List<Message> messages;
+  final List<AIChatSession> sessions;
+  final List<AIMessage> messages;
   final String? currentStreamingText;
   final String? error;
   final List<String> models;
@@ -35,8 +35,8 @@ class AIChatState extends Equatable {
     bool? isStreaming,
     String? currentSessionId,
     bool clearCurrentSessionId = false,
-    List<ChatSession>? sessions,
-    List<Message>? messages,
+    List<AIChatSession>? sessions,
+    List<AIMessage>? messages,
     String? currentStreamingText,
     String? error,
     List<String>? models,

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:skeleton/domain/entities/message.dart';
-import 'package:skeleton/domain/entities/session.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
+import 'package:skeleton/domain/entities/ai_chat_session.dart';
 import 'package:skeleton/domain/usecases/ai_chat/connect_usecase.dart';
 import 'package:skeleton/domain/usecases/ai_chat/create_session_usecase.dart';
 import 'package:skeleton/domain/usecases/ai_chat/delete_session_usecase.dart';
@@ -107,7 +107,7 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
           } catch (_) {}
 
           String? currentSessionId;
-          List<Message> messages = const [];
+          List<AIMessage> messages = const [];
 
           if (sessions.isNotEmpty) {
             currentSessionId = sessions.first.id;
@@ -251,7 +251,7 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
 
       String? modelForSession = state.selectedModel;
       if (state.models.isNotEmpty) {
-        ChatSession? serverSession;
+        AIChatSession? serverSession;
         for (final s in state.sessions) {
           if (s.id == event.sessionId) {
             serverSession = s;
@@ -349,13 +349,11 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
     if (sessionId.isEmpty || !sessionExists) {
       try {
         final session = await createSessionUseCase(
-          model: state.selectedModel ??
-              (state.models.isNotEmpty ? state.models.first : null),
+          model: state.selectedModel ?? (state.models.isNotEmpty ? state.models.first : null),
         );
         sessionId = session.id;
 
-        final modelToSave = state.selectedModel ??
-            (state.models.isNotEmpty ? state.models.first : null);
+        final modelToSave = state.selectedModel ?? (state.models.isNotEmpty ? state.models.first : null);
         if (modelToSave != null) {
           try {
             await setSessionModelUseCase(sessionId, modelToSave);
@@ -382,10 +380,10 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
     }
 
     Logs().d('ChatBloc: отправка сообщения в сессию $sessionId');
-    final userMessage = Message(
+    final userMessage = AIMessage(
       id: _uuid.v4(),
       content: text,
-      role: MessageRole.user,
+      role: AIMessageRole.user,
       createdAt: DateTime.now(),
       attachmentFileName: event.attachmentFileName,
       attachmentContent: event.attachmentContent != null
@@ -441,10 +439,10 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
 
       if (streamingText.isNotEmpty) {
         Logs().i('ChatBloc: сообщение получено');
-        final assistantMessage = Message(
+        final assistantMessage = AIMessage(
           id: _uuid.v4(),
           content: streamingText,
-          role: MessageRole.assistant,
+          role: AIMessageRole.assistant,
           createdAt: DateTime.now(),
         );
 
@@ -599,7 +597,7 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
     }
     final updatedSessions = state.sessions.map((s) {
       if (s.id == sessionId) {
-        return ChatSession(
+        return AIChatSession(
           id: s.id,
           title: s.title,
           createdAt: s.createdAt,
@@ -633,10 +631,10 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
 
     if (state.currentStreamingText != null
         && state.currentStreamingText!.isNotEmpty) {
-      final assistantMessage = Message(
+      final assistantMessage = AIMessage(
         id: _uuid.v4(),
         content: state.currentStreamingText!,
-        role: MessageRole.assistant,
+        role: AIMessageRole.assistant,
         createdAt: DateTime.now(),
       );
 

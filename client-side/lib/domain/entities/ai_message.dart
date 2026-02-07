@@ -2,17 +2,17 @@ import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 
-enum MessageRole { user, assistant }
+enum AIMessageRole { user, assistant }
 
-class Message extends Equatable {
+class AIMessage extends Equatable {
   final String id;
   final String content;
-  final MessageRole role;
+  final AIMessageRole role;
   final DateTime createdAt;
   final String? attachmentFileName;
   final Uint8List? attachmentContent;
 
-  const Message({
+  const AIMessage({
     required this.id,
     required this.content,
     required this.role,

@@ -34,8 +34,8 @@ class AppBottomNav extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(
-                icon: Icons.chat_bubble_outline_rounded,
-                selectedIcon: Icons.chat_bubble_rounded,
+                icon: Icons.smart_toy_outlined,
+                selectedIcon: Icons.smart_toy,
                 label: 'AI Чаты',
                 isSelected: selected == NavDestination.home,
                 onTap: () => onDestinationSelected(NavDestination.home),

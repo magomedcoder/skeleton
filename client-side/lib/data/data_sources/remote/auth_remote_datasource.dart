@@ -8,7 +8,7 @@ import 'package:skeleton/domain/entities/auth_result.dart';
 import 'package:skeleton/domain/entities/auth_tokens.dart';
 import 'package:skeleton/domain/entities/device.dart';
 import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
-import 'package:skeleton/generated/grpc_pb/auth.pbgrpc.dart' as grpc;
+import 'package:skeleton/generated/grpc_pb/auth.pbgrpc.dart' as authpb;
 
 abstract class IAuthRemoteDataSource {
   Future<AuthResult> login(String username, String password);
@@ -30,13 +30,13 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
   AuthRemoteDataSource(this._channelManager, this._tokenStorage);
 
-  grpc.AuthServiceClient get _client => _channelManager.authClient;
+  authpb.AuthServiceClient get _client => _channelManager.authClient;
 
   @override
   Future<AuthResult> login(String username, String password) async {
     Logs().d('AuthRemoteDataSource: вход для пользователя $username');
     try {
-      final request = grpc.LoginRequest(
+      final request = authpb.LoginRequest(
         username: username,
         password: password,
       );
@@ -60,7 +60,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   Future<AuthTokens> refreshToken(String refreshToken) async {
     Logs().d('AuthRemoteDataSource: обновление токена');
     try {
-      final request = grpc.RefreshTokenRequest(
+      final request = authpb.RefreshTokenRequest(
         refreshToken: refreshToken
       );
 
@@ -83,7 +83,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   Future<void> logout() async {
     Logs().d('AuthRemoteDataSource: выход');
     try {
-      final request = grpc.LogoutRequest();
+      final request = authpb.LogoutRequest();
 
       await _client.logout(request);
       Logs().i('AuthRemoteDataSource: выход выполнен');
@@ -100,7 +100,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]) async {
     Logs().d('AuthRemoteDataSource: смена пароля');
     try {
-      final request = grpc.ChangePasswordRequest(
+      final request = authpb.ChangePasswordRequest(
         oldPassword: oldPassword,
         newPassword: newPassword,
       );
@@ -128,7 +128,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   Future<List<Device>> getDevices() async {
     Logs().d('AuthRemoteDataSource: список устройств');
     try {
-      final request = grpc.GetDevicesRequest();
+      final request = authpb.GetDevicesRequest();
       final response = await _client.getDevices(request);
       final devices = response.devices
         .map((d) => Device(
@@ -153,7 +153,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   Future<void> revokeDevice(int deviceId) async {
     Logs().d('AuthRemoteDataSource: отзыв устройства $deviceId');
     try {
-      final request = grpc.RevokeDeviceRequest(deviceId: deviceId);
+      final request = authpb.RevokeDeviceRequest(deviceId: deviceId);
       await _client.revokeDevice(request);
       Logs().i('AuthRemoteDataSource: устройство отозвано');
     } on GrpcError catch (e) {

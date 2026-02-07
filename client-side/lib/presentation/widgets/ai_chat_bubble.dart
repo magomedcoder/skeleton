@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
 import 'package:skeleton/presentation/widgets/code_block_builder.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class ChatBubble extends StatefulWidget {
-  final Message message;
+  final AIMessage message;
   final bool isStreaming;
 
   const ChatBubble({
@@ -26,7 +26,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   Widget build(BuildContext context) {
     final message = widget.message;
     final isStreaming = widget.isStreaming;
-    final isUser = message.role == MessageRole.user;
+    final isUser = message.role == AIMessageRole.user;
     final theme = Theme.of(context);
     final width = Breakpoints.width(context);
     const minBubbleWidth = 64.0;

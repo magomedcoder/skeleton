@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/entities/message.dart';
+import 'package:skeleton/domain/entities/ai_message.dart';
 import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
 
 class SendMessageUseCase {
@@ -8,7 +8,7 @@ class SendMessageUseCase {
 
   Stream<String> call(
     String sessionId,
-    List<Message> messages, {
+    List<AIMessage> messages, {
     String? model,
   }) {
     return repository.sendMessage(sessionId, messages, model: model);
