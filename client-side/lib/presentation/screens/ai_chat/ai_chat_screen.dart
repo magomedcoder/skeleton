@@ -78,13 +78,6 @@ class _ChatScreenState extends State<ChatScreen> {
     context.read<AIChatBloc>().add(ChatSelectSession(session.id));
   }
 
-  void _selectSessionAndCloseDrawer(AIChatSession session) {
-    _selectSession(session);
-    if (Breakpoints.useDrawerForSessions(context)) {
-      Navigator.of(context).pop();
-    }
-  }
-
   void _deleteSession(String sessionId, String sessionTitle) {
     final chatBloc = context.read<AIChatBloc>();
     showDialog<void>(
@@ -404,7 +397,7 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 120,
               height: 120,
               child: Icon(
-                Icons.chat_bubble_outline,
+                Icons.smart_toy,
                 size: 54,
                 color: Theme.of(context)
                     .colorScheme
@@ -501,8 +494,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: SafeArea(
                       child: SessionsSidebar(
                         isInDrawer: true,
-                        onCreateNewSession: _createNewSession,
-                        onSelectSession: _selectSessionAndCloseDrawer,
+                        onCreateNewSession: () {
+                          _createNewSession();
+                          _scaffoldKey.currentState?.closeDrawer();
+                        },
+                        onSelectSession: (session) {
+                          _selectSession(session);
+                          _scaffoldKey.currentState?.closeDrawer();
+                        },
                         onDeleteSession: _deleteSession,
                       ),
                     ),

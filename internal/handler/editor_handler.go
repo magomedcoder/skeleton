@@ -13,10 +13,10 @@ import (
 type EditorHandler struct {
 	editorpb.UnimplementedEditorServiceServer
 	editorUseCase *usecase.EditorUseCase
-	authUseCase   *usecase.AuthUseCase
+	authUseCase   usecase.TokenValidator
 }
 
-func NewEditorHandler(editorUseCase *usecase.EditorUseCase, authUseCase *usecase.AuthUseCase) *EditorHandler {
+func NewEditorHandler(editorUseCase *usecase.EditorUseCase, authUseCase usecase.TokenValidator) *EditorHandler {
 	return &EditorHandler{
 		editorUseCase: editorUseCase,
 		authUseCase:   authUseCase,

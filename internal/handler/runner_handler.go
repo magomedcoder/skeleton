@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+
 	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
 	"github.com/magomedcoder/skeleton/internal/runner"
 	"github.com/magomedcoder/skeleton/internal/usecase"
@@ -11,10 +12,10 @@ import (
 type RunnerHandler struct {
 	runnerpb.UnimplementedRunnerAdminServiceServer
 	pool        *runner.Pool
-	authUseCase *usecase.AuthUseCase
+	authUseCase usecase.TokenValidator
 }
 
-func NewRunnerHandler(pool *runner.Pool, authUseCase *usecase.AuthUseCase) *RunnerHandler {
+func NewRunnerHandler(pool *runner.Pool, authUseCase usecase.TokenValidator) *RunnerHandler {
 	return &RunnerHandler{
 		pool:        pool,
 		authUseCase: authUseCase,

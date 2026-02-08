@@ -30,7 +30,7 @@ func extractToken(ctx context.Context) (string, error) {
 	return strings.TrimPrefix(authHeader, "Bearer "), nil
 }
 
-func GetUserFromContext(ctx context.Context, authUseCase *usecase.AuthUseCase) (*domain.User, error) {
+func GetUserFromContext(ctx context.Context, authUseCase usecase.TokenValidator) (*domain.User, error) {
 	token, err := extractToken(ctx)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func GetUserFromContext(ctx context.Context, authUseCase *usecase.AuthUseCase) (
 	return user, nil
 }
 
-func RequireAdmin(ctx context.Context, authUseCase *usecase.AuthUseCase) error {
+func RequireAdmin(ctx context.Context, authUseCase usecase.TokenValidator) error {
 	user, err := GetUserFromContext(ctx, authUseCase)
 	if err != nil {
 		return err

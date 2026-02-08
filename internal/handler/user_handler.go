@@ -15,10 +15,10 @@ import (
 type UserHandler struct {
 	userpb.UnimplementedUserServiceServer
 	userUseCase *usecase.UserUseCase
-	authUseCase *usecase.AuthUseCase
+	authUseCase usecase.TokenValidator
 }
 
-func NewUserHandler(userUseCase *usecase.UserUseCase, authUseCase *usecase.AuthUseCase) *UserHandler {
+func NewUserHandler(userUseCase *usecase.UserUseCase, authUseCase usecase.TokenValidator) *UserHandler {
 	return &UserHandler{
 		userUseCase: userUseCase,
 		authUseCase: authUseCase,

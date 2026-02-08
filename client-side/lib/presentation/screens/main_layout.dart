@@ -41,15 +41,18 @@ class _MainLayoutState extends State<MainLayout> {
     context.read<AIChatBloc>().add(const ChatCreateSession());
   }
 
+  void _createNewSessionAndCloseDrawer() {
+    _createNewSession();
+    _scaffoldKey.currentState?.closeDrawer();
+  }
+
   void _selectSession(AIChatSession session) {
     context.read<AIChatBloc>().add(ChatSelectSession(session.id));
   }
 
   void _selectSessionAndCloseDrawer(AIChatSession session) {
     _selectSession(session);
-    if (Breakpoints.useDrawerForSessions(context)) {
-      Navigator.of(context).pop();
-    }
+    _scaffoldKey.currentState?.closeDrawer();
   }
 
   void _deleteSession(String sessionId, String sessionTitle) {
@@ -83,9 +86,9 @@ class _MainLayoutState extends State<MainLayout> {
     final useDrawer = Breakpoints.useDrawerForSessions(context);
     final sessionsSidebar = SessionsSidebar(
       isInDrawer: useDrawer,
-      onCreateNewSession: _createNewSession,
-      onSelectSession: useDrawer 
-        ? _selectSessionAndCloseDrawer 
+      onCreateNewSession: useDrawer ? _createNewSessionAndCloseDrawer : _createNewSession,
+      onSelectSession: useDrawer
+        ? _selectSessionAndCloseDrawer
         : _selectSession,
       onDeleteSession: _deleteSession,
     );

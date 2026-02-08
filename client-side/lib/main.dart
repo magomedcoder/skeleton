@@ -4,16 +4,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:skeleton/core/injector.dart' as di;
 import 'package:skeleton/core/log/logs.dart';
 import 'package:skeleton/core/theme/app_theme.dart';
+import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:skeleton/presentation/screens/auth/login_screen.dart';
 import 'package:skeleton/presentation/screens/auth/update_required_screen.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:skeleton/presentation/screens/editor/bloc/editor_bloc.dart';
 import 'package:skeleton/presentation/screens/main_layout.dart';
-import 'package:skeleton/presentation/theme/theme_cubit.dart';
-import 'package:skeleton/presentation/theme/theme_state.dart';
+import 'package:skeleton/presentation/cubit/theme/theme_cubit.dart';
+import 'package:skeleton/presentation/cubit/theme/theme_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

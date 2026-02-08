@@ -25,6 +25,11 @@ build-runner-nvidia:
 	@mkdir -p build
 	go build -tags nvidia -o build/skeleton-runner ./cmd/runner
 
+.PHONY: test
+test:
+	go test ./...
+	cd client-side && flutter test
+
 .PHONY: gen
 gen:
 	@for proto in ./api/proto/*.proto; do \

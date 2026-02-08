@@ -13,6 +13,10 @@ import (
 
 const maxDevicesPerUser = 4
 
+type TokenValidator interface {
+	ValidateToken(ctx context.Context, token string) (*domain.User, error)
+}
+
 type AuthUseCase struct {
 	userRepo        domain.UserRepository
 	userSessionRepo domain.UserSessionRepository

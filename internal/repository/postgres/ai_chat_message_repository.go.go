@@ -17,7 +17,7 @@ func NewMessageRepository(db *pgxpool.Pool) domain.AIChatMessageRepository {
 
 func (r *messageRepository) Create(ctx context.Context, message *domain.Message) error {
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO messages (id, session_id, content, role, attachment_file_id, created_at, updated_at)
+		INSERT INTO chat_session_messages (id, session_id, content, role, attachment_file_id, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id
 	`,
@@ -46,7 +46,7 @@ func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string
 	var total int32
 	err := r.db.QueryRow(ctx, `
 		SELECT COUNT(*)
-		FROM messages
+		FROM chat_session_messages
 		WHERE session_id = $1 AND deleted_at IS NULL
 	`, sessionID).Scan(&total)
 	if err != nil {
@@ -55,7 +55,7 @@ func (r *messageRepository) GetBySessionId(ctx context.Context, sessionID string
 
 	rows, err := r.db.Query(ctx, `
 		SELECT id, session_id, content, role, attachment_file_id, created_at, updated_at, deleted_at
-		FROM messages
+		FROM chat_session_messages
 		WHERE session_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at ASC
 		LIMIT $2 OFFSET $3

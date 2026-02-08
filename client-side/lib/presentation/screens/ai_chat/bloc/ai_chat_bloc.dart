@@ -106,37 +106,8 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
             }
           } catch (_) {}
 
-          String? currentSessionId;
-          List<AIMessage> messages = const [];
-
-          if (sessions.isNotEmpty) {
-            currentSessionId = sessions.first.id;
-
-            final sessionMessages = await getSessionMessagesUseCase(
-              currentSessionId,
-              page: 1,
-              pageSize: 50,
-            );
-            messages = sessionMessages;
-
-            if (selectedModel == null
-                && models.isNotEmpty
-                && sessions.isNotEmpty) {
-              final firstSession = sessions.first;
-              if (firstSession.model != null
-                  && firstSession.model!.isNotEmpty
-                  && models.contains(firstSession.model)) {
-                selectedModel = firstSession.model;
-              } else {
-                try {
-                  final savedModel = await getSessionModelUseCase(currentSessionId);
-                  if (savedModel != null && models.contains(savedModel)) {
-                    selectedModel = savedModel;
-                  }
-                } catch (_) {}
-              }
-            }
-          }
+          const String? currentSessionId = null;
+          const List<AIMessage> messages = [];
 
           emit(
             state.copyWith(
@@ -144,7 +115,7 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
               isLoading: false,
               sessions: sessions,
               currentSessionId: currentSessionId,
-              clearCurrentSessionId: sessions.isEmpty,
+              clearCurrentSessionId: true,
               messages: messages,
               models: models,
               selectedModel: selectedModel ?? state.selectedModel,

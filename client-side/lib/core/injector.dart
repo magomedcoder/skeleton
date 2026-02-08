@@ -50,7 +50,7 @@ import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_bloc.dart
 import 'package:skeleton/presentation/screens/admin/bloc/users_admin_bloc.dart';
 import 'package:skeleton/presentation/screens/devices/bloc/devices_bloc.dart';
 import 'package:skeleton/presentation/screens/editor/bloc/editor_bloc.dart';
-import 'package:skeleton/presentation/theme/theme_cubit.dart';
+import 'package:skeleton/presentation/cubit/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
 

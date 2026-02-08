@@ -16,10 +16,10 @@ import (
 type AIChatHandler struct {
 	aichatpb.UnimplementedAIChatServiceServer
 	aiChatUseCase *usecase.AIChatUseCase
-	authUseCase   *usecase.AuthUseCase
+	authUseCase   usecase.TokenValidator
 }
 
-func NewAIChatHandler(aiChatUseCase *usecase.AIChatUseCase, authUseCase *usecase.AuthUseCase) *AIChatHandler {
+func NewAIChatHandler(aiChatUseCase *usecase.AIChatUseCase, authUseCase usecase.TokenValidator) *AIChatHandler {
 	return &AIChatHandler{
 		aiChatUseCase: aiChatUseCase,
 		authUseCase:   authUseCase,

@@ -449,6 +449,7 @@ class _ChatContentState extends State<ChatContent> {
   }
 
   Widget _buildEmptyState() {
+    final useDrawer = Breakpoints.useDrawerForSessions(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -459,7 +460,7 @@ class _ChatContentState extends State<ChatContent> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.chat_bubble_outline_rounded,
+              Icons.smart_toy_outlined,
               size: 64,
               color: Theme.of(
                 context,
@@ -467,7 +468,9 @@ class _ChatContentState extends State<ChatContent> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Выберите сессию из списка слева\nили создайте новую',
+              useDrawer
+                  ? 'Нажмите ☰ чтобы выбрать сессию\nили создайте новую'
+                  : 'Выберите сессию из списка слева\nили создайте новую',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

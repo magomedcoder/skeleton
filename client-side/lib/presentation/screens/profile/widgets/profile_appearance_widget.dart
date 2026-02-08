@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeleton/core/theme/app_theme.dart';
-import 'package:skeleton/presentation/theme/theme_cubit.dart';
-import 'package:skeleton/presentation/theme/theme_state.dart';
+import 'package:skeleton/presentation/cubit/theme/theme_cubit.dart';
+import 'package:skeleton/presentation/cubit/theme/theme_state.dart';
 
 class ProfileAppearanceWidget extends StatelessWidget {
   const ProfileAppearanceWidget({super.key, this.scrollable = true});

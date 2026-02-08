@@ -78,7 +78,7 @@ class _SessionsSidebarState extends State<SessionsSidebar> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.chat_bubble_outline_rounded,
+                    Icons.smart_toy_outlined,
                     size: 20,
                     color: isSelected
                         ? theme.colorScheme.primary
