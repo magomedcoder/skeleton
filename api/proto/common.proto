@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package skeleton;
+package legion;
 
-option go_package = "github.com/magomedcoder/skeleton/api/pb/commonpb;commonpb";
+option go_package = "github.com/magomedcoder/legion/api/pb/commonpb;commonpb";
 
 message Empty {}
 

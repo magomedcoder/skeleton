@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/data_sources/local/session_model_local_data_source.dart';
-import 'package:skeleton/data/data_sources/remote/ai_chat_remote_datasource.dart';
-import 'package:skeleton/domain/entities/ai_message.dart';
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
-import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/data/data_sources/local/session_model_local_data_source.dart';
+import 'package:legion/data/data_sources/remote/ai_chat_remote_datasource.dart';
+import 'package:legion/domain/entities/ai_message.dart';
+import 'package:legion/domain/entities/ai_chat_session.dart';
+import 'package:legion/domain/repositories/ai_chat_repository.dart';
 
 class AIChatRepositoryImpl implements AIChatRepository {
   final IAIChatRemoteDataSource dataSource;

@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
+import 'package:legion/domain/repositories/ai_chat_repository.dart';
 
 class DeleteSessionUseCase {
   final AIChatRepository repository;

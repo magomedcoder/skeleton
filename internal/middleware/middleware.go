@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"context"
-	error2 "github.com/magomedcoder/skeleton/pkg/error"
+	error2 "github.com/magomedcoder/legion/pkg/error"
 	"strings"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/usecase"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

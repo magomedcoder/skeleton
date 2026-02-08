@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/api/pb/runnerpb"
 )
 
 func TestNewRegistry(t *testing.T) {

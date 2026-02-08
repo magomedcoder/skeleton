@@ -1,11 +1,11 @@
 {
-    "name": "Skeleton",
-    "short_name": "skeleton",
+    "name": "legion",
+    "short_name": "legion",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "skeleton",
+    "description": "legion",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

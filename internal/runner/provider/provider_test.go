@@ -3,7 +3,7 @@ package provider
 import (
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/runner/config"
+	"github.com/magomedcoder/legion/internal/runner/config"
 )
 
 func TestNewTextProvider_ollama(t *testing.T) {

@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/domain/usecases/ai_chat/get_models_usecase.dart';
-import 'package:skeleton/domain/usecases/editor/transform_text_usecase.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/editor/bloc/editor_event.dart';
-import 'package:skeleton/presentation/screens/editor/bloc/editor_state.dart';
-import 'package:skeleton/presentation/utils/request_logout_on_unauthorized.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/domain/usecases/ai_chat/get_models_usecase.dart';
+import 'package:legion/domain/usecases/editor/transform_text_usecase.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/editor/bloc/editor_event.dart';
+import 'package:legion/presentation/screens/editor/bloc/editor_state.dart';
+import 'package:legion/presentation/utils/request_logout_on_unauthorized.dart';
 
 class EditorBloc extends Bloc<EditorEvent, EditorState> {
   final AuthBloc authBloc;

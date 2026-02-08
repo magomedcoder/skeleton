@@ -4,7 +4,7 @@ import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/github.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:highlight/highlight.dart' show highlight, Node, Result;
-import 'package:skeleton/core/code_highlight_settings.dart';
+import 'package:legion/core/code_highlight_settings.dart';
 import 'package:markdown/markdown.dart' as md;
 
 class CodeBlockBuilder extends MarkdownElementBuilder {

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 
 class AuthInterceptor implements ClientInterceptor {
   final UserLocalDataSourceImpl tokenStorage;

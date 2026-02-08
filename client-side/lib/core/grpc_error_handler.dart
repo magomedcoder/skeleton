@@ -1,6 +1,6 @@
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/log/logs.dart';
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/log/logs.dart';
 
 const String kSessionExpiredMessage = 'Сессия истекла, войдите снова';
 

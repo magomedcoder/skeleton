@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/repositories/runners_repository.dart';
+import 'package:legion/domain/repositories/runners_repository.dart';
 
 class GetRunnersStatusUseCase {
   final RunnersRepository _repo;

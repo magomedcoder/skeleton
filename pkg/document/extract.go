@@ -32,7 +32,7 @@ func ExtractText(filename string, content []byte) (string, error) {
 }
 
 func extractPDF(content []byte) (string, error) {
-	tmp, err := os.CreateTemp("", "skeleton-pdf-*.pdf")
+	tmp, err := os.CreateTemp("", "legion-pdf-*.pdf")
 	if err != nil {
 		return "", fmt.Errorf("создание временного файла: %w", err)
 	}

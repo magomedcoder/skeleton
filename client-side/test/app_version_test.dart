@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:skeleton/core/app_version.dart';
+import 'package:legion/core/app_version.dart';
 
 void main() {
   test('appBuildNumber задан', () {

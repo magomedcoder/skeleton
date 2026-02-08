@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/domain/entities/device.dart';
-import 'package:skeleton/presentation/screens/devices/bloc/devices_bloc.dart';
-import 'package:skeleton/presentation/screens/devices/bloc/devices_event.dart';
-import 'package:skeleton/presentation/screens/devices/bloc/devices_state.dart';
+import 'package:legion/domain/entities/device.dart';
+import 'package:legion/presentation/screens/devices/bloc/devices_bloc.dart';
+import 'package:legion/presentation/screens/devices/bloc/devices_event.dart';
+import 'package:legion/presentation/screens/devices/bloc/devices_state.dart';
 
 class DevicesContent extends StatelessWidget {
   const DevicesContent({super.key});

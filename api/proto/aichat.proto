@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package chat;
 
-option go_package = "github.com/magomedcoder/skeleton/api/pb/aichatpb;aichatpb";
+option go_package = "github.com/magomedcoder/legion/api/pb/aichatpb;aichatpb";
 
 import "common.proto";
 
 service AIChatService {
-  rpc CheckConnection(skeleton.Empty) returns (ConnectionResponse);
+  rpc CheckConnection(legion.Empty) returns (ConnectionResponse);
 
-  rpc GetModels(skeleton.Empty) returns (GetModelsResponse);
+  rpc GetModels(legion.Empty) returns (GetModelsResponse);
 
   rpc SendMessage(SendMessageRequest) returns (stream ChatResponse);
 
@@ -21,7 +21,7 @@ service AIChatService {
 
   rpc GetSessionMessages(GetSessionMessagesRequest) returns (GetSessionMessagesResponse);
 
-  rpc DeleteSession(DeleteSessionRequest) returns (skeleton.Empty);
+  rpc DeleteSession(DeleteSessionRequest) returns (legion.Empty);
 
   rpc UpdateSessionTitle(UpdateSessionTitleRequest) returns (ChatSession);
 

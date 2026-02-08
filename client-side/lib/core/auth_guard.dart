@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/log/logs.dart';
+import 'package:legion/core/log/logs.dart';
 
 const accessTokenRefreshThreshold = Duration(minutes: 2);
 const backgroundRefreshCheckInterval = Duration(seconds: 60);

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 func TestNewDB_invalidDSN(t *testing.T) {

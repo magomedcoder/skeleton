@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/magomedcoder/skeleton/pkg"
+	"github.com/magomedcoder/legion/pkg"
 	"time"
 )
 

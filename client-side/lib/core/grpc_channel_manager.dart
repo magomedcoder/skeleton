@@ -1,12 +1,12 @@
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/auth_interceptor.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/core/server_config.dart';
-import 'package:skeleton/generated/grpc_pb/auth.pbgrpc.dart' as grpc_auth;
-import 'package:skeleton/generated/grpc_pb/aichat.pbgrpc.dart' as grpc_chat;
-import 'package:skeleton/generated/grpc_pb/editor.pbgrpc.dart' as grpc_editor;
-import 'package:skeleton/generated/grpc_pb/runner.pbgrpc.dart' as grpc_runner;
-import 'package:skeleton/generated/grpc_pb/user.pbgrpc.dart' as grpc_user;
+import 'package:legion/core/auth_interceptor.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/core/server_config.dart';
+import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as grpc_auth;
+import 'package:legion/generated/grpc_pb/aichat.pbgrpc.dart' as grpc_chat;
+import 'package:legion/generated/grpc_pb/editor.pbgrpc.dart' as grpc_editor;
+import 'package:legion/generated/grpc_pb/runner.pbgrpc.dart' as grpc_runner;
+import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc_user;
 
 class GrpcChannelManager {
   final ServerConfig _config;

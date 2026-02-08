@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
-import 'package:skeleton/domain/repositories/ai_chat_repository.dart';
+import 'package:legion/domain/entities/ai_chat_session.dart';
+import 'package:legion/domain/repositories/ai_chat_repository.dart';
 
 class UpdateSessionModelUseCase {
   final AIChatRepository repository;

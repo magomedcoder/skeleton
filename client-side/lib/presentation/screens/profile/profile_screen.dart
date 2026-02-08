@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
-import 'package:skeleton/presentation/screens/profile/profile_section.dart';
-import 'package:skeleton/presentation/screens/profile/profile_section_screen.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_appearance_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_devices_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_overview_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_security_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_sidebar.dart';
+import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
+import 'package:legion/presentation/screens/profile/profile_section.dart';
+import 'package:legion/presentation/screens/profile/profile_section_screen.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_appearance_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_devices_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_overview_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_security_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_sidebar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

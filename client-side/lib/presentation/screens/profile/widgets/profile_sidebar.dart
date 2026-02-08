@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/presentation/screens/profile/profile_section.dart';
+import 'package:legion/presentation/screens/profile/profile_section.dart';
 
 class ProfileSidebar extends StatelessWidget {
   final ProfileSection selected;

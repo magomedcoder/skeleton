@@ -3,20 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/skeleton"
-	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
-	"github.com/magomedcoder/skeleton/api/pb/authpb"
-	"github.com/magomedcoder/skeleton/api/pb/editorpb"
-	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
-	"github.com/magomedcoder/skeleton/api/pb/userpb"
-	"github.com/magomedcoder/skeleton/internal/bootstrap"
-	"github.com/magomedcoder/skeleton/internal/config"
-	"github.com/magomedcoder/skeleton/internal/handler"
-	"github.com/magomedcoder/skeleton/internal/repository/postgres"
-	"github.com/magomedcoder/skeleton/internal/runner"
-	"github.com/magomedcoder/skeleton/internal/service"
-	"github.com/magomedcoder/skeleton/internal/usecase"
-	"github.com/magomedcoder/skeleton/pkg/logger"
+	"github.com/magomedcoder/legion"
+	"github.com/magomedcoder/legion/api/pb/aichatpb"
+	"github.com/magomedcoder/legion/api/pb/authpb"
+	"github.com/magomedcoder/legion/api/pb/editorpb"
+	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/api/pb/userpb"
+	"github.com/magomedcoder/legion/internal/bootstrap"
+	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/legion/internal/handler"
+	"github.com/magomedcoder/legion/internal/repository/postgres"
+	"github.com/magomedcoder/legion/internal/runner"
+	"github.com/magomedcoder/legion/internal/service"
+	"github.com/magomedcoder/legion/internal/usecase"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
@@ -57,7 +57,7 @@ func main() {
 	defer sqlDB.Close()
 	logger.I("Подключение к базе данных установлено")
 
-	if err := bootstrap.RunMigrations(ctx, db, skeleton.Postgres); err != nil {
+	if err := bootstrap.RunMigrations(ctx, db, legion.Postgres); err != nil {
 		logger.E("Ошибка применения миграций: %v", err)
 		os.Exit(1)
 	}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/core/theme/app_theme.dart';
-import 'package:skeleton/presentation/widgets/side_navigation.dart';
+import 'package:legion/core/theme/app_theme.dart';
+import 'package:legion/presentation/widgets/side_navigation.dart';
 
 class AppBottomNav extends StatelessWidget {
   final NavDestination selected;

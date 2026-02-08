@@ -3,11 +3,11 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/skeleton/api/pb/editorpb"
+	"github.com/magomedcoder/legion/api/pb/editorpb"
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type EditorUseCase struct {

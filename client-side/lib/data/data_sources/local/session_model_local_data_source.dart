@@ -9,7 +9,7 @@ abstract class SessionModelLocalDataSource {
 }
 
 class SessionModelLocalDataSourceImpl implements SessionModelLocalDataSource {
-  static const _keyPrefix = 'skeleton_session_model_';
+  static const _keyPrefix = 'legion_session_model_';
 
   SharedPreferences? _prefs;
 

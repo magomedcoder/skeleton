@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
+import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/domain/entities/ai_chat_session.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 
 typedef ChatSessionCallback = void Function(AIChatSession);
 

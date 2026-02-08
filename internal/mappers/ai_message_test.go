@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/api/pb/aichatpb"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 func TestMessageToProto_nil(t *testing.T) {

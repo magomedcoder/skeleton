@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/repositories/editor_repository.dart';
-import 'package:skeleton/generated/grpc_pb/editor.pb.dart' as grpc;
+import 'package:legion/domain/repositories/editor_repository.dart';
+import 'package:legion/generated/grpc_pb/editor.pb.dart' as grpc;
 
 class TransformTextUseCase {
   final EditorRepository repository;

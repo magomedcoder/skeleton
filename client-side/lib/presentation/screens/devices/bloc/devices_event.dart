@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:skeleton/domain/entities/device.dart';
+import 'package:legion/domain/entities/device.dart';
 
 sealed class DevicesEvent extends Equatable {
   const DevicesEvent();

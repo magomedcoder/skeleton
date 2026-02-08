@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
-	"github.com/magomedcoder/skeleton/internal/runner"
+	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/internal/runner"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
-import 'package:skeleton/generated/grpc_pb/aichat.pb.dart' as grpc;
+import 'package:legion/domain/entities/ai_chat_session.dart';
+import 'package:legion/generated/grpc_pb/aichat.pb.dart' as grpc;
 
 abstract class AIChatSessionMapper {
   AIChatSessionMapper._();

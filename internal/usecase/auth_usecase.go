@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/service"
-	"github.com/magomedcoder/skeleton/pkg"
-	"github.com/magomedcoder/skeleton/pkg/logger"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/service"
+	"github.com/magomedcoder/legion/pkg"
+	"github.com/magomedcoder/legion/pkg/logger"
 )
 
 const maxDevicesPerUser = 4

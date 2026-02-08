@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/service"
-	"github.com/magomedcoder/skeleton/pkg/logger"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/service"
+	"github.com/magomedcoder/legion/pkg/logger"
 )
 
 func CreateFirstUser(ctx context.Context, userRepo domain.UserRepository, jwtService *service.JWTService) error {
-	username, password, name, surname := "skeleton", "password", "Admin", "Admin"
+	username, password, name, surname := "legion", "password", "Admin", "Admin"
 
 	_, total, err := userRepo.List(ctx, 1, 1)
 	if err != nil {

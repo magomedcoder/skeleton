@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package runner;
 
-option go_package = "github.com/magomedcoder/skeleton/api/pb/runnerpb;runnerpb";
+option go_package = "github.com/magomedcoder/legion/api/pb/runnerpb;runnerpb";
 
 import "aichat.proto";
 

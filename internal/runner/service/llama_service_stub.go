@@ -6,7 +6,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type LlamaService struct{}

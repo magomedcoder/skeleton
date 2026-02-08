@@ -1,4 +1,4 @@
-import 'package:skeleton/core/log/print_logs_native.dart';
+import 'package:legion/core/log/print_logs_native.dart';
 
 enum Level { debug, info, error, warning, verbose }
 

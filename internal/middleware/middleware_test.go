@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/usecase"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

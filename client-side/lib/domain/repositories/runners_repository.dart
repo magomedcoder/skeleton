@@ -1,4 +1,4 @@
-import 'package:skeleton/domain/entities/runner.dart';
+import 'package:legion/domain/entities/runner.dart';
 
 abstract class RunnersRepository {
   Future<List<Runner>> getRunners();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/domain/entities/server_info.dart';
+import 'package:legion/domain/entities/server_info.dart';
 
 class RunnerServerInfoSection extends StatelessWidget {
   final ServerInfo serverInfo;

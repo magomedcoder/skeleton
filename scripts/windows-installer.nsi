@@ -1,11 +1,11 @@
-!define APP_NAME "Skeleton"
+!define APP_NAME "Legion"
 
 !ifndef APP_VERSION
 !define APP_VERSION "1.0.0"
 !endif
-!define COMPANY_NAME "Skeleton"
+!define COMPANY_NAME "Legion"
 
-OutFile "SkeletonSetup.exe"
+OutFile "LegionSetup.exe"
 InstallDir "$PROGRAMFILES\\${APP_NAME}"
 InstallDirRegKey HKLM "Software\\${COMPANY_NAME}\\${APP_NAME}" "Install_Dir"
 
@@ -21,10 +21,10 @@ Section "Install"
 
   WriteRegStr HKLM "Software\\${COMPANY_NAME}\\${APP_NAME}" "Install_Dir" "$INSTDIR"
 
-  CreateShortCut "$DESKTOP\\${APP_NAME}.lnk" "$INSTDIR\\skeleton.exe"
+  CreateShortCut "$DESKTOP\\${APP_NAME}.lnk" "$INSTDIR\\legion.exe"
 
   CreateDirectory "$SMPROGRAMS\\${APP_NAME}"
-  CreateShortCut "$SMPROGRAMS\\${APP_NAME}\\${APP_NAME}.lnk" "$INSTDIR\\skeleton.exe"
+  CreateShortCut "$SMPROGRAMS\\${APP_NAME}\\${APP_NAME}.lnk" "$INSTDIR\\legion.exe"
   CreateShortCut "$SMPROGRAMS\\${APP_NAME}\\Uninstall.lnk" "$INSTDIR\\uninstall.exe"
 
   WriteUninstaller "$INSTDIR\\uninstall.exe"

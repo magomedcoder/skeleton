@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/entities/ai_message.dart';
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
+import 'package:legion/domain/entities/ai_message.dart';
+import 'package:legion/domain/entities/ai_chat_session.dart';
 import 'package:equatable/equatable.dart';
 
 class AIChatState extends Equatable {

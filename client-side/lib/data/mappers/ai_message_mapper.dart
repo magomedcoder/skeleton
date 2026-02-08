@@ -1,6 +1,6 @@
 import 'package:fixnum/fixnum.dart';
-import 'package:skeleton/domain/entities/ai_message.dart';
-import 'package:skeleton/generated/grpc_pb/aichat.pb.dart' as grpc;
+import 'package:legion/domain/entities/ai_message.dart';
+import 'package:legion/generated/grpc_pb/aichat.pb.dart' as grpc;
 
 abstract class AIMessageMapper {
   AIMessageMapper._();

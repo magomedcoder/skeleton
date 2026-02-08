@@ -1,14 +1,14 @@
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/grpc_channel_manager.dart';
-import 'package:skeleton/core/grpc_error_handler.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/mappers/auth_mapper.dart';
-import 'package:skeleton/domain/entities/auth_result.dart';
-import 'package:skeleton/domain/entities/auth_tokens.dart';
-import 'package:skeleton/domain/entities/device.dart';
-import 'package:skeleton/data/data_sources/local/user_local_data_source.dart';
-import 'package:skeleton/generated/grpc_pb/auth.pbgrpc.dart' as authpb;
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/grpc_error_handler.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/data/mappers/auth_mapper.dart';
+import 'package:legion/domain/entities/auth_result.dart';
+import 'package:legion/domain/entities/auth_tokens.dart';
+import 'package:legion/domain/entities/device.dart';
+import 'package:legion/data/data_sources/local/user_local_data_source.dart';
+import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as authpb;
 
 abstract class IAuthRemoteDataSource {
   Future<AuthResult> login(String username, String password);

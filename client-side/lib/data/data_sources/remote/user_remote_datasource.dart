@@ -1,12 +1,12 @@
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/auth_guard.dart';
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/grpc_channel_manager.dart';
-import 'package:skeleton/core/grpc_error_handler.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/mappers/user_mapper.dart';
-import 'package:skeleton/domain/entities/user.dart';
-import 'package:skeleton/generated/grpc_pb/user.pbgrpc.dart' as userpb;
+import 'package:legion/core/auth_guard.dart';
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/grpc_error_handler.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/data/mappers/user_mapper.dart';
+import 'package:legion/domain/entities/user.dart';
+import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as userpb;
 
 abstract class IUserRemoteDataSource {
   Future<List<User>> getUsers({required int page, required int pageSize});

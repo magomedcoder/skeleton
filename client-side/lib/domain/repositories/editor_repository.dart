@@ -1,4 +1,4 @@
-import 'package:skeleton/generated/grpc_pb/editor.pb.dart' as grpc;
+import 'package:legion/generated/grpc_pb/editor.pb.dart' as grpc;
 
 abstract interface class EditorRepository {
   Future<String> transform({

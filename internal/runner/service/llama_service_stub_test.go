@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 func TestNewLlamaService_stub(t *testing.T) {

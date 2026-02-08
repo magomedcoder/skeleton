@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/api/pb/aichatpb"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 func AIChatSessionToProto(session *domain.AIChatSession) *aichatpb.ChatSession {

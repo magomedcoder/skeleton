@@ -1,8 +1,8 @@
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/data_sources/remote/editor_remote_datasource.dart';
-import 'package:skeleton/domain/repositories/editor_repository.dart';
-import 'package:skeleton/generated/grpc_pb/editor.pb.dart' as grpc;
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/data/data_sources/remote/editor_remote_datasource.dart';
+import 'package:legion/domain/repositories/editor_repository.dart';
+import 'package:legion/generated/grpc_pb/editor.pb.dart' as grpc;
 
 class EditorRepositoryImpl implements EditorRepository {
   final IEditorRemoteDataSource dataSource;

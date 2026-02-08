@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/domain/entities/runner.dart';
-import 'package:skeleton/domain/usecases/runners/get_runners_usecase.dart';
-import 'package:skeleton/domain/usecases/runners/set_runner_enabled_usecase.dart';
-import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_event.dart';
-import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_state.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/domain/entities/runner.dart';
+import 'package:legion/domain/usecases/runners/get_runners_usecase.dart';
+import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_event.dart';
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_state.dart';
 
 class RunnersAdminBloc extends Bloc<RunnersAdminEvent, RunnersAdminState> {
   final GetRunnersUseCase getRunnersUseCase;

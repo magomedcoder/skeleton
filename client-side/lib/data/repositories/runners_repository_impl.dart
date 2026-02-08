@@ -1,6 +1,6 @@
-import 'package:skeleton/data/data_sources/remote/runners_remote_datasource.dart';
-import 'package:skeleton/domain/entities/runner.dart';
-import 'package:skeleton/domain/repositories/runners_repository.dart';
+import 'package:legion/data/data_sources/remote/runners_remote_datasource.dart';
+import 'package:legion/domain/entities/runner.dart';
+import 'package:legion/domain/repositories/runners_repository.dart';
 
 class RunnersRepositoryImpl implements RunnersRepository {
   final IRunnersRemoteDataSource _remote;

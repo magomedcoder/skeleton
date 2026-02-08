@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:skeleton/core/injector.dart' as di;
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/core/theme/app_theme.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_event.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
-import 'package:skeleton/presentation/screens/auth/login_screen.dart';
-import 'package:skeleton/presentation/screens/auth/update_required_screen.dart';
-import 'package:skeleton/presentation/screens/editor/bloc/editor_bloc.dart';
-import 'package:skeleton/presentation/screens/main_layout.dart';
-import 'package:skeleton/presentation/cubit/theme/theme_cubit.dart';
-import 'package:skeleton/presentation/cubit/theme/theme_state.dart';
+import 'package:legion/core/injector.dart' as di;
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/core/theme/app_theme.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:legion/presentation/screens/auth/login_screen.dart';
+import 'package:legion/presentation/screens/auth/update_required_screen.dart';
+import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
+import 'package:legion/presentation/screens/main_layout.dart';
+import 'package:legion/presentation/cubit/theme/theme_cubit.dart';
+import 'package:legion/presentation/cubit/theme/theme_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +35,7 @@ class App extends StatelessWidget {
           final primary = AppTheme.primaryFromId(themeState.accentColorId);
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Skeleton',
+            title: 'Legion',
             theme: AppTheme.themeLight(primary),
             darkTheme: AppTheme.themeDark(primary),
             themeMode: themeState.themeMode,

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:skeleton/domain/entities/gpu_info.dart';
-import 'package:skeleton/domain/entities/server_info.dart';
+import 'package:legion/domain/entities/gpu_info.dart';
+import 'package:legion/domain/entities/server_info.dart';
 
 class Runner extends Equatable {
   final String address;

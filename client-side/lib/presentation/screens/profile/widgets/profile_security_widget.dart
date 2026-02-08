@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/core/injector.dart' as di;
-import 'package:skeleton/domain/usecases/auth/change_password_usecase.dart';
+import 'package:legion/core/injector.dart' as di;
+import 'package:legion/domain/usecases/auth/change_password_usecase.dart';
 
 class ProfileSecurityWidget extends StatefulWidget {
   const ProfileSecurityWidget({super.key, this.scrollable = true});

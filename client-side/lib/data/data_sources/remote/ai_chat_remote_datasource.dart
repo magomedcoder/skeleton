@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/auth_guard.dart';
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/grpc_channel_manager.dart';
-import 'package:skeleton/core/grpc_error_handler.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/data/mappers/ai_message_mapper.dart';
-import 'package:skeleton/data/mappers/ai_chat_session_mapper.dart';
-import 'package:skeleton/domain/entities/ai_message.dart';
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
-import 'package:skeleton/generated/grpc_pb/aichat.pbgrpc.dart' as aichatpb;
-import 'package:skeleton/generated/grpc_pb/common.pb.dart' as commonpb;
+import 'package:legion/core/auth_guard.dart';
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/grpc_error_handler.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/data/mappers/ai_message_mapper.dart';
+import 'package:legion/data/mappers/ai_chat_session_mapper.dart';
+import 'package:legion/domain/entities/ai_message.dart';
+import 'package:legion/domain/entities/ai_chat_session.dart';
+import 'package:legion/generated/grpc_pb/aichat.pbgrpc.dart' as aichatpb;
+import 'package:legion/generated/grpc_pb/common.pb.dart' as commonpb;
 
 abstract class IAIChatRemoteDataSource {
   Future<bool> checkConnection();

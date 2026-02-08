@@ -1,12 +1,12 @@
 import 'package:grpc/grpc.dart';
-import 'package:skeleton/core/auth_guard.dart';
-import 'package:skeleton/core/failures.dart';
-import 'package:skeleton/core/grpc_channel_manager.dart';
-import 'package:skeleton/core/log/logs.dart';
-import 'package:skeleton/domain/entities/gpu_info.dart';
-import 'package:skeleton/domain/entities/runner.dart';
-import 'package:skeleton/domain/entities/server_info.dart';
-import 'package:skeleton/generated/grpc_pb/runner.pb.dart' as runnerpb;
+import 'package:legion/core/auth_guard.dart';
+import 'package:legion/core/failures.dart';
+import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/log/logs.dart';
+import 'package:legion/domain/entities/gpu_info.dart';
+import 'package:legion/domain/entities/runner.dart';
+import 'package:legion/domain/entities/server_info.dart';
+import 'package:legion/generated/grpc_pb/runner.pb.dart' as runnerpb;
 
 abstract class IRunnersRemoteDataSource {
   Future<List<Runner>> getRunners();

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/api/pb/editorpb"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/api/pb/editorpb"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type mockEditorLLM struct {

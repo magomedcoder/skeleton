@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/injector.dart' as di;
-import 'package:skeleton/presentation/screens/devices/bloc/devices_bloc.dart';
-import 'package:skeleton/presentation/screens/devices/bloc/devices_event.dart';
-import 'package:skeleton/presentation/screens/devices/widgets/devices_content.dart';
+import 'package:legion/core/injector.dart' as di;
+import 'package:legion/presentation/screens/devices/bloc/devices_bloc.dart';
+import 'package:legion/presentation/screens/devices/bloc/devices_event.dart';
+import 'package:legion/presentation/screens/devices/widgets/devices_content.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});

@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = skeleton
+PRODUCT_NAME = legion
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = ru.magomedcoder.skeleton
+PRODUCT_BUNDLE_IDENTIFIER = ru.magomedcoder.legion
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 Skeleton. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Legion. All rights reserved.

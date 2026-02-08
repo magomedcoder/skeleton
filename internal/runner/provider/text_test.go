@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type mockTextBackend struct {

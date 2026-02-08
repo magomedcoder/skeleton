@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/injector.dart' as di;
-import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_bloc.dart';
-import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_event.dart';
-import 'package:skeleton/presentation/screens/admin/bloc/runners_admin_state.dart';
-import 'package:skeleton/presentation/screens/admin/widgets/runner_card.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:legion/core/injector.dart' as di;
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_bloc.dart';
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_event.dart';
+import 'package:legion/presentation/screens/admin/bloc/runners_admin_state.dart';
+import 'package:legion/presentation/screens/admin/widgets/runner_card.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 
 class RunnersAdminScreen extends StatefulWidget {
   const RunnersAdminScreen({super.key});

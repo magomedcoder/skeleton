@@ -58,45 +58,45 @@ jobs:
           cd artifacts
 
           if [ -f android-apk/app-release.apk ]; then
-            mv android-apk/app-release.apk ../skeleton-android-dev.apk
+            mv android-apk/app-release.apk ../legion-android-dev.apk
           else
             echo "APK not found!" && exit 1
           fi
 
           if [ -d ios-app ]; then
-            mv ios-app ../skeleton-ios-dev.app
+            mv ios-app ../legion-ios-dev.app
           else
             echo "ios-app not found!" && exit 1
           fi
 
-          if [ -f linux-installer/skeleton-linux.tar.gz ]; then
-            mv linux-installer/skeleton-linux.tar.gz ../skeleton-linux-dev.tar.gz
+          if [ -f linux-installer/legion-linux.tar.gz ]; then
+            mv linux-installer/legion-linux.tar.gz ../legion-linux-dev.tar.gz
           else
             echo "linux-installer artifact not found!" && exit 1
           fi
 
-          DEB=$(find linux-installer -maxdepth 1 -name 'skeleton_*_amd64.deb' -print -quit)
+          DEB=$(find linux-installer -maxdepth 1 -name 'legion-*-amd64.deb' -print -quit)
           if [ -z "$DEB" ] || [ ! -f "$DEB" ]; then
-            DEB="linux-installer/skeleton_amd64.deb"
+            DEB="linux-installer/legion-amd64.deb"
           fi
           if [ -n "$DEB" ] && [ -f "$DEB" ]; then
-            cp "$DEB" ../skeleton-linux-dev.deb
+            cp "$DEB" ../legion-linux-dev.deb
           else
             echo "linux .deb not found! Contents of linux-installer:"
             ls -la linux-installer/
             exit 1
           fi
 
-          if [ -f windows-installer/SkeletonSetup.exe ]; then
-            mv windows-installer/SkeletonSetup.exe ../skeleton-windows-dev.exe
-          elif [ -f SkeletonSetup.exe ]; then
-            mv SkeletonSetup.exe ../skeleton-windows-dev.exe
+          if [ -f windows-installer/LegionSetup.exe ]; then
+            mv windows-installer/LegionSetup.exe ../legion-windows-dev.exe
+          elif [ -f LegionSetup.exe ]; then
+            mv LegionSetup.exe ../legion-windows-dev.exe
           else
             echo "windows-installer artifact not found!" && exit 1
           fi
 
-          if [ -f macos-installer/skeleton-macos.dmg ]; then
-            mv macos-installer/skeleton-macos.dmg ../skeleton-macos-dev.dmg
+          if [ -f macos-installer/legion-macos.dmg ]; then
+            mv macos-installer/legion-macos.dmg ../legion-macos-dev.dmg
           else
             echo "macos-installer artifact not found!" && exit 1
           fi
@@ -109,11 +109,11 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            skeleton-android-dev.apk
-            skeleton-ios-dev.app
-            skeleton-linux-dev.tar.gz
-            skeleton-linux-dev.deb
-            skeleton-windows-dev.exe
-            skeleton-macos-dev.dmg
+            legion-android-dev.apk
+            legion-ios-dev.app
+            legion-linux-dev.tar.gz
+            legion-linux-dev.deb
+            legion-windows-dev.exe
+            legion-macos-dev.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

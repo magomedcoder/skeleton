@@ -2,15 +2,15 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/attachment_settings.dart';
-import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/domain/entities/ai_message.dart';
-import 'package:skeleton/domain/entities/ai_chat_session.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
-import 'package:skeleton/presentation/screens/ai_chat/widgets/chat_input_bar.dart';
-import 'package:skeleton/presentation/widgets/ai_chat_bubble.dart';
+import 'package:legion/core/attachment_settings.dart';
+import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/domain/entities/ai_message.dart';
+import 'package:legion/domain/entities/ai_chat_session.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
+import 'package:legion/presentation/screens/ai_chat/widgets/chat_input_bar.dart';
+import 'package:legion/presentation/widgets/ai_chat_bubble.dart';
 
 class ChatContent extends StatefulWidget {
   final VoidCallback? onOpenSessionsDrawer;

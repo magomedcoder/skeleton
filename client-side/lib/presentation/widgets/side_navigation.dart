@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/core/theme/app_theme.dart';
+import 'package:legion/core/theme/app_theme.dart';
 
 enum NavDestination { home, editor, profile, admin }
 

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/config"
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/service"
+	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/service"
 )
 
 func TestCheckDatabase_invalidDSN(t *testing.T) {
@@ -117,7 +117,7 @@ func TestCreateFirstUser_createsWhenNoUsers(t *testing.T) {
 		t.Fatal("ожидался вызов Create с пользователем")
 	}
 
-	if createdUser.Username != "skeleton" || createdUser.Role != domain.UserRoleAdmin {
+	if createdUser.Username != "legion" || createdUser.Role != domain.UserRoleAdmin {
 		t.Errorf("создан пользователь: %+v", createdUser)
 	}
 }

@@ -2,12 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/skeleton/internal/usecase"
+	"github.com/magomedcoder/legion/internal/usecase"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
-	"github.com/magomedcoder/skeleton/api/pb/commonpb"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/api/pb/aichatpb"
+	"github.com/magomedcoder/legion/api/pb/commonpb"
+	"github.com/magomedcoder/legion/internal/domain"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

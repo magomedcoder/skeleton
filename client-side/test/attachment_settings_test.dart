@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:skeleton/core/attachment_settings.dart';
+import 'package:legion/core/attachment_settings.dart';
 
 void main() {
   group('AttachmentSettings', () {

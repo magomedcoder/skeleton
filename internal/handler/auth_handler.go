@@ -2,14 +2,14 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/skeleton/internal/config"
-	"github.com/magomedcoder/skeleton/internal/middleware"
-	error2 "github.com/magomedcoder/skeleton/pkg/error"
+	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/legion/internal/middleware"
+	error2 "github.com/magomedcoder/legion/pkg/error"
 
-	"github.com/magomedcoder/skeleton/api/pb/authpb"
-	"github.com/magomedcoder/skeleton/internal/mappers"
-	"github.com/magomedcoder/skeleton/internal/usecase"
-	"github.com/magomedcoder/skeleton/pkg/logger"
+	"github.com/magomedcoder/legion/api/pb/authpb"
+	"github.com/magomedcoder/legion/internal/mappers"
+	"github.com/magomedcoder/legion/internal/usecase"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

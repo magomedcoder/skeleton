@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 	"gorm.io/gorm"
 )
 

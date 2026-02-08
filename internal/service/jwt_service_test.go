@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/magomedcoder/skeleton/internal/config"
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 func TestNewJWTService(t *testing.T) {

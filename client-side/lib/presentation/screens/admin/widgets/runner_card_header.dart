@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/domain/entities/runner.dart';
-import 'package:skeleton/presentation/screens/admin/widgets/runner_status.dart';
+import 'package:legion/domain/entities/runner.dart';
+import 'package:legion/presentation/screens/admin/widgets/runner_status.dart';
 
 class RunnerCardHeader extends StatelessWidget {
   final Runner runner;

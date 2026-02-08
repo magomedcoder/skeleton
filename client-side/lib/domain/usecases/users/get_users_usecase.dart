@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/entities/user.dart';
-import 'package:skeleton/domain/repositories/user_repository.dart';
+import 'package:legion/domain/entities/user.dart';
+import 'package:legion/domain/repositories/user_repository.dart';
 
 class GetUsersUseCase {
   final UserRepository repo;

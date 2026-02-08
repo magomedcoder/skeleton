@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/pkg"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/pkg"
 	"gorm.io/gorm"
 )
 

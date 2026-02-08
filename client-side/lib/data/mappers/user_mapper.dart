@@ -1,5 +1,5 @@
-import 'package:skeleton/domain/entities/user.dart';
-import 'package:skeleton/generated/grpc_pb/common.pb.dart' as grpc;
+import 'package:legion/domain/entities/user.dart';
+import 'package:legion/generated/grpc_pb/common.pb.dart' as grpc;
 
 abstract class UserMapper {
   UserMapper._();

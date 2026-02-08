@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:skeleton/domain/entities/auth_tokens.dart';
-import 'package:skeleton/domain/entities/user.dart';
+import 'package:legion/domain/entities/auth_tokens.dart';
+import 'package:legion/domain/entities/user.dart';
 
 class AuthResult extends Equatable {
   final User user;

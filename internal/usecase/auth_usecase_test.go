@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/config"
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/service"
+	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/service"
 )
 
 type mockUserRepo struct {

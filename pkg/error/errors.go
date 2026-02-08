@@ -1,7 +1,7 @@
 package error
 
 import (
-	"github.com/magomedcoder/skeleton/pkg/logger"
+	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

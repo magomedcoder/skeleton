@@ -3,13 +3,13 @@ package usecase
 import (
 	"context"
 	"errors"
-	"github.com/magomedcoder/skeleton/pkg"
+	"github.com/magomedcoder/legion/pkg"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/service"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/service"
 )
 
 type UserUseCase struct {

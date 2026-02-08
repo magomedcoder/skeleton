@@ -49,12 +49,12 @@ jobs:
       - name: Create Linux archive installer (tar.gz)
         run: |
           mkdir -p linux-installer
-          tar -czf linux-installer/skeleton-linux.tar.gz -C client-side/build/linux/x64/release/bundle .
+          tar -czf linux-installer/legion-linux.tar.gz -C client-side/build/linux/x64/release/bundle .
 
       - name: Build .deb package
         run: |
           chmod +x scripts/build-deb.sh
-          scripts/build-deb.sh "client-side/build/linux/x64/release/bundle" "linux-installer/skeleton_amd64.deb"
+          scripts/build-deb.sh "client-side/build/linux/x64/release/bundle" "linux-installer/legion-amd64.deb"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -102,7 +102,7 @@ jobs:
       - name: Prepare windows-installer artifact
         run: |
           New-Item -ItemType Directory -Force -Path windows-installer
-          Move-Item -Path scripts/SkeletonSetup.exe -Destination windows-installer/SkeletonSetup.exe
+          Move-Item -Path scripts/LegionSetup.exe -Destination windows-installer/LegionSetup.exe
 
       - uses: actions/upload-artifact@v4
         with:
@@ -148,10 +148,10 @@ jobs:
           mkdir -p dist
           ver="${RELEASE_TAG#v}"
           [[ "$ver" =~ ^[0-9] ]] || ver="1.0.0"
-          hdiutil create -volname "Skeleton" \
-            -srcfolder "client-side/build/macos/Build/Products/Release/skeleton.app" \
-            -ov -format UDZO "dist/skeleton-${ver}-macos.dmg"
-          cp "dist/skeleton-${ver}-macos.dmg" dist/skeleton-macos.dmg
+          hdiutil create -volname "Legion" \
+            -srcfolder "client-side/build/macos/Build/Products/Release/legion.app" \
+            -ov -format UDZO "dist/legion-${ver}-macos.dmg"
+          cp "dist/legion-${ver}-macos.dmg" dist/legion-macos.dmg
 
       - uses: actions/upload-artifact@v4
         with:
@@ -161,7 +161,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: macos-installer
-          path: dist/skeleton-macos.dmg
+          path: dist/legion-macos.dmg
 
   build-apk:
     name: Build Android APK

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/magomedcoder/skeleton/api/pb/editorpb"
-	"github.com/magomedcoder/skeleton/internal/domain"
-	"github.com/magomedcoder/skeleton/internal/usecase"
+	"github.com/magomedcoder/legion/api/pb/editorpb"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

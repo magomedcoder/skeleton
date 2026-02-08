@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:skeleton/presentation/screens/auth/bloc/auth_state.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 
 class ProfileOverviewWidget extends StatelessWidget {
   const ProfileOverviewWidget({super.key, this.scrollable = true});

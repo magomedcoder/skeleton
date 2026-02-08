@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:skeleton/presentation/screens/profile/profile_section.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_appearance_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_devices_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_overview_widget.dart';
-import 'package:skeleton/presentation/screens/profile/widgets/profile_security_widget.dart';
+import 'package:legion/presentation/screens/profile/profile_section.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_appearance_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_devices_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_overview_widget.dart';
+import 'package:legion/presentation/screens/profile/widgets/profile_security_widget.dart';
 
 class ProfileSectionScreen extends StatelessWidget {
   const ProfileSectionScreen({super.key, required this.section});

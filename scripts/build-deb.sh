@@ -2,7 +2,7 @@
 set -e
 
 BUNDLE_DIR="${1:-client-side/build/linux/x64/release/bundle}"
-OUTPUT_DEB="${2:-skeleton_amd64.deb}"
+OUTPUT_DEB="${2:-legion-amd64.deb}"
 
 if [ -n "$VERSION" ]; then
   :
@@ -11,50 +11,50 @@ elif [ -n "$RELEASE_TAG" ] && [[ "$RELEASE_TAG" =~ ^v[0-9] ]]; then
 else
   VERSION=$(grep '^version:' client-side/pubspec.yaml | sed 's/version: *\([0-9.]*\).*/\1/')
 fi
-DEB_NAME="skeleton_${VERSION}_amd64.deb"
+DEB_NAME="legion-${VERSION}-amd64.deb"
 
 PKG_DIR="deb_staging"
 rm -rf "$PKG_DIR"
 mkdir -p "$PKG_DIR/DEBIAN"
-mkdir -p "$PKG_DIR/opt/skeleton"
+mkdir -p "$PKG_DIR/opt/legion"
 mkdir -p "$PKG_DIR/usr/bin"
 mkdir -p "$PKG_DIR/usr/share/applications"
 mkdir -p "$PKG_DIR/usr/share/pixmaps"
 
-cp -a "$BUNDLE_DIR"/* "$PKG_DIR/opt/skeleton"
+cp -a "$BUNDLE_DIR"/* "$PKG_DIR/opt/legion"
 
 ICON_SRC="client-side/linux/runner/resources/app_icon.png"
 if [ -f "$ICON_SRC" ]; then
-  cp "$ICON_SRC" "$PKG_DIR/usr/share/pixmaps/skeleton.png"
+  cp "$ICON_SRC" "$PKG_DIR/usr/share/pixmaps/legion.png"
 else
   echo "Warning: Icon file not found at $ICON_SRC"
 fi
 
-cat > "$PKG_DIR/usr/bin/skeleton" << 'WRAPPER'
+cat > "$PKG_DIR/usr/bin/legion" << 'WRAPPER'
 #!/bin/sh
-exec /opt/skeleton/skeleton "$@"
+exec /opt/legion/legion "$@"
 WRAPPER
-chmod 755 "$PKG_DIR/usr/bin/skeleton"
+chmod 755 "$PKG_DIR/usr/bin/legion"
 
-cat > "$PKG_DIR/usr/share/applications/skeleton.desktop" << 'DESKTOP'
+cat > "$PKG_DIR/usr/share/applications/legion.desktop" << 'DESKTOP'
 [Desktop Entry]
-Name=Skeleton
-Comment=Skeleton desktop application
-Exec=/opt/skeleton/skeleton
-Icon=skeleton
+Name=Legion
+Comment=Legion desktop application
+Exec=/opt/legion/legion
+Icon=legion
 Terminal=false
 Type=Application
 Categories=Utility;
 DESKTOP
 
 cat > "$PKG_DIR/DEBIAN/control" << CONTROL
-Package: skeleton
+Package: legion
 Version: $VERSION
 Section: utils
 Priority: optional
 Architecture: amd64
-Maintainer: Skeleton <info@magomedcoder.ru>
-Description: Skeleton desktop application
+Maintainer: Legion <info@magomedcoder.ru>
+Description: Legion desktop application
 CONTROL
 
 dpkg-deb -b "$PKG_DIR" "$DEB_NAME"

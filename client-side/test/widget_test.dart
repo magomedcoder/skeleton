@@ -5,9 +5,9 @@ void main() {
   testWidgets('простой виджет отображает текст', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: Center(child: Text('Skeleton'))),
+        home: Scaffold(body: Center(child: Text('Legion'))),
       ),
     );
-    expect(find.text('Skeleton'), findsOneWidget);
+    expect(find.text('Legion'), findsOneWidget);
   });
 }

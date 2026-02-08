@@ -3,7 +3,7 @@ package mappers
 import (
 	"testing"
 
-	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/legion/internal/domain"
 )
 
 func TestUserToProto_nil(t *testing.T) {

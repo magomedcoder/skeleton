@@ -4,11 +4,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skeleton/core/attachment_settings.dart';
-import 'package:skeleton/core/layout/responsive.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
-import 'package:skeleton/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
+import 'package:legion/core/attachment_settings.dart';
+import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_event.dart';
+import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_state.dart';
 
 class ChatInputBar extends StatefulWidget {
   final bool isEnabled;
