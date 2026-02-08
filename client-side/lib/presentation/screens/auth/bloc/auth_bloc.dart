@@ -68,7 +68,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (expiry == null) return;
         final now = DateTime.now();
         if (expiry.difference(now) <= accessTokenRefreshThreshold) {
-          Logs().d('AuthBloc: время access-токена подходит к концу — фоновый рефреш');
+          Logs().d('AuthBloc: время access-токена подходит к концу - фоновый рефреш');
           add(const AuthRefreshTokenInBackground());
         }
       },

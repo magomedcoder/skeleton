@@ -1,11 +1,33 @@
 services:
+  legion:
+    container_name: legion
+    build:
+      context: .
+    command: /usr/bin/legion
+    restart: always
+    ports:
+      - 50051:50051
+    depends_on:
+      - postgres
+
+  legion-runner:
+    container_name: legion-runner
+    build:
+      context: .
+    command: /usr/bin/legion-runner
+    restart: always
+    ports:
+      - 50052:50052
+    depends_on:
+      - postgres
+
   postgres:
     container_name: postgres
     image: postgres:16
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=skeleton
+      - POSTGRES_DB=legion
     volumes:
       - .docker-volumes/postgres/:/var/lib/postgresql/data
     ports:

@@ -54,13 +54,13 @@ func Test_extractToken(t *testing.T) {
 			code:    codes.Unauthenticated,
 		},
 		{
-			name:    "неверный формат — без Bearer",
+			name:    "неверный формат - без Bearer",
 			ctx:     metadata.NewIncomingContext(context.Background(), metadata.Pairs("authorization", "token123")),
 			wantErr: true,
 			code:    codes.Unauthenticated,
 		},
 		{
-			name:    "неверный формат — только Bearer без пробела",
+			name:    "неверный формат - только Bearer без пробела",
 			ctx:     metadata.NewIncomingContext(context.Background(), metadata.Pairs("authorization", "Bearer")),
 			wantErr: true,
 			code:    codes.Unauthenticated,
@@ -196,7 +196,7 @@ func TestRequireAdmin(t *testing.T) {
 			wantCode:  codes.PermissionDenied,
 		},
 		{
-			name:      "администратор — успех",
+			name:      "администратор - успех",
 			validator: &fakeTokenValidator{user: adminUser},
 			wantErr:   false,
 		},

@@ -56,7 +56,7 @@ class AuthGuard {
       Logs().d('AuthGuard: unauthenticated, попытка обновить токен');
       final ok = await _doRefresh();
       if (!ok) {
-        Logs().w('AuthGuard: рефреш не удался — выход');
+        Logs().w('AuthGuard: рефреш не удался - выход');
         if (!_sessionExpiredCalled) {
           _sessionExpiredCalled = true;
           _onSessionExpired?.call();
@@ -67,7 +67,7 @@ class AuthGuard {
         return await fn();
       } on GrpcError catch (e2) {
         if (e2.code == StatusCode.unauthenticated) {
-          Logs().w('AuthGuard: снова unauthenticated после рефреша — выход');
+          Logs().w('AuthGuard: снова unauthenticated после рефреша - выход');
           if (!_sessionExpiredCalled) {
             _sessionExpiredCalled = true;
             _onSessionExpired?.call();
