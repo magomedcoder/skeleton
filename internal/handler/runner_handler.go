@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/skeleton/internal/middleware"
 
 	"github.com/magomedcoder/skeleton/api/pb/runnerpb"
 	"github.com/magomedcoder/skeleton/internal/runner"
@@ -23,7 +24,7 @@ func NewRunnerHandler(pool *runner.Pool, authUseCase usecase.TokenValidator) *Ru
 }
 
 func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetRunnersResponse, error) {
-	if err := RequireAdmin(ctx, r.authUseCase); err != nil {
+	if err := middleware.RequireAdmin(ctx, r.authUseCase); err != nil {
 		return nil, err
 	}
 	logger.D("RunnerHandler: получение списка раннеров")
@@ -53,7 +54,7 @@ func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*run
 }
 
 func (r *RunnerHandler) SetRunnerEnabled(ctx context.Context, req *runnerpb.SetRunnerEnabledRequest) (*runnerpb.Empty, error) {
-	if err := RequireAdmin(ctx, r.authUseCase); err != nil {
+	if err := middleware.RequireAdmin(ctx, r.authUseCase); err != nil {
 		return nil, err
 	}
 	if req != nil && req.Address != "" {
@@ -65,7 +66,7 @@ func (r *RunnerHandler) SetRunnerEnabled(ctx context.Context, req *runnerpb.SetR
 }
 
 func (r *RunnerHandler) GetRunnersStatus(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetRunnersStatusResponse, error) {
-	if _, err := GetUserFromContext(ctx, r.authUseCase); err != nil {
+	if _, err := middleware.GetUserFromContext(ctx, r.authUseCase); err != nil {
 		return nil, err
 	}
 

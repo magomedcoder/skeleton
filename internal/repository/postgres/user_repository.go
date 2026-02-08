@@ -2,170 +2,96 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/skeleton/pkg"
+	"gorm.io/gorm"
 )
 
 type userRepository struct {
-	db *pgxpool.Pool
+	db *gorm.DB
 }
 
-func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
+func NewUserRepository(db *gorm.DB) domain.UserRepository {
 	return &userRepository{db: db}
 }
 
 func (u *userRepository) Create(ctx context.Context, user *domain.User) error {
-	err := u.db.QueryRow(ctx, `
-		INSERT INTO users (username, password, name, surname, role, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
-	`,
-		user.Username,
-		user.Password,
-		user.Name,
-		user.Surname,
-		int16(user.Role),
-		user.CreatedAt,
-	).Scan(&user.Id)
-
-	return err
+	m := userDomainToModel(user)
+	if err := u.db.WithContext(ctx).Create(m).Error; err != nil {
+		return err
+	}
+	user.Id = m.Id
+	return nil
 }
 
 func (u *userRepository) UpdateLastVisitedAt(ctx context.Context, userID int) error {
-	_, err := u.db.Exec(ctx, `
-		UPDATE users
-		SET last_visited_at = NOW()
-		WHERE id = $1 AND deleted_at IS NULL
-	`,
-		userID,
-	)
-	return err
+	return u.db.WithContext(ctx).Model(&userModel{}).
+		Where("id = ?", userID).
+		Update("last_visited_at", gorm.Expr("NOW()")).Error
 }
 
 func (u *userRepository) GetById(ctx context.Context, id int) (*domain.User, error) {
-	var user domain.User
-	var role int16
-	err := u.db.QueryRow(ctx, `
-		SELECT id, username, password, name, surname, role, created_at, last_visited_at, deleted_at
-		FROM users
-		WHERE id = $1 AND deleted_at IS NULL
-	`, id).Scan(
-		&user.Id,
-		&user.Username,
-		&user.Password,
-		&user.Name,
-		&user.Surname,
-		&role,
-		&user.CreatedAt,
-		&user.LastVisitedAt,
-		&user.DeletedAt,
-	)
-
+	var m userModel
+	err := u.db.WithContext(ctx).Where("id = ?", id).First(&m).Error
 	if err != nil {
-		return nil, handleNotFound(err, "пользователь не найден")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.HandleNotFound(err, "пользователь не найден")
+		}
+		return nil, err
 	}
 
-	user.Role = domain.UserRole(role)
-
-	return &user, nil
+	return userModelToDomain(&m), nil
 }
 
 func (u *userRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
-	var user domain.User
-	var role int16
-	err := u.db.QueryRow(ctx, `
-		SELECT id, username, password, name, surname, role, created_at, last_visited_at, deleted_at
-		FROM users
-		WHERE username = $1 AND deleted_at IS NULL
-	`, username).Scan(
-		&user.Id,
-		&user.Username,
-		&user.Password,
-		&user.Name,
-		&user.Surname,
-		&role,
-		&user.CreatedAt,
-		&user.LastVisitedAt,
-		&user.DeletedAt,
-	)
+	var m userModel
+	err := u.db.WithContext(ctx).Where("username = ?", username).First(&m).Error
 	if err != nil {
-		return nil, handleNotFound(err, "пользователь не найден")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.HandleNotFound(err, "пользователь не найден")
+		}
+		return nil, err
 	}
-
-	user.Role = domain.UserRole(role)
-
-	return &user, nil
+	return userModelToDomain(&m), nil
 }
 
 func (u *userRepository) Update(ctx context.Context, user *domain.User) error {
-	_, err := u.db.Exec(ctx, `
-		UPDATE users SET
-		    username = $2,
-		    password = CASE WHEN $3 = '' THEN password ELSE $3 END,
-		    name = $4,
-		    surname = $5,
-		    role = $6,
-		    updated_at = NOW()
-		WHERE id = $1 AND deleted_at IS NULL
-	`,
-		user.Id,
-		user.Username,
-		user.Password,
-		user.Name,
-		user.Surname,
-		int16(user.Role),
-	)
+	updates := map[string]interface{}{
+		"username":   user.Username,
+		"name":       user.Name,
+		"surname":    user.Surname,
+		"role":       int32(user.Role),
+		"updated_at": gorm.Expr("NOW()"),
+	}
 
-	return err
+	if user.Password != "" {
+		updates["password"] = user.Password
+	}
+
+	return u.db.WithContext(ctx).Model(&userModel{}).
+		Where("id = ?", user.Id).
+		Updates(updates).Error
 }
 
 func (u *userRepository) List(ctx context.Context, page, pageSize int32) ([]*domain.User, int32, error) {
 	_, pageSize, offset := normalizePagination(page, pageSize)
 
-	var total int32
-	if err := u.db.QueryRow(ctx, `
-		SELECT COUNT(*) FROM users 
-		WHERE deleted_at IS NULL
-	`).Scan(&total); err != nil {
+	var total int64
+	if err := u.db.WithContext(ctx).Model(&userModel{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	rows, err := u.db.Query(ctx, `
-		SELECT id, username, password, name, surname, role, created_at, last_visited_at, deleted_at
-		FROM users
-		WHERE deleted_at IS NULL
-		ORDER BY id DESC
-		LIMIT $1 OFFSET $2
-	`, pageSize, offset)
-	if err != nil {
+	var list []userModel
+	if err := u.db.WithContext(ctx).Order("id DESC").Limit(int(pageSize)).Offset(int(offset)).
+		Find(&list).Error; err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
 
-	users := make([]*domain.User, 0)
-	for rows.Next() {
-		var user domain.User
-		var role int16
-		if err := rows.Scan(
-			&user.Id,
-			&user.Username,
-			&user.Password,
-			&user.Name,
-			&user.Surname,
-			&role,
-			&user.CreatedAt,
-			&user.LastVisitedAt,
-			&user.DeletedAt,
-		); err != nil {
-			return nil, 0, err
-		}
-		user.Role = domain.UserRole(role)
-		users = append(users, &user)
+	users := make([]*domain.User, 0, len(list))
+	for i := range list {
+		users = append(users, userModelToDomain(&list[i]))
 	}
-	if rows.Err() != nil {
-		return nil, 0, rows.Err()
-	}
-
-	return users, total, nil
+	return users, int32(total), nil
 }

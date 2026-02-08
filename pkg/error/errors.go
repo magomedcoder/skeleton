@@ -1,4 +1,4 @@
-package handler
+package error
 
 import (
 	"github.com/magomedcoder/skeleton/pkg/logger"

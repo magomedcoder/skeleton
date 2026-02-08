@@ -78,10 +78,10 @@ func (o *OllamaService) GetModels(ctx context.Context) ([]string, error) {
 	return names, nil
 }
 
-func (o *OllamaService) SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error) {
+func (o *OllamaService) SendMessage(ctx context.Context, model string, messages []*domain.AIChatMessage) (chan string, error) {
 	ollamaMessages := make([]map[string]interface{}, len(messages))
 	for i, msg := range messages {
-		ollamaMessages[i] = msg.ToMap()
+		ollamaMessages[i] = msg.AIToMap()
 	}
 
 	requestBody := map[string]interface{}{

@@ -4,139 +4,98 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/skeleton/pkg"
+	"gorm.io/gorm"
 )
 
 type userSessionRepository struct {
-	db *pgxpool.Pool
+	db *gorm.DB
 }
 
-func NewUserSessionRepository(db *pgxpool.Pool) domain.UserSessionRepository {
+func NewUserSessionRepository(db *gorm.DB) domain.UserSessionRepository {
 	return &userSessionRepository{db: db}
 }
 
 func (u *userSessionRepository) Create(ctx context.Context, token *domain.Token) error {
-	err := u.db.QueryRow(ctx, `
-		INSERT INTO user_sessions (user_id, token, type, expires_at, created_at)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id
-	`,
-		token.UserId,
-		token.Token,
-		token.Type,
-		token.ExpiresAt,
-		token.CreatedAt,
-	).Scan(&token.Id)
-
-	return err
+	m := tokenDomainToModel(token)
+	if err := u.db.WithContext(ctx).Create(m).Error; err != nil {
+		return err
+	}
+	token.Id = m.Id
+	return nil
 }
 
 func (u *userSessionRepository) GetByToken(ctx context.Context, token string) (*domain.Token, error) {
-	var t domain.Token
-	err := u.db.QueryRow(ctx, `
-		SELECT id, user_id, token, type, expires_at, created_at, deleted_at
-		FROM user_sessions
-		WHERE token = $1 AND deleted_at IS NULL
-	`, token).Scan(
-		&t.Id,
-		&t.UserId,
-		&t.Token,
-		&t.Type,
-		&t.ExpiresAt,
-		&t.CreatedAt,
-		&t.DeletedAt,
-	)
-
+	var m userSessionModel
+	err := u.db.WithContext(ctx).Where("token = ?", token).First(&m).Error
 	if err != nil {
-		return nil, handleNotFound(err, "токен не найден")
-	}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.HandleNotFound(err, "токен не найден")
+		}
 
-	return &t, nil
+		return nil, err
+	}
+	return tokenModelToDomain(&m), nil
 }
 
 func (u *userSessionRepository) DeleteByToken(ctx context.Context, token string) error {
-	_, err := u.db.Exec(ctx, `
-		UPDATE user_sessions 
-		SET deleted_at = NOW() 
-		WHERE token = $1 AND deleted_at IS NULL
-	`, token)
-
-	return err
+	return u.db.WithContext(ctx).Where("token = ?", token).Delete(&userSessionModel{}).Error
 }
 
 func (u *userSessionRepository) DeleteByUserId(ctx context.Context, userID int, tokenType domain.TokenType) error {
-	_, err := u.db.Exec(ctx, `
-		UPDATE user_sessions 
-		SET deleted_at = NOW() 
-		WHERE user_id = $1 AND type = $2 AND deleted_at IS NULL
-	`, userID, tokenType)
-
-	return err
+	return u.db.WithContext(ctx).Where("user_id = ? AND type = ?", userID, tokenType).Delete(&userSessionModel{}).Error
 }
 
 func (u *userSessionRepository) CountByUserIdAndType(ctx context.Context, userID int, tokenType domain.TokenType) (int, error) {
-	var count int
-	err := u.db.QueryRow(ctx, `
-		SELECT COUNT(*) FROM user_sessions
-		WHERE user_id = $1 AND type = $2 AND deleted_at IS NULL
-	`, userID, tokenType).Scan(&count)
+	var count int64
+	err := u.db.WithContext(ctx).Model(&userSessionModel{}).
+		Where("user_id = ? AND type = ?", userID, tokenType).
+		Count(&count).Error
 
-	return count, err
+	return int(count), err
 }
 
 func (u *userSessionRepository) DeleteOldestByUserIdAndType(ctx context.Context, userID int, tokenType domain.TokenType, limit int) error {
 	if limit <= 0 {
 		return nil
 	}
-	_, err := u.db.Exec(ctx, `
-		UPDATE user_sessions SET deleted_at = NOW()
-		WHERE id IN (
-			SELECT id FROM user_sessions
-			WHERE user_id = $1 AND type = $2 AND deleted_at IS NULL
-			ORDER BY created_at ASC
-			LIMIT $3
-		)
-	`, userID, tokenType, limit)
 
-	return err
+	var ids []int
+	if err := u.db.WithContext(ctx).Model(&userSessionModel{}).
+		Where("user_id = ? AND type = ?", userID, tokenType).
+		Order("created_at ASC").Limit(limit).Pluck("id", &ids).Error; err != nil {
+		return err
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	return u.db.WithContext(ctx).Delete(&userSessionModel{}, ids).Error
 }
 
 func (u *userSessionRepository) ListByUserIdAndType(ctx context.Context, userID int, tokenType domain.TokenType) ([]*domain.Token, error) {
-	rows, err := u.db.Query(ctx, `
-		SELECT id, user_id, token, type, expires_at, created_at, deleted_at
-		FROM user_sessions
-		WHERE user_id = $1 AND type = $2 AND deleted_at IS NULL
-		ORDER BY created_at DESC
-	`, userID, tokenType)
-	if err != nil {
+	var list []userSessionModel
+	if err := u.db.WithContext(ctx).
+		Where("user_id = ? AND type = ?", userID, tokenType).
+		Order("created_at DESC").Find(&list).Error; err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var tokens []*domain.Token
-	for rows.Next() {
-		var t domain.Token
-		if err := rows.Scan(&t.Id, &t.UserId, &t.Token, &t.Type, &t.ExpiresAt, &t.CreatedAt, &t.DeletedAt); err != nil {
-			return nil, err
-		}
-		tokens = append(tokens, &t)
+	tokens := make([]*domain.Token, 0, len(list))
+	for i := range list {
+		tokens = append(tokens, tokenModelToDomain(&list[i]))
 	}
 
-	return tokens, rows.Err()
+	return tokens, nil
 }
 
 func (u *userSessionRepository) DeleteByIdAndUserId(ctx context.Context, id, userID int) error {
-	result, err := u.db.Exec(ctx, `
-		UPDATE user_sessions
-		SET deleted_at = NOW()
-		WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
-	`, id, userID)
-	if err != nil {
-		return err
+	result := u.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, userID).Delete(&userSessionModel{})
+	if result.Error != nil {
+		return result.Error
 	}
 
-	if result.RowsAffected() == 0 {
+	if result.RowsAffected == 0 {
 		return errors.New("сессия не найдена")
 	}
 
@@ -144,15 +103,7 @@ func (u *userSessionRepository) DeleteByIdAndUserId(ctx context.Context, id, use
 }
 
 func (u *userSessionRepository) DeleteRefreshTokensByUserIdExcept(ctx context.Context, userID int, keepRefreshToken string) error {
-	_, err := u.db.Exec(ctx, `
-		UPDATE user_sessions
-		SET deleted_at = NOW()
-		WHERE user_id = $1 AND type = $2 AND deleted_at IS NULL AND token != $3
-	`,
-		userID,
-		domain.TokenTypeRefresh,
-		keepRefreshToken,
-	)
-
-	return err
+	return u.db.WithContext(ctx).
+		Where("user_id = ? AND type = ? AND token != ?", userID, domain.TokenTypeRefresh, keepRefreshToken).
+		Delete(&userSessionModel{}).Error
 }

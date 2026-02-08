@@ -23,6 +23,6 @@ func (t *Text) GetModels(ctx context.Context) ([]string, error) {
 	return t.backend.GetModels(ctx)
 }
 
-func (t *Text) SendMessage(ctx context.Context, sessionId string, model string, messages []*domain.Message) (chan string, error) {
+func (t *Text) SendMessage(ctx context.Context, sessionId string, model string, messages []*domain.AIChatMessage) (chan string, error) {
 	return t.backend.SendMessage(ctx, model, messages)
 }

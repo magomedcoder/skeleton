@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/skeleton/internal/middleware"
+	error2 "github.com/magomedcoder/skeleton/pkg/error"
 	"strconv"
 
 	"github.com/magomedcoder/skeleton/api/pb/userpb"
@@ -26,14 +28,14 @@ func NewUserHandler(userUseCase *usecase.UserUseCase, authUseCase usecase.TokenV
 }
 
 func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
-	if err := RequireAdmin(ctx, u.authUseCase); err != nil {
+	if err := middleware.RequireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
 	}
 	logger.D("UserHandler: получение пользователей page=%d", req.Page)
 	users, total, err := u.userUseCase.GetUsers(ctx, req.Page, req.PageSize)
 	if err != nil {
 		logger.E("UserHandler: ошибка получения пользователей: %v", err)
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 	logger.V("UserHandler: получено пользователей: %d", len(users))
 
@@ -48,14 +50,14 @@ func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest)
 }
 
 func (u *UserHandler) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.CreateUserResponse, error) {
-	if err := RequireAdmin(ctx, u.authUseCase); err != nil {
+	if err := middleware.RequireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
 	}
 	logger.I("UserHandler: создание пользователя %s", req.Username)
 	user, err := u.userUseCase.CreateUser(ctx, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
 		logger.W("UserHandler: ошибка создания пользователя: %v", err)
-		return nil, ToStatusError(codes.InvalidArgument, err)
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
 	}
 	logger.I("UserHandler: пользователь создан")
 
@@ -63,7 +65,7 @@ func (u *UserHandler) CreateUser(ctx context.Context, req *userpb.CreateUserRequ
 }
 
 func (u *UserHandler) EditUser(ctx context.Context, req *userpb.EditUserRequest) (*userpb.EditUserResponse, error) {
-	if err := RequireAdmin(ctx, u.authUseCase); err != nil {
+	if err := middleware.RequireAdmin(ctx, u.authUseCase); err != nil {
 		return nil, err
 	}
 	if _, err := strconv.Atoi(req.Id); err != nil {
@@ -74,7 +76,7 @@ func (u *UserHandler) EditUser(ctx context.Context, req *userpb.EditUserRequest)
 	user, err := u.userUseCase.EditUser(ctx, req.Id, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
 		logger.W("UserHandler: ошибка обновления пользователя: %v", err)
-		return nil, ToStatusError(codes.InvalidArgument, err)
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
 	}
 	logger.I("UserHandler: пользователь обновлён")
 

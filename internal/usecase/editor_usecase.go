@@ -28,9 +28,9 @@ func (e *EditorUseCase) Transform(ctx context.Context, model string, text string
 	sessionId := uuid.New().String()
 	system := buildEditorSystemPrompt(t, preserveMarkdown)
 
-	messages := []*domain.Message{
-		domain.NewMessage(sessionId, system, domain.MessageRoleSystem),
-		domain.NewMessage(sessionId, wrapUserText(text), domain.MessageRoleUser),
+	messages := []*domain.AIChatMessage{
+		domain.NewAIChatMessage(sessionId, system, domain.AIChatMessageRoleSystem),
+		domain.NewAIChatMessage(sessionId, wrapUserText(text), domain.AIChatMessageRoleUser),
 	}
 
 	ch, err := e.llmProvider.SendMessage(ctx, sessionId, model, messages)

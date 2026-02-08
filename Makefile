@@ -28,10 +28,16 @@ build-runner-nvidia:
 .PHONY: test
 test:
 	go test ./...
+
+.PHONY: client-test
+client-test:
 	cd client-side && flutter test
 
 .PHONY: gen
-gen:
+gen: gen-go-proto gen-dart-proto
+
+.PHONY: gen-go-proto
+gen-go-proto:
 	@for proto in ./api/proto/*.proto; do \
 		name=$$(basename $$proto .proto); \
 		mkdir -p ./api/pb/$${name}pb; \
@@ -41,6 +47,8 @@ gen:
 			$$proto; \
 	done
 
+.PHONY: gen-dart-proto
+gen-dart-proto:
 	mkdir -p ./client-side/lib/generated/grpc_pb
 	protoc --proto_path=./api/proto \
 		--dart_out=grpc:./client-side/lib/generated/grpc_pb \

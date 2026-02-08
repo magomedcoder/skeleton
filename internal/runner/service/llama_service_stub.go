@@ -25,7 +25,7 @@ func (s *LlamaService) GetModels(ctx context.Context) ([]string, error) {
 	return nil, fmt.Errorf("llama отключена")
 }
 
-func (s *LlamaService) SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error) {
+func (s *LlamaService) SendMessage(ctx context.Context, model string, messages []*domain.AIChatMessage) (chan string, error) {
 	ch := make(chan string)
 	close(ch)
 	return ch, fmt.Errorf("llama отключена")

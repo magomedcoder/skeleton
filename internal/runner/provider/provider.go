@@ -13,7 +13,7 @@ type TextBackend interface {
 
 	GetModels(ctx context.Context) ([]string, error)
 
-	SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error)
+	SendMessage(ctx context.Context, model string, messages []*domain.AIChatMessage) (chan string, error)
 }
 
 type TextProvider interface {
@@ -21,7 +21,7 @@ type TextProvider interface {
 
 	GetModels(ctx context.Context) ([]string, error)
 
-	SendMessage(ctx context.Context, sessionId string, model string, messages []*domain.Message) (chan string, error)
+	SendMessage(ctx context.Context, sessionId string, model string, messages []*domain.AIChatMessage) (chan string, error)
 }
 
 func NewTextProvider(cfg *config.Config) (TextProvider, error) {

@@ -36,7 +36,7 @@ func NewAIChatUseCase(
 	}
 }
 
-func (ai *AIChatUseCase) verifySessionOwnership(ctx context.Context, userId int, sessionID string) (*domain.ChatSession, error) {
+func (ai *AIChatUseCase) verifySessionOwnership(ctx context.Context, userId int, sessionID string) (*domain.AIChatSession, error) {
 	session, err := ai.aiChatRepo.GetById(ctx, sessionID)
 	if err != nil {
 		return nil, err
@@ -77,12 +77,12 @@ func (ai *AIChatUseCase) SendMessage(ctx context.Context, userId int, sessionId 
 		}
 	}
 
-	userMsg := domain.NewMessageWithAttachment(sessionId, userMessage, domain.MessageRoleUser, attachmentFileID)
+	userMsg := domain.NewAIChatMessageWithAttachment(sessionId, userMessage, domain.AIChatMessageRoleUser, attachmentFileID)
 	if err := ai.aiChatMessageRepo.Create(ctx, userMsg); err != nil {
 		return nil, "", err
 	}
 
-	messagesForLLM := make([]*domain.Message, 0, len(messages)+1)
+	messagesForLLM := make([]*domain.AIChatMessage, 0, len(messages)+1)
 	messagesForLLM = append(messagesForLLM, messages...)
 	if len(attachmentContent) > 0 && attachmentName != "" {
 		fullContent := buildMessageWithFile(attachmentName, attachmentContent, userMessage)
@@ -100,7 +100,7 @@ func (ai *AIChatUseCase) SendMessage(ctx context.Context, userId int, sessionId 
 	}
 	logger.V("ChatUseCase: поток ответа запущен")
 
-	assistantMsg := domain.NewMessage(sessionId, "", domain.MessageRoleAssistant)
+	assistantMsg := domain.NewAIChatMessage(sessionId, "", domain.AIChatMessageRoleAssistant)
 	messageId := assistantMsg.Id
 	var fullResponse strings.Builder
 
@@ -125,8 +125,8 @@ func (ai *AIChatUseCase) SendMessage(ctx context.Context, userId int, sessionId 
 	return clientChan, messageId, nil
 }
 
-func (ai *AIChatUseCase) CreateSession(ctx context.Context, userId int, title string, model string) (*domain.ChatSession, error) {
-	session := domain.NewChatSession(userId, title, model)
+func (ai *AIChatUseCase) CreateSession(ctx context.Context, userId int, title string, model string) (*domain.AIChatSession, error) {
+	session := domain.NewAIChatSession(userId, title, model)
 	if err := ai.aiChatRepo.Create(ctx, session); err != nil {
 		return nil, err
 	}
@@ -134,15 +134,15 @@ func (ai *AIChatUseCase) CreateSession(ctx context.Context, userId int, title st
 	return session, nil
 }
 
-func (ai *AIChatUseCase) GetSession(ctx context.Context, userId int, sessionID string) (*domain.ChatSession, error) {
+func (ai *AIChatUseCase) GetSession(ctx context.Context, userId int, sessionID string) (*domain.AIChatSession, error) {
 	return ai.verifySessionOwnership(ctx, userId, sessionID)
 }
 
-func (ai *AIChatUseCase) GetSessions(ctx context.Context, userId int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
+func (ai *AIChatUseCase) GetSessions(ctx context.Context, userId int, page, pageSize int32) ([]*domain.AIChatSession, int32, error) {
 	return ai.aiChatRepo.GetByUserId(ctx, userId, page, pageSize)
 }
 
-func (ai *AIChatUseCase) GetSessionMessages(ctx context.Context, userId int, sessionId string, page, pageSize int32) ([]*domain.Message, int32, error) {
+func (ai *AIChatUseCase) GetSessionMessages(ctx context.Context, userId int, sessionId string, page, pageSize int32) ([]*domain.AIChatMessage, int32, error) {
 	_, err := ai.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
 		return nil, 0, err
@@ -160,7 +160,7 @@ func (ai *AIChatUseCase) DeleteSession(ctx context.Context, userId int, sessionI
 	return ai.aiChatRepo.Delete(ctx, sessionID)
 }
 
-func (ai *AIChatUseCase) UpdateSessionTitle(ctx context.Context, userId int, sessionId string, title string) (*domain.ChatSession, error) {
+func (ai *AIChatUseCase) UpdateSessionTitle(ctx context.Context, userId int, sessionId string, title string) (*domain.AIChatSession, error) {
 	session, err := ai.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (ai *AIChatUseCase) UpdateSessionTitle(ctx context.Context, userId int, ses
 	return session, nil
 }
 
-func (ai *AIChatUseCase) UpdateSessionModel(ctx context.Context, userId int, sessionId string, model string) (*domain.ChatSession, error) {
+func (ai *AIChatUseCase) UpdateSessionModel(ctx context.Context, userId int, sessionId string, model string) (*domain.AIChatSession, error) {
 	session, err := ai.verifySessionOwnership(ctx, userId, sessionId)
 	if err != nil {
 		return nil, err

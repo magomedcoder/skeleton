@@ -42,7 +42,7 @@ func TestLlamaService_stub_GetModels(t *testing.T) {
 
 func TestLlamaService_stub_SendMessage(t *testing.T) {
 	svc := NewLlamaService("/path")
-	ch, err := svc.SendMessage(context.Background(), "m", []*domain.Message{})
+	ch, err := svc.SendMessage(context.Background(), "m", []*domain.AIChatMessage{})
 	if err == nil {
 		t.Error("ожидалась ошибка (llama отключена)")
 	}

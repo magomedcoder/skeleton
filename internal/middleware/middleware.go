@@ -1,7 +1,8 @@
-package handler
+package middleware
 
 import (
 	"context"
+	error2 "github.com/magomedcoder/skeleton/pkg/error"
 	"strings"
 
 	"github.com/magomedcoder/skeleton/internal/domain"
@@ -38,7 +39,7 @@ func GetUserFromContext(ctx context.Context, authUseCase usecase.TokenValidator)
 
 	user, err := authUseCase.ValidateToken(ctx, token)
 	if err != nil {
-		return nil, ToStatusError(codes.Unauthenticated, err)
+		return nil, error2.ToStatusError(codes.Unauthenticated, err)
 	}
 
 	return user, nil

@@ -42,20 +42,20 @@ func TestToken_IsExpired(t *testing.T) {
 func TestFromProtoRole_ToProtoRole(t *testing.T) {
 	tests := []struct {
 		proto string
-		want  MessageRole
+		want  AIChatMessageRole
 	}{
-		{"system", MessageRoleSystem},
-		{"user", MessageRoleUser},
-		{"assistant", MessageRoleAssistant},
-		{"unknown", MessageRoleUser},
-		{"", MessageRoleUser},
+		{"system", AIChatMessageRoleSystem},
+		{"user", AIChatMessageRoleUser},
+		{"assistant", AIChatMessageRoleAssistant},
+		{"unknown", AIChatMessageRoleUser},
+		{"", AIChatMessageRoleUser},
 	}
 	for _, tt := range tests {
-		got := FromProtoRole(tt.proto)
+		got := AIFromProtoRole(tt.proto)
 		if got != tt.want {
 			t.Errorf("FromProtoRole(%q) = %v, ожидалось %v", tt.proto, got, tt.want)
 		}
-		if back := ToProtoRole(got); back != string(tt.want) && tt.proto != "unknown" && tt.proto != "" {
+		if back := AIToProtoRole(got); back != string(tt.want) && tt.proto != "unknown" && tt.proto != "" {
 			if (tt.proto == "unknown" || tt.proto == "") && back == "user" {
 				continue
 			}
@@ -65,32 +65,32 @@ func TestFromProtoRole_ToProtoRole(t *testing.T) {
 }
 
 func TestMessage_ToMap(t *testing.T) {
-	m := &Message{
+	m := &AIChatMessage{
 		Content: "hi",
-		Role:    MessageRoleUser,
+		Role:    AIChatMessageRoleUser,
 	}
-	out := m.ToMap()
+	out := m.AIToMap()
 	if out["role"] != "user" || out["content"] != "hi" {
 		t.Errorf("ToMap() вернул %v", out)
 	}
 }
 
 func TestNewMessage(t *testing.T) {
-	m := NewMessage("sess1", "text", MessageRoleUser)
-	if m.SessionId != "sess1" || m.Content != "text" || m.Role != MessageRoleUser || m.Id == "" {
+	m := NewAIChatMessage("sess1", "text", AIChatMessageRoleUser)
+	if m.SessionId != "sess1" || m.Content != "text" || m.Role != AIChatMessageRoleUser || m.Id == "" {
 		t.Errorf("NewMessage: неверные поля %+v", m)
 	}
 }
 
 func TestNewMessageWithAttachment(t *testing.T) {
-	m := NewMessageWithAttachment("sess1", "text", MessageRoleAssistant, "file.txt")
-	if m.AttachmentName != "file.txt" || m.Role != MessageRoleAssistant {
+	m := NewAIChatMessageWithAttachment("sess1", "text", AIChatMessageRoleAssistant, "file.txt")
+	if m.AttachmentName != "file.txt" || m.Role != AIChatMessageRoleAssistant {
 		t.Errorf("NewMessageWithAttachment: неверные поля %+v", m)
 	}
 }
 
 func TestNewChatSession(t *testing.T) {
-	s := NewChatSession(1, "title", "model1")
+	s := NewAIChatSession(1, "title", "model1")
 	if s.UserId != 1 || s.Title != "title" || s.Model != "model1" || s.Id == "" {
 		t.Errorf("NewChatSession: неверные поля %+v", s)
 	}

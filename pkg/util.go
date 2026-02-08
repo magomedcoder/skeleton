@@ -1,6 +1,12 @@
 package pkg
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"gorm.io/gorm"
+)
 
 const (
 	minPasswordLength = 8
@@ -16,4 +22,27 @@ func ValidatePassword(password string) error {
 	}
 
 	return nil
+}
+
+func NormalizePagination(page, pageSize, defaultPageSize int32) (int32, int32) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = defaultPageSize
+	}
+
+	return page, pageSize
+}
+
+func HandleNotFound(err error, message string) error {
+	if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(message)
+	}
+
+	return err
+}
+
+func GenerateUUID() string {
+	return uuid.New().String()
 }

@@ -23,7 +23,7 @@ func (m *mockLLMProvider) CheckConnection(context.Context) (bool, error) {
 	return true, nil
 }
 
-func (m *mockLLMProvider) SendMessage(context.Context, string, string, []*domain.Message) (chan string, error) {
+func (m *mockLLMProvider) SendMessage(context.Context, string, string, []*domain.AIChatMessage) (chan string, error) {
 	ch := make(chan string, 1)
 	ch <- ""
 	close(ch)

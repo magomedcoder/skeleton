@@ -250,7 +250,7 @@ func (p *Pool) GetServerInfo(ctx context.Context, address string) *runnerpb.Serv
 	return resp
 }
 
-func (p *Pool) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.Message) (chan string, error) {
+func (p *Pool) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.AIChatMessage) (chan string, error) {
 	addr, ok := p.pickRunner()
 	if !ok {
 		logger.W("Pool: нет доступных раннеров для сессии %s", sessionID)
@@ -265,7 +265,7 @@ func (p *Pool) SendMessage(ctx context.Context, sessionID string, model string, 
 
 	protoMessages := make([]*aichatpb.ChatMessage, len(messages))
 	for i, m := range messages {
-		protoMessages[i] = mappers.MessageToProto(m)
+		protoMessages[i] = mappers.AIMessageToProto(m)
 	}
 	req := &runnerpb.GenerateRequest{
 		SessionId: sessionID,

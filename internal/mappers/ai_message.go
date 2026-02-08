@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func MessageToProto(msg *domain.Message) *aichatpb.ChatMessage {
+func AIMessageToProto(msg *domain.AIChatMessage) *aichatpb.ChatMessage {
 	if msg == nil {
 		return nil
 	}
@@ -14,7 +14,7 @@ func MessageToProto(msg *domain.Message) *aichatpb.ChatMessage {
 	p := &aichatpb.ChatMessage{
 		Id:        msg.Id,
 		Content:   msg.Content,
-		Role:      domain.ToProtoRole(msg.Role),
+		Role:      domain.AIToProtoRole(msg.Role),
 		CreatedAt: msg.CreatedAt.Unix(),
 	}
 	if msg.AttachmentName != "" {
@@ -24,16 +24,16 @@ func MessageToProto(msg *domain.Message) *aichatpb.ChatMessage {
 	return p
 }
 
-func MessageFromProto(proto *aichatpb.ChatMessage, sessionID string) *domain.Message {
+func AIMessageFromProto(proto *aichatpb.ChatMessage, sessionID string) *domain.AIChatMessage {
 	if proto == nil {
 		return nil
 	}
 
-	msg := &domain.Message{
+	msg := &domain.AIChatMessage{
 		Id:        proto.Id,
 		SessionId: sessionID,
 		Content:   proto.Content,
-		Role:      domain.FromProtoRole(proto.Role),
+		Role:      domain.AIFromProtoRole(proto.Role),
 		CreatedAt: time.Unix(proto.CreatedAt, 0),
 		UpdatedAt: time.Unix(proto.CreatedAt, 0),
 	}
@@ -44,14 +44,14 @@ func MessageFromProto(proto *aichatpb.ChatMessage, sessionID string) *domain.Mes
 	return msg
 }
 
-func MessagesFromProto(protos []*aichatpb.ChatMessage, sessionID string) []*domain.Message {
+func AIMessagesFromProto(protos []*aichatpb.ChatMessage, sessionID string) []*domain.AIChatMessage {
 	if len(protos) == 0 {
 		return nil
 	}
 
-	out := make([]*domain.Message, len(protos))
+	out := make([]*domain.AIChatMessage, len(protos))
 	for i, p := range protos {
-		out[i] = MessageFromProto(p, sessionID)
+		out[i] = AIMessageFromProto(p, sessionID)
 	}
 
 	return out

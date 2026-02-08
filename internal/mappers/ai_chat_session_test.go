@@ -7,15 +7,15 @@ import (
 	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
-func TestSessionToProto_nil(t *testing.T) {
-	if got := SessionToProto(nil); got != nil {
+func TestAISessionToProto_nil(t *testing.T) {
+	if got := AIChatSessionToProto(nil); got != nil {
 		t.Errorf("SessionToProto(nil) = %v, ожидалось nil", got)
 	}
 }
 
-func TestSessionToProto(t *testing.T) {
+func TestAISessionToProto(t *testing.T) {
 	ts := time.Now()
-	s := &domain.ChatSession{
+	s := &domain.AIChatSession{
 		Id:        "sid",
 		Title:     "t",
 		Model:     "m",
@@ -23,7 +23,7 @@ func TestSessionToProto(t *testing.T) {
 		CreatedAt: ts,
 		UpdatedAt: ts,
 	}
-	got := SessionToProto(s)
+	got := AIChatSessionToProto(s)
 	if got == nil {
 		t.Fatal("ожидался непустой результат")
 	}

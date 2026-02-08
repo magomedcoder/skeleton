@@ -2,131 +2,76 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/magomedcoder/skeleton/internal/domain"
+	"github.com/magomedcoder/skeleton/pkg"
+	"gorm.io/gorm"
 )
 
 type aiChatSessionRepository struct {
-	db *pgxpool.Pool
+	db *gorm.DB
 }
 
-func NewAIChatSessionRepository(db *pgxpool.Pool) domain.AIChatRepository {
+func NewAIChatSessionRepository(db *gorm.DB) domain.AIChatRepository {
 	return &aiChatSessionRepository{db: db}
 }
 
-func (ai *aiChatSessionRepository) Create(ctx context.Context, session *domain.ChatSession) error {
-	err := ai.db.QueryRow(ctx, `
-		INSERT INTO chat_sessions (id, user_id, title, model, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
-	`,
-		session.Id,
-		session.UserId,
-		session.Title,
-		session.Model,
-		session.CreatedAt,
-		session.UpdatedAt,
-	).Scan(&session.Id)
-
-	return err
-}
-
-func (ai *aiChatSessionRepository) GetById(ctx context.Context, id string) (*domain.ChatSession, error) {
-	var session domain.ChatSession
-	err := ai.db.QueryRow(ctx, `
-		SELECT id, user_id, title, model, created_at, updated_at, deleted_at
-		FROM chat_sessions
-		WHERE id = $1 AND deleted_at IS NULL
-	`, id).Scan(
-		&session.Id,
-		&session.UserId,
-		&session.Title,
-		&session.Model,
-		&session.CreatedAt,
-		&session.UpdatedAt,
-		&session.DeletedAt,
-	)
-
-	if err != nil {
-		return nil, handleNotFound(err, "сессия не найдена")
+func (ai *aiChatSessionRepository) Create(ctx context.Context, session *domain.AIChatSession) error {
+	m := aiChatSessionDomainToModel(session)
+	if err := ai.db.WithContext(ctx).Create(m).Error; err != nil {
+		return err
 	}
-
-	return &session, nil
+	return nil
 }
 
-func (ai *aiChatSessionRepository) GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*domain.ChatSession, int32, error) {
+func (ai *aiChatSessionRepository) GetById(ctx context.Context, id string) (*domain.AIChatSession, error) {
+	var m aiChatSessionModel
+	err := ai.db.WithContext(ctx).Where("id = ?", id).First(&m).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.HandleNotFound(err, "сессия не найдена")
+		}
+		return nil, err
+	}
+	return aiChatSessionModelToDomain(&m), nil
+}
+
+func (ai *aiChatSessionRepository) GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*domain.AIChatSession, int32, error) {
 	_, pageSize, offset := normalizePagination(page, pageSize)
 
-	var total int32
-	err := ai.db.QueryRow(ctx, `
-		SELECT COUNT(*)
-		FROM chat_sessions
-		WHERE user_id = $1 AND deleted_at IS NULL
-	`, userID).Scan(&total)
-	if err != nil {
+	var total int64
+	if err := ai.db.WithContext(ctx).Model(&aiChatSessionModel{}).
+		Where("user_id = ?", userID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	rows, err := ai.db.Query(ctx, `
-		SELECT id, user_id, title, model, created_at, updated_at, deleted_at
-		FROM chat_sessions
-		WHERE user_id = $1 AND deleted_at IS NULL
-		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3
-	`, userID, pageSize, offset)
-	if err != nil {
+	var list []aiChatSessionModel
+	if err := ai.db.WithContext(ctx).Where("user_id = ?", userID).
+		Order("created_at DESC").Limit(int(pageSize)).Offset(int(offset)).
+		Find(&list).Error; err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
 
-	var sessions []*domain.ChatSession
-	for rows.Next() {
-		var session domain.ChatSession
-		if err := rows.Scan(
-			&session.Id,
-			&session.UserId,
-			&session.Title,
-			&session.Model,
-			&session.CreatedAt,
-			&session.UpdatedAt,
-			&session.DeletedAt,
-		); err != nil {
-			return nil, 0, err
-		}
-		sessions = append(sessions, &session)
+	sessions := make([]*domain.AIChatSession, 0, len(list))
+	for i := range list {
+		sessions = append(sessions, aiChatSessionModelToDomain(&list[i]))
 	}
-
-	if rows.Err() != nil {
-		return nil, 0, rows.Err()
-	}
-
-	return sessions, total, nil
+	return sessions, int32(total), nil
 }
 
-func (ai *aiChatSessionRepository) Update(ctx context.Context, session *domain.ChatSession) error {
+func (ai *aiChatSessionRepository) Update(ctx context.Context, session *domain.AIChatSession) error {
 	session.UpdatedAt = time.Now()
-	_, err := ai.db.Exec(ctx, `
-		UPDATE chat_sessions
-		SET title = $2, model = $3, updated_at = $4
-		WHERE id = $1 AND deleted_at IS NULL
-	`,
-		session.Id,
-		session.Title,
-		session.Model,
-		session.UpdatedAt,
-	)
-
-	return err
+	return ai.db.WithContext(ctx).Model(&aiChatSessionModel{}).
+		Where("id = ?", session.Id).
+		Updates(map[string]interface{}{
+			"title":      session.Title,
+			"model":      session.Model,
+			"updated_at": session.UpdatedAt,
+		}).Error
 }
 
 func (ai *aiChatSessionRepository) Delete(ctx context.Context, id string) error {
-	_, err := ai.db.Exec(ctx, `
-		UPDATE chat_sessions
-		SET deleted_at = NOW()
-		WHERE id = $1 AND deleted_at IS NULL
-	`, id)
-
-	return err
+	return ai.db.WithContext(ctx).Delete(&aiChatSessionModel{}, id).Error
 }

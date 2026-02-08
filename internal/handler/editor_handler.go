@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/skeleton/internal/middleware"
+	error2 "github.com/magomedcoder/skeleton/pkg/error"
 
 	"github.com/magomedcoder/skeleton/api/pb/editorpb"
 	"github.com/magomedcoder/skeleton/internal/usecase"
@@ -24,7 +26,7 @@ func NewEditorHandler(editorUseCase *usecase.EditorUseCase, authUseCase usecase.
 }
 
 func (e *EditorHandler) Transform(ctx context.Context, req *editorpb.TransformRequest) (*editorpb.TransformResponse, error) {
-	_, err := GetUserFromContext(ctx, e.authUseCase)
+	_, err := middleware.GetUserFromContext(ctx, e.authUseCase)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +43,7 @@ func (e *EditorHandler) Transform(ctx context.Context, req *editorpb.TransformRe
 
 	out, err := e.editorUseCase.Transform(ctx, req.GetModel(), req.GetText(), req.GetType(), req.GetPreserveMarkdown())
 	if err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	return &editorpb.TransformResponse{Text: out}, nil

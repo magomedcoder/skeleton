@@ -11,7 +11,7 @@ import (
 type mockTextBackend struct {
 	checkConn func(context.Context) (bool, error)
 	getModels func(context.Context) ([]string, error)
-	sendMsg   func(context.Context, string, []*domain.Message) (chan string, error)
+	sendMsg   func(context.Context, string, []*domain.AIChatMessage) (chan string, error)
 }
 
 func (m *mockTextBackend) CheckConnection(ctx context.Context) (bool, error) {
@@ -30,7 +30,7 @@ func (m *mockTextBackend) GetModels(ctx context.Context) ([]string, error) {
 	return nil, nil
 }
 
-func (m *mockTextBackend) SendMessage(ctx context.Context, model string, messages []*domain.Message) (chan string, error) {
+func (m *mockTextBackend) SendMessage(ctx context.Context, model string, messages []*domain.AIChatMessage) (chan string, error) {
 	if m.sendMsg != nil {
 		return m.sendMsg(ctx, model, messages)
 	}

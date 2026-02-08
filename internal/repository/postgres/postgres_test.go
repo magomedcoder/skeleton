@@ -10,10 +10,12 @@ import (
 
 func TestNewDB_invalidDSN(t *testing.T) {
 	ctx := context.Background()
-	pool, err := NewDB(ctx, "invalid-dsn-not-a-url")
+	db, err := NewDB(ctx, "invalid-dsn-not-a-url")
 	if err == nil {
-		if pool != nil {
-			pool.Close()
+		if db != nil {
+			if sqlDB, _ := db.DB(); sqlDB != nil {
+				_ = sqlDB.Close()
+			}
 		}
 		t.Fatal("ожидалась ошибка при невалидном DSN")
 	}

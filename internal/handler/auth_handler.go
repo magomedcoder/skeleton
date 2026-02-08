@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"github.com/magomedcoder/skeleton/internal/config"
+	"github.com/magomedcoder/skeleton/internal/middleware"
+	error2 "github.com/magomedcoder/skeleton/pkg/error"
 
 	"github.com/magomedcoder/skeleton/api/pb/authpb"
 	"github.com/magomedcoder/skeleton/internal/mappers"
@@ -30,7 +32,7 @@ func (a *AuthHandler) Login(ctx context.Context, req *authpb.LoginRequest) (*aut
 	user, accessToken, refreshToken, err := a.authUseCase.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		logger.W("AuthHandler: ошибка входа: %v", err)
-		return nil, ToStatusError(codes.Unauthenticated, err)
+		return nil, error2.ToStatusError(codes.Unauthenticated, err)
 	}
 	logger.I("AuthHandler: вход выполнен успешно")
 
@@ -46,7 +48,7 @@ func (a *AuthHandler) RefreshToken(ctx context.Context, req *authpb.RefreshToken
 	accessToken, refreshToken, err := a.authUseCase.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		logger.W("AuthHandler: ошибка обновления токена: %v", err)
-		return nil, ToStatusError(codes.Unauthenticated, err)
+		return nil, error2.ToStatusError(codes.Unauthenticated, err)
 	}
 	logger.I("AuthHandler: токен обновлён")
 
@@ -57,7 +59,7 @@ func (a *AuthHandler) RefreshToken(ctx context.Context, req *authpb.RefreshToken
 }
 
 func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
-	user, err := GetUserFromContext(ctx, a.authUseCase)
+	user, err := middleware.GetUserFromContext(ctx, a.authUseCase)
 	if err != nil {
 		return nil, err
 	}
@@ -74,14 +76,14 @@ func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*a
 }
 
 func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePasswordRequest) (*authpb.ChangePasswordResponse, error) {
-	user, err := GetUserFromContext(ctx, a.authUseCase)
+	user, err := middleware.GetUserFromContext(ctx, a.authUseCase)
 	if err != nil {
 		return nil, err
 	}
 	logger.D("AuthHandler: смена пароля пользователя %d", user.Id)
 	if err := a.authUseCase.ChangePassword(ctx, user.Id, req.OldPassword, req.NewPassword, req.GetCurrentRefreshToken()); err != nil {
 		logger.W("AuthHandler: ошибка смены пароля: %v", err)
-		return nil, ToStatusError(codes.InvalidArgument, err)
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
 	}
 	logger.I("AuthHandler: пароль изменён")
 
@@ -104,7 +106,7 @@ func (a *AuthHandler) CheckVersion(ctx context.Context, req *authpb.CheckVersion
 }
 
 func (a *AuthHandler) GetDevices(ctx context.Context, req *authpb.GetDevicesRequest) (*authpb.GetDevicesResponse, error) {
-	user, err := GetUserFromContext(ctx, a.authUseCase)
+	user, err := middleware.GetUserFromContext(ctx, a.authUseCase)
 	if err != nil {
 		return nil, err
 	}
@@ -127,14 +129,14 @@ func (a *AuthHandler) GetDevices(ctx context.Context, req *authpb.GetDevicesRequ
 }
 
 func (a *AuthHandler) RevokeDevice(ctx context.Context, req *authpb.RevokeDeviceRequest) (*authpb.RevokeDeviceResponse, error) {
-	user, err := GetUserFromContext(ctx, a.authUseCase)
+	user, err := middleware.GetUserFromContext(ctx, a.authUseCase)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := a.authUseCase.RevokeDevice(ctx, user.Id, int(req.GetDeviceId())); err != nil {
 		logger.W("AuthHandler: ошибка отзыва устройства: %v", err)
-		return nil, ToStatusError(codes.NotFound, err)
+		return nil, error2.ToStatusError(codes.NotFound, err)
 	}
 
 	logger.I("AuthHandler: устройство %d отозвано", req.GetDeviceId())

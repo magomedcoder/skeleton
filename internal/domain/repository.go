@@ -39,21 +39,21 @@ type UserSessionRepository interface {
 }
 
 type AIChatRepository interface {
-	Create(ctx context.Context, session *ChatSession) error
+	Create(ctx context.Context, session *AIChatSession) error
 
-	GetById(ctx context.Context, id string) (*ChatSession, error)
+	GetById(ctx context.Context, id string) (*AIChatSession, error)
 
-	GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*ChatSession, int32, error)
+	GetByUserId(ctx context.Context, userID int, page, pageSize int32) ([]*AIChatSession, int32, error)
 
-	Update(ctx context.Context, session *ChatSession) error
+	Update(ctx context.Context, session *AIChatSession) error
 
 	Delete(ctx context.Context, id string) error
 }
 
 type AIChatMessageRepository interface {
-	Create(ctx context.Context, message *Message) error
+	Create(ctx context.Context, message *AIChatMessage) error
 
-	GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*Message, int32, error)
+	GetBySessionId(ctx context.Context, sessionID string, page, pageSize int32) ([]*AIChatMessage, int32, error)
 }
 
 type FileRepository interface {
@@ -67,5 +67,5 @@ type LLMProvider interface {
 
 	GetModels(ctx context.Context) ([]string, error)
 
-	SendMessage(ctx context.Context, sessionID string, model string, messages []*Message) (chan string, error)
+	SendMessage(ctx context.Context, sessionID string, model string, messages []*AIChatMessage) (chan string, error)
 }

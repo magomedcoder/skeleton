@@ -3,6 +3,9 @@ package handler
 import (
 	"context"
 	"github.com/magomedcoder/skeleton/api/pb/commonpb"
+	"github.com/magomedcoder/skeleton/internal/middleware"
+	"github.com/magomedcoder/skeleton/pkg"
+	error2 "github.com/magomedcoder/skeleton/pkg/error"
 	"time"
 
 	"github.com/magomedcoder/skeleton/api/pb/aichatpb"
@@ -27,7 +30,7 @@ func NewAIChatHandler(aiChatUseCase *usecase.AIChatUseCase, authUseCase usecase.
 }
 
 func (c *AIChatHandler) getUserID(ctx context.Context) (int, error) {
-	user, err := GetUserFromContext(ctx, c.authUseCase)
+	user, err := middleware.GetUserFromContext(ctx, c.authUseCase)
 	if err != nil {
 		return 0, err
 	}
@@ -60,7 +63,7 @@ func (c *AIChatHandler) SendMessage(req *aichatpb.SendMessageRequest, stream aic
 	responseChan, messageId, err := c.aiChatUseCase.SendMessage(ctx, userID, req.SessionId, req.GetModel(), userMessage, attachmentName, attachmentContent)
 	if err != nil {
 		logger.E("ChatHandler: ошибка отправки сообщения: %v", err)
-		return ToStatusError(codes.Internal, err)
+		return error2.ToStatusError(codes.Internal, err)
 	}
 
 	createdAt := time.Now().Unix()
@@ -96,11 +99,11 @@ func (c *AIChatHandler) CreateSession(ctx context.Context, req *aichatpb.CreateS
 	session, err := c.aiChatUseCase.CreateSession(ctx, userID, req.GetTitle(), req.GetModel())
 	if err != nil {
 		logger.E("ChatHandler: ошибка создания сессии: %v", err)
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 	logger.I("ChatHandler: сессия создана")
 
-	return mappers.SessionToProto(session), nil
+	return mappers.AIChatSessionToProto(session), nil
 }
 
 func (c *AIChatHandler) GetSession(ctx context.Context, req *aichatpb.GetSessionRequest) (*aichatpb.ChatSession, error) {
@@ -111,10 +114,10 @@ func (c *AIChatHandler) GetSession(ctx context.Context, req *aichatpb.GetSession
 
 	session, err := c.aiChatUseCase.GetSession(ctx, userID, req.SessionId)
 	if err != nil {
-		return nil, ToStatusError(codes.NotFound, err)
+		return nil, error2.ToStatusError(codes.NotFound, err)
 	}
 
-	return mappers.SessionToProto(session), nil
+	return mappers.AIChatSessionToProto(session), nil
 }
 
 func (c *AIChatHandler) GetSessions(ctx context.Context, req *aichatpb.GetSessionsRequest) (*aichatpb.GetSessionsResponse, error) {
@@ -123,16 +126,16 @@ func (c *AIChatHandler) GetSessions(ctx context.Context, req *aichatpb.GetSessio
 		return nil, err
 	}
 
-	page, pageSize := normalizePagination(req.Page, req.PageSize, 20)
+	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 20)
 
 	sessions, total, err := c.aiChatUseCase.GetSessions(ctx, userID, page, pageSize)
 	if err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	protoSessions := make([]*aichatpb.ChatSession, len(sessions))
 	for i, session := range sessions {
-		protoSessions[i] = mappers.SessionToProto(session)
+		protoSessions[i] = mappers.AIChatSessionToProto(session)
 	}
 
 	return &aichatpb.GetSessionsResponse{
@@ -149,16 +152,16 @@ func (c *AIChatHandler) GetSessionMessages(ctx context.Context, req *aichatpb.Ge
 		return nil, err
 	}
 
-	page, pageSize := normalizePagination(req.Page, req.PageSize, 50)
+	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 50)
 
 	messages, total, err := c.aiChatUseCase.GetSessionMessages(ctx, userID, req.SessionId, page, pageSize)
 	if err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	protoMessages := make([]*aichatpb.ChatMessage, len(messages))
 	for i, msg := range messages {
-		protoMessages[i] = mappers.MessageToProto(msg)
+		protoMessages[i] = mappers.AIMessageToProto(msg)
 	}
 
 	return &aichatpb.GetSessionMessagesResponse{
@@ -176,7 +179,7 @@ func (c *AIChatHandler) DeleteSession(ctx context.Context, req *aichatpb.DeleteS
 	}
 
 	if err := c.aiChatUseCase.DeleteSession(ctx, userID, req.SessionId); err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	return &commonpb.Empty{}, nil
@@ -190,10 +193,10 @@ func (c *AIChatHandler) UpdateSessionTitle(ctx context.Context, req *aichatpb.Up
 
 	session, err := c.aiChatUseCase.UpdateSessionTitle(ctx, userID, req.SessionId, req.Title)
 	if err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
-	return mappers.SessionToProto(session), nil
+	return mappers.AIChatSessionToProto(session), nil
 }
 
 func (c *AIChatHandler) UpdateSessionModel(ctx context.Context, req *aichatpb.UpdateSessionModelRequest) (*aichatpb.ChatSession, error) {
@@ -204,10 +207,10 @@ func (c *AIChatHandler) UpdateSessionModel(ctx context.Context, req *aichatpb.Up
 
 	session, err := c.aiChatUseCase.UpdateSessionModel(ctx, userID, req.SessionId, req.GetModel())
 	if err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
-	return mappers.SessionToProto(session), nil
+	return mappers.AIChatSessionToProto(session), nil
 }
 
 func (c *AIChatHandler) CheckConnection(ctx context.Context, req *commonpb.Empty) (*aichatpb.ConnectionResponse, error) {
@@ -217,7 +220,7 @@ func (c *AIChatHandler) CheckConnection(ctx context.Context, req *commonpb.Empty
 func (c *AIChatHandler) GetModels(ctx context.Context, req *commonpb.Empty) (*aichatpb.GetModelsResponse, error) {
 	models, err := c.aiChatUseCase.GetModels(ctx)
 	if err != nil {
-		return nil, ToStatusError(codes.Internal, err)
+		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	return &aichatpb.GetModelsResponse{Models: models}, nil

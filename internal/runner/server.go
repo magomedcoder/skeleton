@@ -67,7 +67,7 @@ func (s *Server) Generate(req *runnerpb.GenerateRequest, stream runnerpb.RunnerS
 
 	sessionID := req.SessionId
 	model := req.Model
-	messages := mappers.MessagesFromProto(req.Messages, sessionID)
+	messages := mappers.AIMessagesFromProto(req.Messages, sessionID)
 
 	ctx := stream.Context()
 	ch, err := s.textProvider.SendMessage(ctx, sessionID, model, messages)

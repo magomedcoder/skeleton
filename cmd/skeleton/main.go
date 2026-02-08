@@ -49,7 +49,12 @@ func main() {
 		logger.E("Ошибка подключения к базе данных: %v", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	sqlDB, errDB := db.DB()
+	if errDB != nil {
+		logger.E("Ошибка получения *sql.DB: %v", errDB)
+		os.Exit(1)
+	}
+	defer sqlDB.Close()
 	logger.I("Подключение к базе данных установлено")
 
 	if err := bootstrap.RunMigrations(ctx, db, skeleton.Postgres); err != nil {

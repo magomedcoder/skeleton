@@ -9,7 +9,7 @@ import (
 )
 
 type mockEditorLLM struct {
-	sendMessage func(context.Context, string, string, []*domain.Message) (chan string, error)
+	sendMessage func(context.Context, string, string, []*domain.AIChatMessage) (chan string, error)
 }
 
 func (m *mockEditorLLM) GetModels(context.Context) ([]string, error) {
@@ -20,7 +20,7 @@ func (m *mockEditorLLM) CheckConnection(context.Context) (bool, error) {
 	return true, nil
 }
 
-func (m *mockEditorLLM) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.Message) (chan string, error) {
+func (m *mockEditorLLM) SendMessage(ctx context.Context, sessionID string, model string, messages []*domain.AIChatMessage) (chan string, error) {
 	if m.sendMessage != nil {
 		return m.sendMessage(ctx, sessionID, model, messages)
 	}

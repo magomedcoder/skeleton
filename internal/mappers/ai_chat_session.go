@@ -5,7 +5,7 @@ import (
 	"github.com/magomedcoder/skeleton/internal/domain"
 )
 
-func SessionToProto(session *domain.ChatSession) *aichatpb.ChatSession {
+func AIChatSessionToProto(session *domain.AIChatSession) *aichatpb.ChatSession {
 	if session == nil {
 		return nil
 	}
