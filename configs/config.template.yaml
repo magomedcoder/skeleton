@@ -1,0 +1,25 @@
+# Конфигурация основного сервера Legion
+
+server:
+  host: "0.0.0.0"
+  port: "50051"
+
+database:
+  dsn: "postgres://postgres:postgres@127.0.0.1:5432/legion"
+
+jwt:
+  access_secret: "legion"
+  refresh_secret: "legion"
+  access_ttl: 15m
+  refresh_ttl: 168h
+
+runners:
+  addresses:
+    - "127.0.0.1:50052"
+
+attachments:
+  save_dir: "./uploads"
+
+log:
+  # debug, verbose, info, warn, error, off
+  level: "debug"

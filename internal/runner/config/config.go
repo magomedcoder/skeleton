@@ -1,48 +1,56 @@
 package config
 
+import (
+	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
 const (
 	EngineOllama = "ollama"
 	EngineLlama  = "llama"
 )
 
 type Ollama struct {
-	BaseURL string
+	BaseURL string `yaml:"base_url"`
 }
 
 type Llama struct {
-	ModelPath string
+	ModelPath string `yaml:"model_path"`
 }
 
 type LogConfig struct {
-	Level string
+	Level string `yaml:"level"`
 }
 
 type Config struct {
-	CoreAddr   string
-	ListenAddr string
-	Log        LogConfig
-	Engine     string
-	Ollama     Ollama
-	Llama      Llama
+	CoreAddr   string    `yaml:"core_addr"`
+	ListenAddr string    `yaml:"listen_addr"`
+	Log        LogConfig `yaml:"log"`
+	Engine     string    `yaml:"engine"`
+	Ollama     Ollama    `yaml:"ollama"`
+	Llama      Llama     `yaml:"llama"`
 }
 
 func Load() (*Config, error) {
-	c := &Config{
-		CoreAddr:   "127.0.0.1:50051",
-		ListenAddr: "127.0.0.1:50052",
-		Log: LogConfig{
-			Level: "debug",
-		},
-		Ollama: Ollama{
-			BaseURL: "http://127.0.0.1:11434",
-		},
-		Llama: Llama{
-			ModelPath: "./models",
-		},
+	c := &Config{}
+
+	configPath := os.Getenv("LEGION_RUNNER_CONFIG")
+	if configPath == "" {
+		configPath = "./configs/runner-config.yaml"
 	}
 
-	// EngineOllama или EngineLlama
-	c.Engine = EngineOllama
+	if _, err := os.Stat(configPath); err == nil {
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка чтения конфигурационного файла %s: %w", configPath, err)
+		}
+
+		if err := yaml.Unmarshal(data, c); err != nil {
+			return nil, fmt.Errorf("ошибка парсинга конфигурационного файла %s: %w", configPath, err)
+		}
+	}
 
 	return c, nil
 }

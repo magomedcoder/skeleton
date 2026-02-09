@@ -33,3 +33,7 @@ llama.cpp-update:
 	cd llama.cpp \
 		&& git fetch --depth 1 origin tag $(LLAMA_CPP_TAG) \
 		&& git checkout $(LLAMA_CPP_TAG)
+
+.PHONY: build-ollama
+build-ollama:
+	cd ollama && cmake -B build &&  cmake --build build

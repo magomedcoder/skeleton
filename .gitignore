@@ -7,3 +7,5 @@ client-side/lib/generated/
 uploads
 models
 vendor
+/configs/config.yaml
+/configs/runner-config.yaml

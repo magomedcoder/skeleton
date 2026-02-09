@@ -1,0 +1,17 @@
+# Конфигурация раннера Legion
+
+core_addr: "127.0.0.1:50051"
+listen_addr: "127.0.0.1:50052"
+
+log:
+  # debug, verbose, info, warn, error, off
+  level: "debug"
+
+# Движок: ollama или llama
+engine: "ollama"
+
+ollama:
+  base_url: "http://127.0.0.1:11434"
+
+llama:
+  model_path: "./models"

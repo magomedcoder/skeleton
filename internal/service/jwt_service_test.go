@@ -48,8 +48,12 @@ func TestJWTService_GenerateAccessToken_ValidateAccessToken(t *testing.T) {
 		JWT: config.JWTConfig{
 			AccessSecret:  "test-secret",
 			RefreshSecret: "test-secret",
-			AccessTTL:     15 * time.Minute,
-			RefreshTTL:    24 * time.Hour,
+			AccessTTL: config.Duration{
+				Duration: 15 * time.Minute,
+			},
+			RefreshTTL: config.Duration{
+				Duration: 24 * time.Hour,
+			},
 		},
 	}
 	svc := NewJWTService(cfg)

@@ -29,8 +29,8 @@ func NewJWTService(cfg *config.Config) *JWTService {
 	return &JWTService{
 		accessSecret:  []byte(cfg.JWT.AccessSecret),
 		refreshSecret: []byte(cfg.JWT.RefreshSecret),
-		accessTTL:     cfg.JWT.AccessTTL,
-		refreshTTL:    cfg.JWT.RefreshTTL,
+		accessTTL:     cfg.JWT.AccessTTL.Duration,
+		refreshTTL:    cfg.JWT.RefreshTTL.Duration,
 	}
 }
 
