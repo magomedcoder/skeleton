@@ -29,6 +29,10 @@ build-runner-nvidia:
 test:
 	go test ./...
 
+.PHONY: test-load
+test-load:
+	go test ./tests/load -v -run TestLoad
+
 .PHONY: client-test
 client-test:
 	cd client-side && flutter test

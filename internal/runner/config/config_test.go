@@ -1,8 +1,22 @@
 package config
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestLoad(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd: %v", err)
+	}
+
+	projectRoot := filepath.Join(wd, "..", "..", "..")
+	configPath := filepath.Join(projectRoot, "configs", "runner-config.yaml")
+	os.Setenv("LEGION_RUNNER_CONFIG", configPath)
+	defer os.Unsetenv("LEGION_RUNNER_CONFIG")
+
 	cfg, err := Load()
 	if err != nil {
 		t.Fatalf("Load: %v", err)

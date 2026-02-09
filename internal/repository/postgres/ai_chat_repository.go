@@ -73,5 +73,5 @@ func (ai *aiChatSessionRepository) Update(ctx context.Context, session *domain.A
 }
 
 func (ai *aiChatSessionRepository) Delete(ctx context.Context, id string) error {
-	return ai.db.WithContext(ctx).Delete(&aiChatSessionModel{}, id).Error
+	return ai.db.WithContext(ctx).Where("id = ?", id).Delete(&aiChatSessionModel{}).Error
 }
