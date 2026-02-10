@@ -49,7 +49,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
 
   AIChatRemoteDataSource(this._channelManager, this._authGuard);
 
-  aichatpb.AIChatServiceClient get _client => _channelManager.chatClient;
+  aichatpb.AIChatServiceClient get _client => _channelManager.aiChatClient;
 
   @override
   Future<bool> checkConnection() async {

@@ -41,6 +41,13 @@ class AppBottomNav extends StatelessWidget {
                 onTap: () => onDestinationSelected(NavDestination.home),
               ),
               _NavItem(
+                icon: Icons.chat_bubble_outline,
+                selectedIcon: Icons.chat_bubble,
+                label: 'Чаты',
+                isSelected: selected == NavDestination.chat,
+                onTap: () => onDestinationSelected(NavDestination.chat),
+              ),
+              _NavItem(
                 icon: Icons.edit_note_outlined,
                 selectedIcon: Icons.edit_note_rounded,
                 label: 'Редактор',

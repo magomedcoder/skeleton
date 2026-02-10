@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package search;
+
+option go_package = "github.com/magomedcoder/legion/api/pb/searchpb;searchpb";
+
+import "common.proto";
+
+service SearchService {
+  rpc Users(SearchUsersRequest) returns (SearchUsersResponse);
+}
+
+message SearchUsersRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message SearchUsersResponse {
+  repeated legion.User users = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}

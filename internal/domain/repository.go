@@ -13,6 +13,8 @@ type UserRepository interface {
 
 	List(ctx context.Context, page, pageSize int32) ([]*User, int32, error)
 
+	Search(ctx context.Context, query string, page, pageSize int32) ([]*User, int32, error)
+
 	Update(ctx context.Context, user *User) error
 
 	UpdateLastVisitedAt(ctx context.Context, userID int) error
@@ -68,4 +70,18 @@ type LLMProvider interface {
 	GetModels(ctx context.Context) ([]string, error)
 
 	SendMessage(ctx context.Context, sessionID string, model string, messages []*AIChatMessage) (chan string, error)
+}
+
+type ChatRepository interface {
+	GetById(ctx context.Context, id int) (*Chat, error)
+
+	GetOrCreatePrivateChat(ctx context.Context, uid, userId int) (*Chat, error)
+
+	ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*Chat, int32, error)
+}
+
+type ChatMessageRepository interface {
+	Create(ctx context.Context, msg *Message) error
+
+	ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*Message, int32, error)
 }

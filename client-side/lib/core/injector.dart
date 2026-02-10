@@ -10,16 +10,20 @@ import 'package:legion/data/data_sources/remote/ai_chat_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/editor_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/runners_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
+import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
+import 'package:legion/data/data_sources/remote/search_remote_datasource.dart';
 import 'package:legion/data/repositories/auth_repository_impl.dart';
 import 'package:legion/data/repositories/ai_chat_repository_impl.dart';
 import 'package:legion/data/repositories/editor_repository_impl.dart';
 import 'package:legion/data/repositories/runners_repository_impl.dart';
 import 'package:legion/data/repositories/user_repository_impl.dart';
+import 'package:legion/data/repositories/user_chat_repository_impl.dart';
 import 'package:legion/domain/repositories/auth_repository.dart';
 import 'package:legion/domain/repositories/ai_chat_repository.dart';
 import 'package:legion/domain/repositories/editor_repository.dart';
 import 'package:legion/domain/repositories/runners_repository.dart';
 import 'package:legion/domain/repositories/user_repository.dart';
+import 'package:legion/domain/repositories/user_chat_repository.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
 import 'package:legion/domain/usecases/auth/change_password_usecase.dart';
 import 'package:legion/domain/usecases/auth/get_devices_usecase.dart';
@@ -44,8 +48,10 @@ import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
 import 'package:legion/domain/usecases/users/create_user_usecase.dart';
 import 'package:legion/domain/usecases/users/get_users_usecase.dart';
 import 'package:legion/domain/usecases/users/edit_user_usecase.dart';
+import 'package:legion/domain/usecases/search/search_users_usecase.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:legion/presentation/screens/user_chat/bloc/user_chat_bloc.dart';
 import 'package:legion/presentation/screens/admin/bloc/runners_admin_bloc.dart';
 import 'package:legion/presentation/screens/admin/bloc/users_admin_bloc.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_bloc.dart';
@@ -106,6 +112,14 @@ Future<void> init() async {
     () => UserRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
 
+  sl.registerLazySingleton<IChatRemoteDataSource>(
+    () => ChatRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
+  );
+
+  sl.registerLazySingleton<ISearchRemoteDataSource>(
+    () => SearchRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
+  );
+
   sl.registerLazySingleton<IRunnersRemoteDataSource>(
     () => RunnersRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
@@ -116,6 +130,9 @@ Future<void> init() async {
   sl.registerLazySingleton<EditorRepository>(() => EditorRepositoryImpl(sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
   sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(sl()));
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(sl<IChatRemoteDataSource>()),
+  );
   sl.registerLazySingleton<RunnersRepository>(
     () => RunnersRepositoryImpl(sl<IRunnersRemoteDataSource>()),
   );
@@ -147,6 +164,7 @@ Future<void> init() async {
   sl.registerFactory(() => GetUsersUseCase(sl()));
   sl.registerFactory(() => CreateUserUseCase(sl()));
   sl.registerFactory(() => EditUserUseCase(sl()));
+  sl.registerFactory(() => SearchUsersUseCase(sl<ISearchRemoteDataSource>()));
 
   sl.registerFactory(
     () => AIChatBloc(
@@ -163,6 +181,12 @@ Future<void> init() async {
       deleteSessionUseCase: sl(),
       updateSessionTitleUseCase: sl(),
       getRunnersStatusUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ChatBloc(
+      repository: sl<ChatRepository>(),
     ),
   );
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:legion/core/theme/app_theme.dart';
 
-enum NavDestination { home, editor, profile, admin }
+enum NavDestination { home, chat, editor, profile, admin }
 
 class SideNavigation extends StatelessWidget {
   final NavDestination selected;
@@ -51,6 +51,14 @@ class SideNavigation extends StatelessWidget {
             isSelected: selected == NavDestination.editor,
             tooltip: 'Редактор',
             onTap: () => onDestinationSelected(NavDestination.editor),
+          ),
+          const SizedBox(height: 4),
+          _RailIcon(
+            icon: Icons.chat_bubble_outline,
+            selectedIcon: Icons.chat_bubble,
+            isSelected: selected == NavDestination.chat,
+            tooltip: 'Чаты',
+            onTap: () => onDestinationSelected(NavDestination.chat),
           ),
           if (showAdmin) ...[
             const SizedBox(height: 4),

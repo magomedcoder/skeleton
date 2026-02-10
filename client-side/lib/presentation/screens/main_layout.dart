@@ -14,6 +14,7 @@ import 'package:legion/presentation/screens/editor/editor_screen.dart';
 import 'package:legion/presentation/screens/ai_chat/widgets/chat_content.dart';
 import 'package:legion/presentation/screens/ai_chat/widgets/sessions_sidebar.dart';
 import 'package:legion/presentation/screens/profile/profile_screen.dart';
+import 'package:legion/presentation/screens/user_chat/user_chat_screen.dart';
 import 'package:legion/presentation/widgets/app_bottom_nav.dart';
 import 'package:legion/presentation/widgets/side_navigation.dart';
 
@@ -166,6 +167,8 @@ class _MainLayoutState extends State<MainLayout> {
     switch (_destination) {
       case NavDestination.home:
         return _buildHomeBody();
+      case NavDestination.chat:
+        return const UserChatScreen();
       case NavDestination.editor:
         return const EditorScreen();
       case NavDestination.profile:

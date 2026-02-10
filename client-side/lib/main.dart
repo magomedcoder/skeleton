@@ -11,6 +11,7 @@ import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/auth/login_screen.dart';
 import 'package:legion/presentation/screens/auth/update_required_screen.dart';
 import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
+import 'package:legion/presentation/screens/user_chat/bloc/user_chat_bloc.dart';
 import 'package:legion/presentation/screens/main_layout.dart';
 import 'package:legion/presentation/cubit/theme/theme_cubit.dart';
 import 'package:legion/presentation/cubit/theme/theme_state.dart';
@@ -55,6 +56,9 @@ class App extends StatelessWidget {
                 ),
                 BlocProvider(
                   create: (context) => di.sl<EditorBloc>(),
+                ),
+                BlocProvider(
+                  create: (context) => di.sl<ChatBloc>(),
                 ),
               ],
               child: BlocBuilder<AuthBloc, AuthState>(

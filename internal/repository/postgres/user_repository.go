@@ -95,3 +95,34 @@ func (u *userRepository) List(ctx context.Context, page, pageSize int32) ([]*dom
 	}
 	return users, int32(total), nil
 }
+
+func (u *userRepository) Search(ctx context.Context, query string, page, pageSize int32) ([]*domain.User, int32, error) {
+	_, pageSize, offset := normalizePagination(page, pageSize)
+
+	q := "%" + query + "%"
+
+	var total int64
+	if err := u.db.WithContext(ctx).
+		Model(&userModel{}).
+		Where("username ILIKE ? OR name ILIKE ? OR surname ILIKE ?", q, q, q).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var list []userModel
+	if err := u.db.WithContext(ctx).
+		Where("username ILIKE ? OR name ILIKE ? OR surname ILIKE ?", q, q, q).
+		Order("id DESC").
+		Limit(int(pageSize)).
+		Offset(int(offset)).
+		Find(&list).Error; err != nil {
+		return nil, 0, err
+	}
+
+	users := make([]*domain.User, 0, len(list))
+	for i := range list {
+		users = append(users, userModelToDomain(&list[i]))
+	}
+
+	return users, int32(total), nil
+}

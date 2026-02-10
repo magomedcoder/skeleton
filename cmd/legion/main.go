@@ -6,8 +6,10 @@ import (
 	"github.com/magomedcoder/legion"
 	"github.com/magomedcoder/legion/api/pb/aichatpb"
 	"github.com/magomedcoder/legion/api/pb/authpb"
+	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/editorpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/api/pb/searchpb"
 	"github.com/magomedcoder/legion/api/pb/userpb"
 	"github.com/magomedcoder/legion/internal/bootstrap"
 	"github.com/magomedcoder/legion/internal/config"
@@ -67,6 +69,8 @@ func main() {
 	userSessionRepo := postgres.NewUserSessionRepository(db)
 	aiChatSessionRepo := postgres.NewAIChatSessionRepository(db)
 	messageRepo := postgres.NewMessageRepository(db)
+	chatRepo := postgres.NewChatRepository(db)
+	chatMessageRepo := postgres.NewChatMessageRepository(db)
 	fileRepo := postgres.NewFileRepository(db)
 
 	jwtService := service.NewJWTService(cfg)
@@ -80,20 +84,26 @@ func main() {
 	runnerPool := runner.NewPool(cfg.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, userSessionRepo, jwtService)
 	chatUseCase := usecase.NewAIChatUseCase(aiChatSessionRepo, messageRepo, fileRepo, runnerPool, cfg.Attachments.SaveDir)
+	userChatUseCase := usecase.NewChatUseCase(chatRepo, chatMessageRepo, userRepo)
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
+	searchUseCase := usecase.NewSearchUseCase(userRepo)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
 	chatHandler := handler.NewAIChatHandler(chatUseCase, authUseCase)
+	userChatHandler := handler.NewChatHandler(userChatUseCase, authUseCase)
 	editorHandler := handler.NewEditorHandler(editorUseCase, authUseCase)
 	userHandler := handler.NewUserHandler(userUseCase, authUseCase)
+	searchHandler := handler.NewSearchHandler(searchUseCase, authUseCase)
 
 	grpcServer := grpc.NewServer()
 
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
 	aichatpb.RegisterAIChatServiceServer(grpcServer, chatHandler)
+	chatpb.RegisterChatServiceServer(grpcServer, userChatHandler)
 	editorpb.RegisterEditorServiceServer(grpcServer, editorHandler)
 	userpb.RegisterUserServiceServer(grpcServer, userHandler)
+	searchpb.RegisterSearchServiceServer(grpcServer, searchHandler)
 	runnerpb.RegisterRunnerAdminServiceServer(grpcServer, handler.NewRunnerHandler(runnerPool, authUseCase))
 	runnerpb.RegisterRunnerServiceServer(grpcServer, runner.NewRegistry(runnerPool))
 

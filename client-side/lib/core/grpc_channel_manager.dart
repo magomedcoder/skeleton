@@ -2,23 +2,27 @@ import 'package:grpc/grpc.dart';
 import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/core/server_config.dart';
-import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as grpc_auth;
-import 'package:legion/generated/grpc_pb/aichat.pbgrpc.dart' as grpc_chat;
-import 'package:legion/generated/grpc_pb/editor.pbgrpc.dart' as grpc_editor;
-import 'package:legion/generated/grpc_pb/runner.pbgrpc.dart' as grpc_runner;
-import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as grpc_user;
+import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as authpb;
+import 'package:legion/generated/grpc_pb/aichat.pbgrpc.dart' as aichatpb;
+import 'package:legion/generated/grpc_pb/editor.pbgrpc.dart' as editorpb;
+import 'package:legion/generated/grpc_pb/runner.pbgrpc.dart' as runnerpb;
+import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as userpb;
+import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as chatpb;
+import 'package:legion/generated/grpc_pb/search.pbgrpc.dart' as searchpb;
 
 class GrpcChannelManager {
   final ServerConfig _config;
   final AuthInterceptor _authInterceptor;
 
   ClientChannel? _channel;
-  grpc_auth.AuthServiceClient? _authClient;
-  grpc_auth.AuthServiceClient? _authClientNoInterceptor;
-  grpc_chat.AIChatServiceClient? _aiChatClient;
-  grpc_editor.EditorServiceClient? _editorClient;
-  grpc_user.UserServiceClient? _userClient;
-  grpc_runner.RunnerAdminServiceClient? _runnerAdminClient;
+  authpb.AuthServiceClient? _authClient;
+  authpb.AuthServiceClient? _authClientNoInterceptor;
+  aichatpb.AIChatServiceClient? _aiChatClient;
+  editorpb.EditorServiceClient? _editorClient;
+  userpb.UserServiceClient? _userClient;
+  runnerpb.RunnerAdminServiceClient? _runnerAdminClient;
+  chatpb.ChatServiceClient? _chatClient;
+  searchpb.SearchServiceClient? _searchClient;
 
   GrpcChannelManager(this._config, this._authInterceptor);
 
@@ -37,49 +41,65 @@ class GrpcChannelManager {
     return _channel!;
   }
 
-  grpc_auth.AuthServiceClient get authClient {
-    _authClient ??= grpc_auth.AuthServiceClient(
+  authpb.AuthServiceClient get authClient {
+    _authClient ??= authpb.AuthServiceClient(
       channel,
       interceptors: [_authInterceptor],
     );
     return _authClient!;
   }
 
-  grpc_chat.AIChatServiceClient get chatClient {
-    _aiChatClient ??= grpc_chat.AIChatServiceClient(
+  aichatpb.AIChatServiceClient get aiChatClient {
+    _aiChatClient ??= aichatpb.AIChatServiceClient(
       channel,
       interceptors: [_authInterceptor],
     );
     return _aiChatClient!;
   }
 
-  grpc_editor.EditorServiceClient get editorClient {
-    _editorClient ??= grpc_editor.EditorServiceClient(
+  editorpb.EditorServiceClient get editorClient {
+    _editorClient ??= editorpb.EditorServiceClient(
       channel,
       interceptors: [_authInterceptor],
     );
     return _editorClient!;
   }
 
-  grpc_user.UserServiceClient get userClient {
-    _userClient ??= grpc_user.UserServiceClient(
+  userpb.UserServiceClient get userClient {
+    _userClient ??= userpb.UserServiceClient(
       channel,
       interceptors: [_authInterceptor],
     );
     return _userClient!;
   }
 
-  grpc_runner.RunnerAdminServiceClient get runnerAdminClient {
-    _runnerAdminClient ??= grpc_runner.RunnerAdminServiceClient(
+  runnerpb.RunnerAdminServiceClient get runnerAdminClient {
+    _runnerAdminClient ??= runnerpb.RunnerAdminServiceClient(
       channel,
       interceptors: [_authInterceptor],
     );
     return _runnerAdminClient!;
   }
 
-  grpc_auth.AuthServiceClient get authClientForVersionCheck {
-    _authClientNoInterceptor ??= grpc_auth.AuthServiceClient(channel);
+  authpb.AuthServiceClient get authClientForVersionCheck {
+    _authClientNoInterceptor ??= authpb.AuthServiceClient(channel);
     return _authClientNoInterceptor!;
+  }
+
+  chatpb.ChatServiceClient get chatClient {
+    _chatClient ??= chatpb.ChatServiceClient(
+      channel,
+      interceptors: [_authInterceptor],
+    );
+    return _chatClient!;
+  }
+
+  searchpb.SearchServiceClient get searchClient {
+    _searchClient ??= searchpb.SearchServiceClient(
+      channel,
+      interceptors: [_authInterceptor],
+    );
+    return _searchClient!;
   }
 
   Future<void> setServer(String host, int port) async {
@@ -97,6 +117,8 @@ class GrpcChannelManager {
     _editorClient = null;
     _userClient = null;
     _runnerAdminClient = null;
+    _chatClient = null;
+    _searchClient = null;
     if (ch != null) {
       Logs().d('GrpcChannelManager: закрытие канала');
       await ch.shutdown();
