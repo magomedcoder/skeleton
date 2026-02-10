@@ -52,6 +52,10 @@ func (m *mockUserRepoForUserUC) UpdateLastVisitedAt(context.Context, int) error 
 	return nil
 }
 
+func (m *mockUserRepoForUserUC) Search(context.Context, string, int32, int32) ([]*domain.User, int32, error) {
+	return nil, 0, nil
+}
+
 type mockSessionRepoForUserUC struct{}
 
 func (m *mockSessionRepoForUserUC) Create(context.Context, *domain.Token) error {

@@ -68,6 +68,10 @@ func (m *mockUserRepoBootstrap) UpdateLastVisitedAt(context.Context, int) error 
 	return nil
 }
 
+func (m *mockUserRepoBootstrap) Search(context.Context, string, int32, int32) ([]*domain.User, int32, error) {
+	return nil, 0, nil
+}
+
 func TestCreateFirstUser_skipsWhenUsersExist(t *testing.T) {
 	cfg, _ := config.Load()
 	jwtSvc := service.NewJWTService(cfg)

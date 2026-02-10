@@ -25,6 +25,16 @@ CREATE TABLE IF NOT EXISTS user_sessions
     deleted_at TIMESTAMP   NULL
 );
 
+CREATE TABLE IF NOT EXISTS files
+(
+    id           UUID PRIMARY KEY      DEFAULT uuid_generate_v4(),
+    filename     VARCHAR(255) NOT NULL,
+    mime_type    VARCHAR(100) NULL,
+    size         BIGINT       NOT NULL DEFAULT 0,
+    storage_path TEXT         NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS chat_sessions
 (
     id         UUID PRIMARY KEY      DEFAULT uuid_generate_v4(),
@@ -46,16 +56,6 @@ CREATE TABLE IF NOT EXISTS chat_session_messages
     created_at         TIMESTAMP   NOT NULL DEFAULT NOW(),
     updated_at         TIMESTAMP   NOT NULL DEFAULT NOW(),
     deleted_at         TIMESTAMP   NULL
-);
-
-CREATE TABLE IF NOT EXISTS files
-(
-    id           UUID PRIMARY KEY      DEFAULT uuid_generate_v4(),
-    filename     VARCHAR(255) NOT NULL,
-    mime_type    VARCHAR(100) NULL,
-    size         BIGINT       NOT NULL DEFAULT 0,
-    storage_path TEXT         NOT NULL,
-    created_at   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS chats
