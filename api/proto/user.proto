@@ -7,11 +7,23 @@ option go_package = "github.com/magomedcoder/legion/api/pb/userpb;userpb";
 import "common.proto";
 
 service UserService {
-  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {
+    option (method_conf) = {
+      role: ROLE_ADMIN
+    };
+  }
 
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (method_conf) = {
+      role: ROLE_ADMIN
+    };
+  }
 
-  rpc EditUser(EditUserRequest) returns (EditUserResponse);
+  rpc EditUser(EditUserRequest) returns (EditUserResponse) {
+    option (method_conf) = {
+      role: ROLE_ADMIN
+    };
+  }
 }
 
 message GetUsersRequest {

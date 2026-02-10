@@ -6,7 +6,6 @@ import (
 	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/api/pb/searchpb"
 	"github.com/magomedcoder/legion/internal/mappers"
-	"github.com/magomedcoder/legion/internal/middleware"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg"
 	error2 "github.com/magomedcoder/legion/pkg/error"
@@ -28,10 +27,6 @@ func NewSearchHandler(searchUseCase *usecase.SearchUseCase, authUseCase usecase.
 }
 
 func (h *SearchHandler) Users(ctx context.Context, req *searchpb.SearchUsersRequest) (*searchpb.SearchUsersResponse, error) {
-	if _, err := middleware.GetUserFromContext(ctx, h.authUseCase); err != nil {
-		return nil, err
-	}
-
 	logger.D("SearchHandler: поиск пользователей query=%q page=%d", req.Query, req.Page)
 
 	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 20)

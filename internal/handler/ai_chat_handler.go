@@ -30,16 +30,17 @@ func NewAIChatHandler(aiChatUseCase *usecase.AIChatUseCase, authUseCase usecase.
 }
 
 func (c *AIChatHandler) getUserID(ctx context.Context) (int, error) {
-	user, err := middleware.GetUserFromContext(ctx, c.authUseCase)
-	if err != nil {
-		return 0, err
+	session := middleware.GetSession(ctx)
+	if session == nil {
+		return 0, status.Error(codes.Unauthenticated, "сессия не найдена")
 	}
-	return user.Id, nil
+
+	return session.Uid, nil
 }
 
 func (c *AIChatHandler) SendMessage(req *aichatpb.SendMessageRequest, stream aichatpb.AIChatService_SendMessageServer) error {
 	ctx := stream.Context()
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (c *AIChatHandler) SendMessage(req *aichatpb.SendMessageRequest, stream aic
 	}
 
 	logger.D("ChatHandler: отправка сообщения в сессию %s", req.SessionId)
-	responseChan, messageId, err := c.aiChatUseCase.SendMessage(ctx, userID, req.SessionId, req.GetModel(), userMessage, attachmentName, attachmentContent)
+	responseChan, messageId, err := c.aiChatUseCase.SendMessage(ctx, userId, req.SessionId, req.GetModel(), userMessage, attachmentName, attachmentContent)
 	if err != nil {
 		logger.E("ChatHandler: ошибка отправки сообщения: %v", err)
 		return error2.ToStatusError(codes.Internal, err)
@@ -91,12 +92,13 @@ func (c *AIChatHandler) SendMessage(req *aichatpb.SendMessageRequest, stream aic
 }
 
 func (c *AIChatHandler) CreateSession(ctx context.Context, req *aichatpb.CreateSessionRequest) (*aichatpb.ChatSession, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	logger.D("ChatHandler: создание сессии \"%s\" пользователем %d", req.GetTitle(), userID)
-	session, err := c.aiChatUseCase.CreateSession(ctx, userID, req.GetTitle(), req.GetModel())
+
+	logger.D("ChatHandler: создание сессии \"%s\" пользователем %d", req.GetTitle(), userId)
+	session, err := c.aiChatUseCase.CreateSession(ctx, userId, req.GetTitle(), req.GetModel())
 	if err != nil {
 		logger.E("ChatHandler: ошибка создания сессии: %v", err)
 		return nil, error2.ToStatusError(codes.Internal, err)
@@ -107,12 +109,12 @@ func (c *AIChatHandler) CreateSession(ctx context.Context, req *aichatpb.CreateS
 }
 
 func (c *AIChatHandler) GetSession(ctx context.Context, req *aichatpb.GetSessionRequest) (*aichatpb.ChatSession, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := c.aiChatUseCase.GetSession(ctx, userID, req.SessionId)
+	session, err := c.aiChatUseCase.GetSession(ctx, userId, req.SessionId)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.NotFound, err)
 	}
@@ -121,14 +123,14 @@ func (c *AIChatHandler) GetSession(ctx context.Context, req *aichatpb.GetSession
 }
 
 func (c *AIChatHandler) GetSessions(ctx context.Context, req *aichatpb.GetSessionsRequest) (*aichatpb.GetSessionsResponse, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 20)
 
-	sessions, total, err := c.aiChatUseCase.GetSessions(ctx, userID, page, pageSize)
+	sessions, total, err := c.aiChatUseCase.GetSessions(ctx, userId, page, pageSize)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
@@ -147,14 +149,14 @@ func (c *AIChatHandler) GetSessions(ctx context.Context, req *aichatpb.GetSessio
 }
 
 func (c *AIChatHandler) GetSessionMessages(ctx context.Context, req *aichatpb.GetSessionMessagesRequest) (*aichatpb.GetSessionMessagesResponse, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 50)
 
-	messages, total, err := c.aiChatUseCase.GetSessionMessages(ctx, userID, req.SessionId, page, pageSize)
+	messages, total, err := c.aiChatUseCase.GetSessionMessages(ctx, userId, req.SessionId, page, pageSize)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
@@ -173,12 +175,12 @@ func (c *AIChatHandler) GetSessionMessages(ctx context.Context, req *aichatpb.Ge
 }
 
 func (c *AIChatHandler) DeleteSession(ctx context.Context, req *aichatpb.DeleteSessionRequest) (*commonpb.Empty, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := c.aiChatUseCase.DeleteSession(ctx, userID, req.SessionId); err != nil {
+	if err := c.aiChatUseCase.DeleteSession(ctx, userId, req.SessionId); err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
@@ -186,12 +188,12 @@ func (c *AIChatHandler) DeleteSession(ctx context.Context, req *aichatpb.DeleteS
 }
 
 func (c *AIChatHandler) UpdateSessionTitle(ctx context.Context, req *aichatpb.UpdateSessionTitleRequest) (*aichatpb.ChatSession, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := c.aiChatUseCase.UpdateSessionTitle(ctx, userID, req.SessionId, req.Title)
+	session, err := c.aiChatUseCase.UpdateSessionTitle(ctx, userId, req.SessionId, req.Title)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
@@ -200,12 +202,12 @@ func (c *AIChatHandler) UpdateSessionTitle(ctx context.Context, req *aichatpb.Up
 }
 
 func (c *AIChatHandler) UpdateSessionModel(ctx context.Context, req *aichatpb.UpdateSessionModelRequest) (*aichatpb.ChatSession, error) {
-	userID, err := c.getUserID(ctx)
+	userId, err := c.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := c.aiChatUseCase.UpdateSessionModel(ctx, userID, req.SessionId, req.GetModel())
+	session, err := c.aiChatUseCase.UpdateSessionModel(ctx, userId, req.SessionId, req.GetModel())
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}

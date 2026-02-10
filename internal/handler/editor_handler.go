@@ -2,12 +2,11 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/middleware"
-	error2 "github.com/magomedcoder/legion/pkg/error"
 
 	"github.com/magomedcoder/legion/api/pb/editorpb"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg/logger"
+	error2 "github.com/magomedcoder/legion/pkg/error"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -26,11 +25,6 @@ func NewEditorHandler(editorUseCase *usecase.EditorUseCase, authUseCase usecase.
 }
 
 func (e *EditorHandler) Transform(ctx context.Context, req *editorpb.TransformRequest) (*editorpb.TransformResponse, error) {
-	_, err := middleware.GetUserFromContext(ctx, e.authUseCase)
-	if err != nil {
-		return nil, err
-	}
-
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "пустой запрос")
 	}

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package chat;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/aichatpb;aichatpb";
-
 import "common.proto";
+
+option go_package = "github.com/magomedcoder/legion/api/pb/aichatpb;aichatpb";
 
 service AIChatService {
   rpc CheckConnection(legion.Empty) returns (ConnectionResponse);

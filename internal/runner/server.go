@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/runner/gpu"
@@ -26,7 +27,7 @@ func NewServer(textProvider provider.TextProvider, gpuCollector gpu.Collector) *
 	}
 }
 
-func (s *Server) Ping(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.PingResponse, error) {
+func (s *Server) Ping(ctx context.Context, _ *commonpb.Empty) (*runnerpb.PingResponse, error) {
 	if s.textProvider == nil {
 		return &runnerpb.PingResponse{
 			Ok: false,
@@ -39,7 +40,7 @@ func (s *Server) Ping(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.PingRes
 	}, nil
 }
 
-func (s *Server) GetModels(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetModelsResponse, error) {
+func (s *Server) GetModels(ctx context.Context, _ *commonpb.Empty) (*runnerpb.GetModelsResponse, error) {
 	if s.textProvider == nil {
 		return &runnerpb.GetModelsResponse{}, nil
 	}
@@ -94,7 +95,7 @@ func (s *Server) Generate(req *runnerpb.GenerateRequest, stream runnerpb.RunnerS
 	})
 }
 
-func (s *Server) GetGpuInfo(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetGpuInfoResponse, error) {
+func (s *Server) GetGpuInfo(ctx context.Context, _ *commonpb.Empty) (*runnerpb.GetGpuInfoResponse, error) {
 	list := s.gpuCollector.Collect()
 	gpus := make([]*runnerpb.GpuInfo, len(list))
 	for i := range list {
@@ -109,7 +110,7 @@ func (s *Server) GetGpuInfo(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.G
 	return &runnerpb.GetGpuInfoResponse{Gpus: gpus}, nil
 }
 
-func (s *Server) GetServerInfo(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.ServerInfo, error) {
+func (s *Server) GetServerInfo(ctx context.Context, _ *commonpb.Empty) (*runnerpb.ServerInfo, error) {
 	si := CollectSysInfo()
 	out := &runnerpb.ServerInfo{
 		Hostname:      si.Hostname,

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package userchat;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/chatpb;chatpb";
-
 import "common.proto";
+
+option go_package = "github.com/magomedcoder/legion/api/pb/chatpb;chatpb";
 
 service ChatService {
   rpc CreateChat(CreateChatRequest) returns (Chat);

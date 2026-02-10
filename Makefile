@@ -1,3 +1,10 @@
+.PHONY: install
+install:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
+	&& go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+	git clone https://github.com/googleapis/googleapis.git third_party/proto/googleapis
+
 .PHONY: run
 run:
 	go run ./cmd/legion
@@ -57,11 +64,6 @@ gen-dart-proto:
 	protoc --proto_path=./api/proto \
 		--dart_out=grpc:./client-side/lib/generated/grpc_pb \
 		./api/proto/*.proto
-
-.PHONY: install
-install:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
-	&& go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 .PHONY: deps
 deps:

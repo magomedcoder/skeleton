@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/magomedcoder/legion/api/pb/aichatpb"
+	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/mappers"
@@ -192,7 +193,7 @@ func (p *Pool) CheckConnection(ctx context.Context) (bool, error) {
 			continue
 		}
 
-		resp, err := client.Ping(ctx, &runnerpb.Empty{})
+		resp, err := client.Ping(ctx, &commonpb.Empty{})
 		if err == nil && resp != nil && resp.Ok {
 			return true, nil
 		}
@@ -213,7 +214,7 @@ func (p *Pool) GetModels(ctx context.Context) ([]string, error) {
 			continue
 		}
 
-		resp, err := client.GetModels(ctx, &runnerpb.Empty{})
+		resp, err := client.GetModels(ctx, &commonpb.Empty{})
 		if err == nil && resp != nil {
 			return resp.Models, nil
 		}
@@ -228,7 +229,7 @@ func (p *Pool) GetGpuInfo(ctx context.Context, address string) *runnerpb.GetGpuI
 		return nil
 	}
 
-	resp, err := client.GetGpuInfo(ctx, &runnerpb.Empty{})
+	resp, err := client.GetGpuInfo(ctx, &commonpb.Empty{})
 	if err != nil || resp == nil {
 		return nil
 	}
@@ -242,7 +243,7 @@ func (p *Pool) GetServerInfo(ctx context.Context, address string) *runnerpb.Serv
 		return nil
 	}
 
-	resp, err := client.GetServerInfo(ctx, &runnerpb.Empty{})
+	resp, err := client.GetServerInfo(ctx, &commonpb.Empty{})
 	if err != nil || resp == nil {
 		return nil
 	}

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package search;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/searchpb;searchpb";
-
 import "common.proto";
+
+option go_package = "github.com/magomedcoder/legion/api/pb/searchpb;searchpb";
 
 service SearchService {
   rpc Users(SearchUsersRequest) returns (SearchUsersResponse);

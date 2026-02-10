@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/middleware"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 	"strconv"
 
@@ -28,9 +27,6 @@ func NewUserHandler(userUseCase *usecase.UserUseCase, authUseCase usecase.TokenV
 }
 
 func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
-	if err := middleware.RequireAdmin(ctx, u.authUseCase); err != nil {
-		return nil, err
-	}
 	logger.D("UserHandler: получение пользователей page=%d", req.Page)
 	users, total, err := u.userUseCase.GetUsers(ctx, req.Page, req.PageSize)
 	if err != nil {
@@ -50,9 +46,6 @@ func (u *UserHandler) GetUsers(ctx context.Context, req *userpb.GetUsersRequest)
 }
 
 func (u *UserHandler) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.CreateUserResponse, error) {
-	if err := middleware.RequireAdmin(ctx, u.authUseCase); err != nil {
-		return nil, err
-	}
 	logger.I("UserHandler: создание пользователя %s", req.Username)
 	user, err := u.userUseCase.CreateUser(ctx, req.Username, req.Password, req.Name, req.Surname, req.Role)
 	if err != nil {
@@ -65,9 +58,6 @@ func (u *UserHandler) CreateUser(ctx context.Context, req *userpb.CreateUserRequ
 }
 
 func (u *UserHandler) EditUser(ctx context.Context, req *userpb.EditUserRequest) (*userpb.EditUserResponse, error) {
-	if err := middleware.RequireAdmin(ctx, u.authUseCase); err != nil {
-		return nil, err
-	}
 	if _, err := strconv.Atoi(req.Id); err != nil {
 		logger.W("UserHandler: неверный id пользователя: %s", req.Id)
 		return nil, status.Error(codes.InvalidArgument, "неверный id пользователя")

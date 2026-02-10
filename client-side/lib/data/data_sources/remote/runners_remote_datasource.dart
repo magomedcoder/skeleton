@@ -7,6 +7,7 @@ import 'package:legion/domain/entities/gpu_info.dart';
 import 'package:legion/domain/entities/runner.dart';
 import 'package:legion/domain/entities/server_info.dart';
 import 'package:legion/generated/grpc_pb/runner.pb.dart' as runnerpb;
+import 'package:legion/generated/grpc_pb/common.pb.dart' as commonpb;
 
 abstract class IRunnersRemoteDataSource {
   Future<List<Runner>> getRunners();
@@ -28,7 +29,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     try {
       final response = await _authGuard.execute(
         () => _channelManager.runnerAdminClient.getRunners(
-          runnerpb.Empty(),
+          commonpb.Empty(),
         ),
       );
       final runners = response.runners
@@ -118,7 +119,7 @@ class RunnersRemoteDataSource implements IRunnersRemoteDataSource {
     try {
       final response = await _authGuard.execute(
         () => _channelManager.runnerAdminClient.getRunnersStatus(
-          runnerpb.Empty(),
+          commonpb.Empty(),
         ),
       );
       return response.hasActiveRunners;

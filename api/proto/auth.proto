@@ -2,20 +2,32 @@ syntax = "proto3";
 
 package legion;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/authpb;authpb";
-
 import "common.proto";
 
-service AuthService {
-  rpc Login(LoginRequest) returns (LoginResponse);
+option go_package = "github.com/magomedcoder/legion/api/pb/authpb;authpb";
 
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (method_conf) = {
+      skip_auth: true
+    };
+  }
+
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
+    option (method_conf) = {
+      skip_auth: true
+    };
+  }
 
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 
-  rpc CheckVersion(CheckVersionRequest) returns (CheckVersionResponse);
+  rpc CheckVersion(CheckVersionRequest) returns (CheckVersionResponse) {
+    option (method_conf) = {
+      skip_auth: true
+    };
+  }
 
   rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse);
 

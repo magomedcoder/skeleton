@@ -9,3 +9,4 @@ models
 vendor
 /configs/config.yaml
 /configs/runner-config.yaml
+/third_party/proto/

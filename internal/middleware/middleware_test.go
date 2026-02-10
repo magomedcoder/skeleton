@@ -7,6 +7,7 @@ import (
 
 	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/usecase"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -164,58 +165,90 @@ func TestGetUserFromContext(t *testing.T) {
 	}
 }
 
-func TestRequireAdmin(t *testing.T) {
-	adminUser := &domain.User{
-		Id:       1,
-		Username: "admin",
-		Role:     domain.UserRoleAdmin,
+func TestGetSession(t *testing.T) {
+	t.Run("контекст без сессии — nil", func(t *testing.T) {
+		got := GetSession(context.Background())
+		if got != nil {
+			t.Errorf("GetSession() = %v, ожидался nil", got)
+		}
+	})
+
+	t.Run("контекст с сессией — возвращает сессию", func(t *testing.T) {
+		want := &JSession{Uid: 42}
+		ctx := context.WithValue(context.Background(), sessionKey, want)
+		got := GetSession(ctx)
+		if got != want {
+			t.Errorf("GetSession() = %v, ожидался %v", got, want)
+		}
+		if got != nil && got.Uid != 42 {
+			t.Errorf("GetSession().Uid = %d, ожидалось 42", got.Uid)
+		}
+	})
+
+	t.Run("контекст с значением другого типа — nil", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), sessionKey, "not a session")
+		got := GetSession(ctx)
+		if got != nil {
+			t.Errorf("GetSession() = %v, ожидался nil при неверном типе", got)
+		}
+	})
+}
+
+func TestUnaryAuthInterceptor_noToken_returnsUnauthenticated(t *testing.T) {
+	validator := &fakeTokenValidator{user: &domain.User{Id: 1, Role: domain.UserRoleUser}}
+	mw := NewMiddleware(validator)
+	ctx := context.Background()
+	info := &grpc.UnaryServerInfo{FullMethod: "/some.Service/SomeMethod"}
+	handler := func(ctx context.Context, req any) (any, error) { return "ok", nil }
+
+	_, err := mw.UnaryAuthInterceptor(ctx, nil, info, handler)
+	if err == nil {
+		t.Fatal("UnaryAuthInterceptor: ожидалась ошибка без токена")
 	}
-	regularUser := &domain.User{
-		Id:       2,
-		Username: "user",
-		Role:     domain.UserRoleUser,
+	if code := status.Code(err); code != codes.Unauthenticated {
+		t.Errorf("UnaryAuthInterceptor: код %v, ожидался Unauthenticated", code)
 	}
+}
+
+func TestUnaryAuthInterceptor_validToken_callsHandlerAndSetsSession(t *testing.T) {
+	user := &domain.User{Id: 10, Username: "u", Role: domain.UserRoleUser}
+	validator := &fakeTokenValidator{user: user}
+	mw := NewMiddleware(validator)
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("authorization", "Bearer tok"))
-
-	tests := []struct {
-		name      string
-		validator usecase.TokenValidator
-		wantErr   bool
-		wantCode  codes.Code
-	}{
-		{
-			name:      "ошибка авторизации",
-			validator: &fakeTokenValidator{err: errors.New("bad token")},
-			wantErr:   true,
-			wantCode:  codes.Unauthenticated,
-		},
-		{
-			name:      "пользователь не администратор",
-			validator: &fakeTokenValidator{user: regularUser},
-			wantErr:   true,
-			wantCode:  codes.PermissionDenied,
-		},
-		{
-			name:      "администратор - успех",
-			validator: &fakeTokenValidator{user: adminUser},
-			wantErr:   false,
-		},
+	info := &grpc.UnaryServerInfo{FullMethod: "/some.Service/SomeMethod"}
+	var gotSession *JSession
+	handler := func(ctx context.Context, req any) (any, error) {
+		gotSession = GetSession(ctx)
+		return "ok", nil
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := RequireAdmin(ctx, tt.validator)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("RequireAdmin() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+	resp, err := mw.UnaryAuthInterceptor(ctx, nil, info, handler)
+	if err != nil {
+		t.Fatalf("UnaryAuthInterceptor: %v", err)
+	}
+	if resp != "ok" {
+		t.Errorf("UnaryAuthInterceptor: ответ = %v, ожидался ok", resp)
+	}
+	if gotSession == nil {
+		t.Fatal("UnaryAuthInterceptor: сессия не передана в handler")
+	}
+	if gotSession.Uid != user.Id {
+		t.Errorf("UnaryAuthInterceptor: session.Uid = %d, ожидалось %d", gotSession.Uid, user.Id)
+	}
+}
 
-			if tt.wantErr && tt.wantCode != codes.Unknown {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() != tt.wantCode {
-					t.Errorf("RequireAdmin() status code = %v, want %v", st.Code(), tt.wantCode)
-				}
-			}
-		})
+func TestUnaryAuthInterceptor_invalidToken_returnsUnauthenticated(t *testing.T) {
+	validator := &fakeTokenValidator{err: errors.New("invalid token")}
+	mw := NewMiddleware(validator)
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("authorization", "Bearer bad"))
+	info := &grpc.UnaryServerInfo{FullMethod: "/some.Service/SomeMethod"}
+	handler := func(ctx context.Context, req any) (any, error) { return nil, nil }
+
+	_, err := mw.UnaryAuthInterceptor(ctx, nil, info, handler)
+	if err == nil {
+		t.Fatal("UnaryAuthInterceptor: ожидалась ошибка при неверном токене")
+	}
+	if code := status.Code(err); code != codes.Unauthenticated {
+		t.Errorf("UnaryAuthInterceptor: код %v, ожидался Unauthenticated", code)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/magomedcoder/legion/pkg"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ChatHandler struct {
@@ -27,12 +28,11 @@ func NewChatHandler(chatUseCase *usecase.ChatUseCase, authUseCase usecase.TokenV
 }
 
 func (h *ChatHandler) getUserID(ctx context.Context) (int, error) {
-	user, err := middleware.GetUserFromContext(ctx, h.authUseCase)
-	if err != nil {
-		return 0, err
+	session := middleware.GetSession(ctx)
+	if session == nil {
+		return 0, status.Error(codes.Unauthenticated, "сессия не найдена")
 	}
-
-	return user.Id, nil
+	return session.Uid, nil
 }
 
 func (h *ChatHandler) CreateChat(ctx context.Context, req *chatpb.CreateChatRequest) (*chatpb.Chat, error) {

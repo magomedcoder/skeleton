@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/middleware"
 
+	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/runner"
 	"github.com/magomedcoder/legion/internal/usecase"
@@ -23,10 +23,7 @@ func NewRunnerHandler(pool *runner.Pool, authUseCase usecase.TokenValidator) *Ru
 	}
 }
 
-func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetRunnersResponse, error) {
-	if err := middleware.RequireAdmin(ctx, r.authUseCase); err != nil {
-		return nil, err
-	}
+func (r *RunnerHandler) GetRunners(ctx context.Context, _ *commonpb.Empty) (*runnerpb.GetRunnersResponse, error) {
 	logger.D("RunnerHandler: получение списка раннеров")
 	items := r.pool.GetRunners()
 	runners := make([]*runnerpb.RunnerInfo, len(items))
@@ -53,23 +50,16 @@ func (r *RunnerHandler) GetRunners(ctx context.Context, _ *runnerpb.Empty) (*run
 	}, nil
 }
 
-func (r *RunnerHandler) SetRunnerEnabled(ctx context.Context, req *runnerpb.SetRunnerEnabledRequest) (*runnerpb.Empty, error) {
-	if err := middleware.RequireAdmin(ctx, r.authUseCase); err != nil {
-		return nil, err
-	}
+func (r *RunnerHandler) SetRunnerEnabled(ctx context.Context, req *runnerpb.SetRunnerEnabledRequest) (*commonpb.Empty, error) {
 	if req != nil && req.Address != "" {
 		logger.I("RunnerHandler: setRunnerEnabled %s enabled=%v", req.Address, req.Enabled)
 		r.pool.SetRunnerEnabled(req.Address, req.Enabled)
 	}
 
-	return &runnerpb.Empty{}, nil
+	return &commonpb.Empty{}, nil
 }
 
-func (r *RunnerHandler) GetRunnersStatus(ctx context.Context, _ *runnerpb.Empty) (*runnerpb.GetRunnersStatusResponse, error) {
-	if _, err := middleware.GetUserFromContext(ctx, r.authUseCase); err != nil {
-		return nil, err
-	}
-
+func (r *RunnerHandler) GetRunnersStatus(ctx context.Context, _ *commonpb.Empty) (*runnerpb.GetRunnersStatusResponse, error) {
 	return &runnerpb.GetRunnersStatusResponse{
 		HasActiveRunners: r.pool.HasActiveRunners(),
 	}, nil

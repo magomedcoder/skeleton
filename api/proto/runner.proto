@@ -2,35 +2,42 @@ syntax = "proto3";
 
 package runner;
 
-option go_package = "github.com/magomedcoder/legion/api/pb/runnerpb;runnerpb";
-
+import "common.proto";
 import "aichat.proto";
 
-service RunnerService {
-  rpc Ping(Empty) returns (PingResponse);
+option go_package = "github.com/magomedcoder/legion/api/pb/runnerpb;runnerpb";
 
-  rpc GetModels(Empty) returns (GetModelsResponse);
+service RunnerService {
+  rpc Ping(legion.Empty) returns (PingResponse);
+
+  rpc GetModels(legion.Empty) returns (GetModelsResponse);
 
   rpc Generate(GenerateRequest) returns (stream GenerateResponse);
 
-  rpc Register(RegisterRunnerRequest) returns (Empty);
+  rpc Register(RegisterRunnerRequest) returns (legion.Empty);
 
-  rpc Unregister(UnregisterRunnerRequest) returns (Empty);
+  rpc Unregister(UnregisterRunnerRequest) returns (legion.Empty);
 
-  rpc GetGpuInfo(Empty) returns (GetGpuInfoResponse);
+  rpc GetGpuInfo(legion.Empty) returns (GetGpuInfoResponse);
 
-  rpc GetServerInfo(Empty) returns (ServerInfo);
+  rpc GetServerInfo(legion.Empty) returns (ServerInfo);
 }
 
 service RunnerAdminService {
-  rpc GetRunners(Empty) returns (GetRunnersResponse);
+  rpc GetRunners(legion.Empty) returns (GetRunnersResponse) {
+    option (legion.method_conf) = {
+      role: ROLE_ADMIN
+    };
+  }
 
-  rpc SetRunnerEnabled(SetRunnerEnabledRequest) returns (Empty);
+  rpc SetRunnerEnabled(SetRunnerEnabledRequest) returns (legion.Empty) {
+    option (legion.method_conf) = {
+      role: ROLE_ADMIN
+    };
+  }
 
-  rpc GetRunnersStatus(Empty) returns (GetRunnersStatusResponse);
+  rpc GetRunnersStatus(legion.Empty) returns (GetRunnersStatusResponse);
 }
-
-message Empty {}
 
 message PingResponse {
   bool ok = 1;

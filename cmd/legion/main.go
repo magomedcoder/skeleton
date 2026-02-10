@@ -14,6 +14,7 @@ import (
 	"github.com/magomedcoder/legion/internal/bootstrap"
 	"github.com/magomedcoder/legion/internal/config"
 	"github.com/magomedcoder/legion/internal/handler"
+	"github.com/magomedcoder/legion/internal/middleware"
 	"github.com/magomedcoder/legion/internal/repository/postgres"
 	"github.com/magomedcoder/legion/internal/runner"
 	"github.com/magomedcoder/legion/internal/service"
@@ -96,7 +97,12 @@ func main() {
 	userHandler := handler.NewUserHandler(userUseCase, authUseCase)
 	searchHandler := handler.NewSearchHandler(searchUseCase, authUseCase)
 
-	grpcServer := grpc.NewServer()
+	authMiddleware := middleware.NewMiddleware(authUseCase)
+
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(authMiddleware.UnaryAuthInterceptor),
+		grpc.ChainStreamInterceptor(authMiddleware.StreamAuthInterceptor),
+	)
 
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
 	aichatpb.RegisterAIChatServiceServer(grpcServer, chatHandler)

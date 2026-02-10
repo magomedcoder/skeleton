@@ -2,7 +2,23 @@ syntax = "proto3";
 
 package legion;
 
+import "google/protobuf/descriptor.proto";
+
 option go_package = "github.com/magomedcoder/legion/api/pb/commonpb;commonpb";
+
+enum Role {
+  ROLE_USER = 0;
+  ROLE_ADMIN = 1;
+}
+
+message MethodConf {
+  bool skip_auth = 1;
+  Role role = 2;
+}
+
+extend google.protobuf.MethodOptions {
+  MethodConf method_conf = 51001;
+}
 
 message Empty {}
 

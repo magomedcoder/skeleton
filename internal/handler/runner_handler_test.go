@@ -2,46 +2,64 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"testing"
 
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/internal/runner"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func TestRunnerHandler_GetRunners_noAuth(t *testing.T) {
+func TestRunnerHandler_GetRunners_returnsEmptyList(t *testing.T) {
 	pool := runner.NewPool(nil)
 	h := NewRunnerHandler(pool, nil)
 	ctx := context.Background()
 
-	_, err := h.GetRunners(ctx, &runnerpb.Empty{})
-	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("GetRunners: код %v, ожидался Unauthenticated", code)
+	resp, err := h.GetRunners(ctx, &commonpb.Empty{})
+	if err != nil {
+		t.Fatalf("GetRunners: %v", err)
+	}
+	if resp == nil || len(resp.Runners) != 0 {
+		t.Errorf("GetRunners: ожидался пустой список, получено %v", resp)
 	}
 }
 
-func TestRunnerHandler_SetRunnerEnabled_noAuth(t *testing.T) {
+func TestRunnerHandler_GetRunnersStatus_returnsResponse(t *testing.T) {
+	pool := runner.NewPool(nil)
+	h := NewRunnerHandler(pool, nil)
+	ctx := context.Background()
+
+	resp, err := h.GetRunnersStatus(ctx, &commonpb.Empty{})
+	if err != nil {
+		t.Fatalf("GetRunnersStatus: %v", err)
+	}
+
+	if resp == nil {
+		t.Fatal("GetRunnersStatus: ответ nil")
+	}
+
+	if resp.HasActiveRunners {
+		t.Errorf("GetRunnersStatus: ожидалось HasActiveRunners=false")
+	}
+}
+
+func TestRunnerHandler_SetRunnerEnabled_emptyAddress_noError(t *testing.T) {
 	pool := runner.NewPool(nil)
 	h := NewRunnerHandler(pool, nil)
 	ctx := context.Background()
 
 	_, err := h.SetRunnerEnabled(ctx, &runnerpb.SetRunnerEnabledRequest{
-		Address: "a",
+		Address: "",
 		Enabled: true,
 	})
-	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("SetRunnerEnabled: код %v, ожидался Unauthenticated", code)
+	if err != nil {
+		t.Errorf("SetRunnerEnabled(пустой address): %v", err)
 	}
-}
 
-func TestRunnerHandler_GetRunnersStatus_noAuth(t *testing.T) {
-	pool := runner.NewPool(nil)
-	h := NewRunnerHandler(pool, nil)
-	ctx := context.Background()
-
-	_, err := h.GetRunnersStatus(ctx, &runnerpb.Empty{})
-	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("GetRunnersStatus: код %v, ожидался Unauthenticated", code)
+	_, err = h.SetRunnerEnabled(ctx, &runnerpb.SetRunnerEnabledRequest{
+		Address: "localhost:8080",
+		Enabled: true,
+	})
+	if err != nil {
+		t.Errorf("SetRunnerEnabled: %v", err)
 	}
 }
