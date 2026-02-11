@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/domain/usecases/search/search_users_usecase.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_bloc.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_event.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 
 class ChatUserSearchScreen extends StatefulWidget {
   const ChatUserSearchScreen({super.key});

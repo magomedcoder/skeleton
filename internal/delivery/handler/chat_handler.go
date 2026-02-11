@@ -2,11 +2,11 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"strconv"
 
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
-	"github.com/magomedcoder/legion/internal/middleware"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg"
 	error2 "github.com/magomedcoder/legion/pkg/error"

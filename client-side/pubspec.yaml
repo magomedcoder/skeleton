@@ -43,7 +43,7 @@ dependencies:
   flutter_bloc: ^9.1.1
   bloc_concurrency: ^0.3.0
   uuid: ^4.5.1
-
+  provider: ^6.1.2
   grpc: ^5.1.0
   protobuf: ^6.0.0
   fixnum: ^1.1.1

@@ -29,5 +29,10 @@ abstract final class AttachmentSettings {
 
   static const List<String> textFormatLabels = ['TXT', 'MD', 'LOG'];
 
-  static const List<String> documentFormatLabels = ['PDF', 'DOCX', 'XLSX', 'CSV'];
+  static const List<String> documentFormatLabels = [
+    'PDF',
+    'DOCX',
+    'XLSX',
+    'CSV',
+  ];
 }

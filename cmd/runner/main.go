@@ -3,21 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-
+	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/pkg/logger"
+	"github.com/magomedcoder/legion/runner"
+	"github.com/magomedcoder/legion/runner/config"
+	"github.com/magomedcoder/legion/runner/gpu"
+	"github.com/magomedcoder/legion/runner/provider"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/internal/runner"
-	"github.com/magomedcoder/legion/internal/runner/config"
-	"github.com/magomedcoder/legion/internal/runner/gpu"
-	"github.com/magomedcoder/legion/internal/runner/provider"
-	"github.com/magomedcoder/legion/pkg/logger"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {

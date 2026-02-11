@@ -3,11 +3,11 @@ package handler
 import (
 	"context"
 	"github.com/magomedcoder/legion/internal/config"
-	"github.com/magomedcoder/legion/internal/middleware"
+	"github.com/magomedcoder/legion/internal/delivery/mappers"
+	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 
 	"github.com/magomedcoder/legion/api/pb/authpb"
-	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
@@ -81,7 +81,7 @@ func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePass
 	if session == nil {
 		return nil, status.Error(codes.Unauthenticated, "сессия не найдена")
 	}
-	
+
 	logger.D("AuthHandler: смена пароля пользователя %d", session.Uid)
 	if err := a.authUseCase.ChangePassword(ctx, session.Uid, req.OldPassword, req.NewPassword, req.GetCurrentRefreshToken()); err != nil {
 		logger.W("AuthHandler: ошибка смены пароля: %v", err)

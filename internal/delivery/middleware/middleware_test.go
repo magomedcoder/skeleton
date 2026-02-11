@@ -166,14 +166,14 @@ func TestGetUserFromContext(t *testing.T) {
 }
 
 func TestGetSession(t *testing.T) {
-	t.Run("контекст без сессии — nil", func(t *testing.T) {
+	t.Run("контекст без сессии - nil", func(t *testing.T) {
 		got := GetSession(context.Background())
 		if got != nil {
 			t.Errorf("GetSession() = %v, ожидался nil", got)
 		}
 	})
 
-	t.Run("контекст с сессией — возвращает сессию", func(t *testing.T) {
+	t.Run("контекст с сессией - возвращает сессию", func(t *testing.T) {
 		want := &JSession{Uid: 42}
 		ctx := context.WithValue(context.Background(), sessionKey, want)
 		got := GetSession(ctx)
@@ -185,7 +185,7 @@ func TestGetSession(t *testing.T) {
 		}
 	})
 
-	t.Run("контекст с значением другого типа — nil", func(t *testing.T) {
+	t.Run("контекст с значением другого типа - nil", func(t *testing.T) {
 		ctx := context.WithValue(context.Background(), sessionKey, "not a session")
 		got := GetSession(ctx)
 		if got != nil {

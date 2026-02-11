@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/internal/mappers"
-	"github.com/magomedcoder/legion/internal/runner/gpu"
-	"github.com/magomedcoder/legion/internal/runner/provider"
+	"github.com/magomedcoder/legion/internal/delivery/mappers"
+	gpu2 "github.com/magomedcoder/legion/runner/gpu"
+	"github.com/magomedcoder/legion/runner/provider"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -14,12 +14,12 @@ import (
 type Server struct {
 	runnerpb.UnimplementedRunnerServiceServer
 	textProvider provider.TextProvider
-	gpuCollector gpu.Collector
+	gpuCollector gpu2.Collector
 }
 
-func NewServer(textProvider provider.TextProvider, gpuCollector gpu.Collector) *Server {
+func NewServer(textProvider provider.TextProvider, gpuCollector gpu2.Collector) *Server {
 	if gpuCollector == nil {
-		gpuCollector = gpu.NewCollector()
+		gpuCollector = gpu2.NewCollector()
 	}
 	return &Server{
 		textProvider: textProvider,
@@ -66,12 +66,12 @@ func (s *Server) Generate(req *runnerpb.GenerateRequest, stream runnerpb.RunnerS
 		})
 	}
 
-	sessionID := req.SessionId
+	sessionId := req.SessionId
 	model := req.Model
-	messages := mappers.AIMessagesFromProto(req.Messages, sessionID)
+	messages := mappers.AIMessagesFromProto(req.Messages, sessionId)
 
 	ctx := stream.Context()
-	ch, err := s.textProvider.SendMessage(ctx, sessionID, model, messages)
+	ch, err := s.textProvider.SendMessage(ctx, sessionId, model, messages)
 	if err != nil {
 		_ = stream.Send(&runnerpb.GenerateResponse{
 			Done: true,
@@ -107,6 +107,7 @@ func (s *Server) GetGpuInfo(ctx context.Context, _ *commonpb.Empty) (*runnerpb.G
 			UtilizationPercent: list[i].UtilizationPercent,
 		}
 	}
+
 	return &runnerpb.GetGpuInfoResponse{Gpus: gpus}, nil
 }
 
@@ -124,5 +125,6 @@ func (s *Server) GetServerInfo(ctx context.Context, _ *commonpb.Empty) (*runnerp
 			out.Models = models
 		}
 	}
+
 	return out, nil
 }

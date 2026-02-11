@@ -2,8 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/chat.dart';
 import 'package:legion/domain/repositories/user_chat_repository.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_event.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_state.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository repository;

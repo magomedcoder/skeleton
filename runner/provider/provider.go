@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/internal/runner/config"
-	"github.com/magomedcoder/legion/internal/runner/service"
+	"github.com/magomedcoder/legion/runner/config"
+	service2 "github.com/magomedcoder/legion/runner/service"
 )
 
 type TextBackend interface {
@@ -30,10 +30,10 @@ func NewTextProvider(cfg *config.Config) (TextProvider, error) {
 		if cfg.Llama.ModelPath == "" {
 			return nil, fmt.Errorf("движок %q: задайте llama.model_path", config.EngineLlama)
 		}
-		svc := service.NewLlamaService(cfg.Llama.ModelPath)
+		svc := service2.NewLlamaService(cfg.Llama.ModelPath)
 		return NewText(svc), nil
 	case config.EngineOllama:
-		svc := service.NewOllamaService(cfg.Ollama)
+		svc := service2.NewOllamaService(cfg.Ollama)
 		return NewText(svc), nil
 	default:
 		return nil, fmt.Errorf("движок не задан или неизвестен %q (ожидается %q или %q)", cfg.Engine, config.EngineOllama, config.EngineLlama)

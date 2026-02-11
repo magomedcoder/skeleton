@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-
 func TestUserHandler_EditUser_invalidId_returnsInvalidArgument(t *testing.T) {
 	auth := &fakeAuth{
 		user: &domain.User{

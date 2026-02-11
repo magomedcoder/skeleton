@@ -1,9 +1,8 @@
 package provider
 
 import (
+	"github.com/magomedcoder/legion/runner/config"
 	"testing"
-
-	"github.com/magomedcoder/legion/internal/runner/config"
 )
 
 func TestNewTextProvider_ollama(t *testing.T) {

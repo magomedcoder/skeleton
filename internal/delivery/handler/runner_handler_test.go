@@ -3,10 +3,10 @@ package handler
 import (
 	"context"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
+	"github.com/magomedcoder/legion/runner"
 	"testing"
 
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
-	"github.com/magomedcoder/legion/internal/runner"
 )
 
 func TestRunnerHandler_GetRunners_returnsEmptyList(t *testing.T) {

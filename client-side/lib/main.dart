@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:legion/core/app_providers.dart';
 import 'package:legion/core/injector.dart' as di;
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/core/theme/app_theme.dart';
-import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
+import 'package:legion/presentation/cubit/theme/theme_cubit.dart';
+import 'package:legion/presentation/cubit/theme/theme_state.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
-import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/auth/login_screen.dart';
 import 'package:legion/presentation/screens/auth/update_required_screen.dart';
-import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_bloc.dart';
 import 'package:legion/presentation/screens/main_layout.dart';
-import 'package:legion/presentation/cubit/theme/theme_cubit.dart';
-import 'package:legion/presentation/cubit/theme/theme_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,20 +44,7 @@ class App extends StatelessWidget {
             ],
             supportedLocales: const [Locale('ru')],
             home: MultiBlocProvider(
-              providers: [
-                BlocProvider(
-                  create: (context) => di.sl<AuthBloc>()..add(const AuthCheckRequested()),
-                ),
-                BlocProvider(
-                  create: (context) => di.sl<AIChatBloc>(),
-                ),
-                BlocProvider(
-                  create: (context) => di.sl<EditorBloc>(),
-                ),
-                BlocProvider(
-                  create: (context) => di.sl<ChatBloc>(),
-                ),
-              ],
+              providers: AppProviders.allProviders,
               child: BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, authState) {
                   if (authState.needsUpdate) {

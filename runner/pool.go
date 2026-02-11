@@ -6,8 +6,8 @@ import (
 	"github.com/magomedcoder/legion/api/pb/aichatpb"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
+	"github.com/magomedcoder/legion/internal/delivery/mappers"
 	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -151,6 +151,7 @@ func (p *Pool) GetRunners() []RunnerInfo {
 			Connected: connStatus[a] && enabled,
 		}
 	}
+
 	return out
 }
 

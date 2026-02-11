@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/message.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_bloc.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_event.dart';
-import 'package:legion/presentation/screens/user_chat/bloc/user_chat_state.dart';
-import 'package:legion/presentation/screens/user_chat/chat_user_search_screen.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
+import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
+import 'package:legion/presentation/screens/chat/chat_user_search_screen.dart';
 
 class UserChatScreen extends StatefulWidget {
   const UserChatScreen({super.key});

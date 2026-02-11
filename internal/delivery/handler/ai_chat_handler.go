@@ -3,13 +3,13 @@ package handler
 import (
 	"context"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
-	"github.com/magomedcoder/legion/internal/middleware"
+	"github.com/magomedcoder/legion/internal/delivery/mappers"
+	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"github.com/magomedcoder/legion/pkg"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 	"time"
 
 	"github.com/magomedcoder/legion/api/pb/aichatpb"
-	"github.com/magomedcoder/legion/internal/mappers"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"

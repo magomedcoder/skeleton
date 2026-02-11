@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/magomedcoder/legion/internal/domain"
-	"github.com/magomedcoder/legion/internal/runner/config"
+	"github.com/magomedcoder/legion/runner/config"
 	"io"
 	"net/http"
 	"time"

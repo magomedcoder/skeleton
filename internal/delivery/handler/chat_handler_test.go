@@ -2,10 +2,10 @@ package handler
 
 import (
 	"context"
+	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"testing"
 
 	"github.com/magomedcoder/legion/api/pb/chatpb"
-	"github.com/magomedcoder/legion/internal/middleware"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

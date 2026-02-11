@@ -57,7 +57,7 @@
 make build
 # Сборка раннера
 make build-runner
-# Или сборка раннера с поддержкой NVIDIA
+# Сборка раннера с поддержкой NVIDIA
 make build-runner-nvidia
 ```
 
@@ -68,6 +68,8 @@ make build-runner-nvidia
 make test
 # Тесты Flutter
 make client-test
+# Нагрузочные тесты
+make test-load
 ```
 
 #### Запуск
@@ -83,9 +85,11 @@ make client-test
 # Запуск сервера
 make run
 # Запуск раннера
+go run ./cmd/runner
+# Запуск раннера
 make run-runner
-# Запуск с поддержкой NVIDIA
-make run-runner-nvidia
+# Запуск раннера (llama.cpp)
+make run-runner-llama
 ```
 
 ### Генерация кода из Protobuf
@@ -99,11 +103,13 @@ make gen
 
 ### Скачивание исходников llama.cpp и Ollama
 
-Клонирование репозиториев в `third_party/`, сборка библиотеки llama.cpp с CUDA и раннера:
+Клонирование репозиториев в `third_party/`, сборка библиотеки llama.cpp и раннера:
 
 ```bash
 # Клонирование llama.cpp и ollama в third_party/
 make deps
+# Сборка libllama.a (без CUDA)
+make build-llama
 # Сборка libllama.a с поддержкой NVIDIA
 make build-llama-cublas
 # Сборка legion-runner с тегом nvidia
@@ -120,12 +126,12 @@ make build-runner-nvidia
 
 **Параметры:**
 
-- `server` — настройки сервера (хост и порт)
-- `database` — строка подключения к PostgreSQL
-- `jwt` — секреты и время жизни токенов доступа/обновления
-- `runners` — адреса раннеров для обработки запросов
-- `attachments` — директория для сохранения файлов
-- `log` — уровень логирования
+- `server` - настройки сервера (хост и порт)
+- `database` - строка подключения к PostgreSQL
+- `jwt` - секреты и время жизни токенов доступа/обновления
+- `runners` - адреса раннеров для обработки запросов
+- `attachments` - директория для сохранения файлов
+- `log` - уровень логирования
 
 ### Раннер (legion-runner)
 
@@ -133,25 +139,28 @@ make build-runner-nvidia
 
 **Параметры:**
 
-- `core_addr` — адрес основного сервера для регистрации
-- `listen_addr` — адрес для прослушивания gRPC-запросов
-- `log` — уровень логирования
-- `engine` — движок обработки текста: `"ollama"` или `"llama"`
-- `ollama` — настройки для Ollama (URL API)
-- `llama` — настройки для llama.cpp (путь к моделям)
+- `core_addr` - адрес основного сервера для регистрации
+- `listen_addr` - адрес для прослушивания gRPC-запросов
+- `log` - уровень логирования
+- `engine` - движок обработки текста: `"ollama"` или `"llama"`
+- `ollama` - настройки для Ollama (URL API)
+- `llama` - настройки для llama.cpp (путь к моделям)
 
 ---
 
 ## Структура репозитория
 
-| Каталог        | Описание                                |
-|----------------|-----------------------------------------|
-| `api/proto/`   | Protobuf-схемы                          |
-| `cmd/legion/`  | Точка входа основного сервера           |
-| `cmd/runner/`  | Точка входа сервиса-раннера             |
-| `client-side/` | Flutter-клиент                          |
-| `configs/`     | YAML-конфигурационные файлы             |
-| `internal/`    | Домен, хендлеры, репозитории, раннер    |
-| `migrations/`  | SQL-миграции PostgreSQL                 |
-| `pkg/`         | Общие пакеты                            |
-| `scripts/`     | Скрипты сборки (deb, Windows installer) |
+| Каталог        | Описание                                                                                  |
+|----------------|-------------------------------------------------------------------------------------------|
+| `api/proto/`   | Protobuf-схемы                                                                            |
+| `api/pb/`      | Сгенерированный Go-код из proto (после `make gen`)                                        |
+| `cmd/legion/`  | Точка входа основного сервера                                                             |
+| `cmd/runner/`  | Точка входа сервиса-раннера                                                               |
+| `client-side/` | Flutter-клиент                                                                            |
+| `configs/`     | YAML-конфигурационные файлы-шаблоны                                                       |
+| `internal/`    | domain, delivery (handlers, mappers, middleware), repository, usecase, service, bootstrap |
+| `migrations/`  | SQL-миграции PostgreSQL                                                                   |
+| `pkg/`         | Общие пакеты                                                                              |
+| `runner/`      | Сервис-раннер (llama.cpp, Ollama)                                                         |
+| `scripts/`     | Скрипты сборки (deb, Windows installer)                                                   |
+| `tests/`       | Нагрузочные тесты                                                                         |
