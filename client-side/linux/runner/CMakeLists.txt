@@ -16,6 +16,8 @@ add_executable(${BINARY_NAME}
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
 
+target_compile_options(${BINARY_NAME} PRIVATE -Wno-deprecated-declarations)
+
 # Add preprocessor definitions for the application ID.
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 

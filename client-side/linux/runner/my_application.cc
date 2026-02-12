@@ -1,7 +1,6 @@
 #include "my_application.h"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
@@ -16,16 +15,92 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+static GtkWindow* g_main_window = nullptr;
+static GtkStatusIcon* g_status_icon = nullptr;
+
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
+static void status_icon_activate_cb(GtkStatusIcon* icon, gpointer user_data) {
+  (void)icon;
+  (void)user_data;
+  if (g_main_window) {
+    gtk_widget_show(GTK_WIDGET(g_main_window));
+    gtk_window_present(g_main_window);
+  }
+}
+
+static void status_icon_popup_menu_cb(
+    GtkStatusIcon* icon,
+    guint button,
+    guint activate_time,
+    gpointer user_data
+) {
+  (void)user_data;
+  if (button != 3) return;
+  GtkWidget* menu = gtk_menu_new();
+  GtkWidget* quit_item = gtk_menu_item_new_with_label("Выход");
+  g_signal_connect_swapped(
+      quit_item,
+      "activate",
+      G_CALLBACK(gtk_main_quit),
+      nullptr
+  );
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), quit_item);
+  gtk_widget_show_all(menu);
+  gtk_menu_popup_at_pointer(GTK_MENU(menu), nullptr);
+}
+
+static gboolean window_delete_cb(
+    GtkWidget* widget,
+    GdkEvent* event,
+    gpointer user_data
+) {
+  (void)widget;
+  (void)event;
+  (void)user_data;
+  gtk_widget_hide(GTK_WIDGET(g_main_window));
+  if (!g_status_icon) {
+    g_status_icon = gtk_status_icon_new_from_file("linux/runner/resources/app_icon.png");
+    gtk_status_icon_set_tooltip_text(g_status_icon, "Legion");
+    g_signal_connect(
+        g_status_icon,
+        "activate",
+        G_CALLBACK(status_icon_activate_cb),
+        nullptr
+    );
+    g_signal_connect(
+        g_status_icon,
+        "popup-menu",
+        G_CALLBACK(status_icon_popup_menu_cb),
+        nullptr
+    );
+  }
+  gtk_status_icon_set_visible(g_status_icon, TRUE);
+  return TRUE;
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+
+  if (g_main_window) {
+    gtk_widget_show(GTK_WIDGET(g_main_window));
+    gtk_window_present(g_main_window);
+    return;
+  }
+
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+  g_main_window = window;
+  g_signal_connect(
+        window,
+        "delete-event",
+        G_CALLBACK(window_delete_cb),
+        nullptr
+    );
 
     GdkPixbuf *icon = gdk_pixbuf_new_from_file("linux/runner/resources/app_icon.png", nullptr);
     if (icon != nullptr) {
@@ -98,6 +173,15 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
+static void my_application_shutdown_cleanup(GApplication* application) {
+  if (g_status_icon) {
+    gtk_status_icon_set_visible(g_status_icon, FALSE);
+    g_object_unref(g_status_icon);
+    g_status_icon = nullptr;
+  }
+  g_main_window = nullptr;
+}
+
 // Implements GApplication::local_command_line.
 static gboolean my_application_local_command_line(GApplication* application,
                                                   gchar*** arguments,
@@ -130,10 +214,7 @@ static void my_application_startup(GApplication* application) {
 
 // Implements GApplication::shutdown.
 static void my_application_shutdown(GApplication* application) {
-  // MyApplication* self = MY_APPLICATION(object);
-
-  // Perform any actions required at application shutdown.
-
+  my_application_shutdown_cleanup(application);
   G_APPLICATION_CLASS(my_application_parent_class)->shutdown(application);
 }
 
@@ -163,6 +244,5 @@ MyApplication* my_application_new() {
   g_set_prgname(APPLICATION_ID);
 
   return MY_APPLICATION(g_object_new(my_application_get_type(),
-                                     "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_NON_UNIQUE, nullptr));
+                                     "application-id", APPLICATION_ID, nullptr));
 }

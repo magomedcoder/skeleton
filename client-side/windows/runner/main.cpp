@@ -5,8 +5,22 @@
 #include "flutter_window.h"
 #include "utils.h"
 
+constexpr const wchar_t kMutuxName[] = L"Legion_SingleInstance_Mutex";
+constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  HANDLE mutex = CreateMutexW(nullptr, TRUE, kMutuxName);
+  if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    if (mutex) CloseHandle(mutex);
+    HWND existing = FindWindowW(kWindowClassName, L"Legion");
+    if (existing) {
+      ShowWindow(existing, SW_RESTORE);
+      SetForegroundWindow(existing);
+    }
+    return EXIT_SUCCESS;
+  }
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
@@ -30,7 +44,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (!window.Create(L"Legion", origin, size)) {
     return EXIT_FAILURE;
   }
-  window.SetQuitOnClose(true);
+  window.SetQuitOnClose(false);
 
   ::MSG msg;
   while (::GetMessage(&msg, nullptr, 0, 0)) {
@@ -38,6 +52,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  if (mutex) CloseHandle(mutex);
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

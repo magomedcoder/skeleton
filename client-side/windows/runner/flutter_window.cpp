@@ -3,11 +3,14 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "tray_icon.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
-FlutterWindow::~FlutterWindow() {}
+FlutterWindow::~FlutterWindow() {
+  tray::Destroy();
+}
 
 bool FlutterWindow::OnCreate() {
   if (!Win32Window::OnCreate()) {
@@ -26,6 +29,8 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+
+  tray::Create(GetHandle(), GetModuleHandle(nullptr));
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
@@ -59,6 +64,39 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     if (result) {
       return *result;
     }
+  }
+
+  if (message == WM_CLOSE) {
+    tray::Show();
+    ShowWindow(GetHandle(), SW_HIDE);
+    return 0;
+  }
+
+  if (message == tray::GetTrayMessageId()) {
+    if (lparam == WM_LBUTTONDBLCLK) {
+      ShowWindow(GetHandle(), SW_RESTORE);
+      SetForegroundWindow(GetHandle());
+    } else if (lparam == WM_RBUTTONUP) {
+      POINT pt;
+      GetCursorPos(&pt);
+      HMENU menu = CreatePopupMenu();
+      AppendMenuW(menu, MF_STRING, 1001, L"Выход");
+      SetForegroundWindow(hwnd);
+      int cmd = TrackPopupMenu(
+          menu, TPM_RETURNCMD | TPM_NONOTIFY,
+          pt.x,
+          pt.y,
+          0,
+          hwnd,
+          nullptr
+      );
+      DestroyMenu(menu);
+      if (cmd == 1001) {
+        tray::Destroy();
+        PostQuitMessage(0);
+      }
+    }
+    return 0;
   }
 
   switch (message) {
