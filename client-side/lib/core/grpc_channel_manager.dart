@@ -8,6 +8,7 @@ import 'package:legion/generated/grpc_pb/editor.pbgrpc.dart' as editorpb;
 import 'package:legion/generated/grpc_pb/runner.pbgrpc.dart' as runnerpb;
 import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as userpb;
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as chatpb;
+import 'package:legion/generated/grpc_pb/project.pbgrpc.dart' as projectpb;
 import 'package:legion/generated/grpc_pb/search.pbgrpc.dart' as searchpb;
 
 class GrpcChannelManager {
@@ -22,6 +23,7 @@ class GrpcChannelManager {
   userpb.UserServiceClient? _userClient;
   runnerpb.RunnerAdminServiceClient? _runnerAdminClient;
   chatpb.ChatServiceClient? _chatClient;
+  projectpb.ProjectServiceClient? _projectClient;
   searchpb.SearchServiceClient? _searchClient;
 
   GrpcChannelManager(this._config, this._authInterceptor);
@@ -94,6 +96,14 @@ class GrpcChannelManager {
     return _chatClient!;
   }
 
+  projectpb.ProjectServiceClient get projectClient {
+    _projectClient ??= projectpb.ProjectServiceClient(
+      channel,
+      interceptors: [_authInterceptor],
+    );
+    return _projectClient!;
+  }
+
   searchpb.SearchServiceClient get searchClient {
     _searchClient ??= searchpb.SearchServiceClient(
       channel,
@@ -118,6 +128,7 @@ class GrpcChannelManager {
     _userClient = null;
     _runnerAdminClient = null;
     _chatClient = null;
+    _projectClient = null;
     _searchClient = null;
     if (ch != null) {
       Logs().d('GrpcChannelManager: закрытие канала');

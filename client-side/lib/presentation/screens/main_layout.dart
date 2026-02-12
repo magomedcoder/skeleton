@@ -14,6 +14,7 @@ import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_state.dart';
 import 'package:legion/presentation/screens/chat/chat_screen.dart';
 import 'package:legion/presentation/screens/editor/editor_screen.dart';
+import 'package:legion/presentation/screens/projects/projects_screen.dart';
 import 'package:legion/presentation/screens/profile/profile_screen.dart';
 import 'package:legion/presentation/widgets/app_bottom_nav.dart';
 import 'package:legion/presentation/widgets/side_navigation.dart';
@@ -169,6 +170,8 @@ class _MainLayoutState extends State<MainLayout> {
         return _buildHomeBody();
       case NavDestination.chat:
         return const UserChatScreen();
+      case NavDestination.projects:
+        return const ProjectsScreen();
       case NavDestination.editor:
         return const EditorScreen();
       case NavDestination.profile:

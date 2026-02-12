@@ -9,18 +9,21 @@ import 'package:legion/data/data_sources/remote/ai_chat_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/editor_remote_datasource.dart';
+import 'package:legion/data/data_sources/remote/project_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/runners_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/search_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
 import 'package:legion/data/repositories/ai_chat_repository_impl.dart';
 import 'package:legion/data/repositories/auth_repository_impl.dart';
 import 'package:legion/data/repositories/editor_repository_impl.dart';
+import 'package:legion/data/repositories/project_repository_impl.dart';
 import 'package:legion/data/repositories/runners_repository_impl.dart';
 import 'package:legion/data/repositories/user_chat_repository_impl.dart';
 import 'package:legion/data/repositories/user_repository_impl.dart';
 import 'package:legion/domain/repositories/ai_chat_repository.dart';
 import 'package:legion/domain/repositories/auth_repository.dart';
 import 'package:legion/domain/repositories/editor_repository.dart';
+import 'package:legion/domain/repositories/project_repository.dart';
 import 'package:legion/domain/repositories/runners_repository.dart';
 import 'package:legion/domain/repositories/user_chat_repository.dart';
 import 'package:legion/domain/repositories/user_repository.dart';
@@ -42,6 +45,11 @@ import 'package:legion/domain/usecases/auth/logout_usecase.dart';
 import 'package:legion/domain/usecases/auth/refresh_token_usecase.dart';
 import 'package:legion/domain/usecases/auth/revoke_device_usecase.dart';
 import 'package:legion/domain/usecases/editor/transform_text_usecase.dart';
+import 'package:legion/domain/usecases/project/add_user_to_project_usecase.dart';
+import 'package:legion/domain/usecases/project/create_project_usecase.dart';
+import 'package:legion/domain/usecases/project/get_project_members_usecase.dart';
+import 'package:legion/domain/usecases/project/get_project_usecase.dart';
+import 'package:legion/domain/usecases/project/get_projects_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_usecase.dart';
 import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
@@ -57,6 +65,7 @@ import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_bloc.dart';
 import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -123,6 +132,10 @@ Future<void> init() async {
     () => SearchRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
 
+  sl.registerLazySingleton<IProjectRemoteDataSource>(
+    () => ProjectRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
+  );
+
   sl.registerLazySingleton<IRunnersRemoteDataSource>(
     () => RunnersRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
@@ -135,6 +148,9 @@ Future<void> init() async {
   sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(sl()));
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(sl<IChatRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<ProjectRepository>(
+    () => ProjectRepositoryImpl(sl<IProjectRemoteDataSource>()),
   );
   sl.registerLazySingleton<RunnersRepository>(
     () => RunnersRepositoryImpl(sl<IRunnersRemoteDataSource>()),
@@ -171,6 +187,12 @@ Future<void> init() async {
   sl.registerFactory(() => CreateUserUseCase(sl()));
   sl.registerFactory(() => EditUserUseCase(sl()));
   sl.registerFactory(() => SearchUsersUseCase(sl<ISearchRemoteDataSource>()));
+
+  sl.registerFactory(() => CreateProjectUseCase(sl()));
+  sl.registerFactory(() => GetProjectsUseCase(sl()));
+  sl.registerFactory(() => GetProjectUseCase(sl()));
+  sl.registerFactory(() => AddUserToProjectUseCase(sl()));
+  sl.registerFactory(() => GetProjectMembersUseCase(sl()));
 
   sl.registerFactory(
     () => AIChatBloc(
@@ -235,6 +257,16 @@ Future<void> init() async {
     () => DevicesBloc(
       getDevicesUseCase: sl(),
       revokeDeviceUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ProjectBloc(
+      getProjectsUseCase: sl(),
+      createProjectUseCase: sl(),
+      getProjectUseCase: sl(),
+      getProjectMembersUseCase: sl(),
+      addUserToProjectUseCase: sl(),
     ),
   );
 

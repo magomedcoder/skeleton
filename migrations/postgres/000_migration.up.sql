@@ -79,6 +79,24 @@ CREATE TABLE IF NOT EXISTS messages
     created_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS projects
+(
+    id         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    name       VARCHAR(255) NOT NULL,
+    created_by INTEGER      NOT NULL REFERENCES users (id),
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS project_members
+(
+    id         SERIAL PRIMARY KEY,
+    project_id UUID      NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+    user_id    INTEGER   NOT NULL REFERENCES users (id),
+    created_by INTEGER   NOT NULL REFERENCES users (id),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (project_id, user_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users (deleted_at);
@@ -99,3 +117,7 @@ CREATE INDEX IF NOT EXISTS idx_chats_user_receiver ON chats (user_id, receiver_i
 CREATE INDEX IF NOT EXISTS idx_chats_created_at ON chats (created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id_created_at ON messages (chat_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_user_receiver ON messages (user_id, receiver_id);
+CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects (created_by);
+CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects (created_at);
+CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members (project_id);
+CREATE INDEX IF NOT EXISTS idx_project_members_user_id ON project_members (user_id);

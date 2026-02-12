@@ -5,6 +5,7 @@ import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:provider/single_child_widget.dart';
 
 class AppProviders {
@@ -15,6 +16,7 @@ class AppProviders {
     BlocProvider<AIChatBloc>(create: (context) => di.sl<AIChatBloc>()),
     BlocProvider<EditorBloc>(create: (context) => di.sl<EditorBloc>()),
     BlocProvider<ChatBloc>(create: (context) => di.sl<ChatBloc>()),
+    BlocProvider<ProjectBloc>(create: (context) => di.sl<ProjectBloc>()),
   ];
 
   static List<SingleChildWidget> get allProviders => [

@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package project;
+
+import "common.proto";
+
+option go_package = "github.com/magomedcoder/legion/api/pb/projectpb;projectpb";
+
+service ProjectService {
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+
+  rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
+
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+
+  rpc AddUserToProject(AddUserToProjectRequest) returns (AddUserToProjectResponse);
+
+  rpc GetProjectMembers(GetProjectMembersRequest) returns (GetProjectMembersResponse);
+}
+
+message Project {
+  string id = 1;
+  string name = 2;
+}
+
+message CreateProjectRequest {
+  string name = 1;
+}
+
+message CreateProjectResponse {
+  string id = 1;
+}
+
+message GetProjectsRequest {}
+
+message GetProjectsResponse {
+  repeated Project items = 1;
+}
+
+message GetProjectRequest {
+  string id = 1;
+}
+
+message GetProjectResponse {
+  string id = 1;
+  string name = 2;
+}
+
+message AddUserToProjectRequest {
+  string project_id = 1;
+  repeated int64 user_ids = 2;
+}
+
+message AddUserToProjectResponse {}
+
+message GetProjectMembersRequest {
+  string project_id = 1;
+}
+
+message GetProjectMembersResponse {
+  repeated legion.User items = 1;
+}

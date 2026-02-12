@@ -8,6 +8,7 @@ import (
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/editorpb"
+	"github.com/magomedcoder/legion/api/pb/projectpb"
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/api/pb/searchpb"
 	"github.com/magomedcoder/legion/api/pb/userpb"
@@ -73,6 +74,8 @@ func main() {
 	chatRepo := postgres.NewChatRepository(db)
 	chatMessageRepo := postgres.NewChatMessageRepository(db)
 	fileRepo := postgres.NewFileRepository(db)
+	projectRepo := postgres.NewProjectRepository(db)
+	projectMemberRepo := postgres.NewProjectMemberRepository(db)
 
 	jwtService := service.NewJWTService(cfg)
 
@@ -89,6 +92,7 @@ func main() {
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
 	searchUseCase := usecase.NewSearchUseCase(userRepo)
+	projectUseCase := usecase.NewProjectUseCase(projectRepo, projectMemberRepo, userRepo)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
 	chatHandler := handler.NewAIChatHandler(chatUseCase, authUseCase)
@@ -96,6 +100,7 @@ func main() {
 	editorHandler := handler.NewEditorHandler(editorUseCase, authUseCase)
 	userHandler := handler.NewUserHandler(userUseCase, authUseCase)
 	searchHandler := handler.NewSearchHandler(searchUseCase, authUseCase)
+	projectHandler := handler.NewProjectHandler(projectUseCase)
 
 	authMiddleware := middleware.NewMiddleware(authUseCase)
 
@@ -110,6 +115,7 @@ func main() {
 	editorpb.RegisterEditorServiceServer(grpcServer, editorHandler)
 	userpb.RegisterUserServiceServer(grpcServer, userHandler)
 	searchpb.RegisterSearchServiceServer(grpcServer, searchHandler)
+	projectpb.RegisterProjectServiceServer(grpcServer, projectHandler)
 	runnerpb.RegisterRunnerAdminServiceServer(grpcServer, handler.NewRunnerHandler(runnerPool, authUseCase))
 	runnerpb.RegisterRunnerServiceServer(grpcServer, runner.NewRegistry(runnerPool))
 

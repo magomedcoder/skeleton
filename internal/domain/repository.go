@@ -85,3 +85,19 @@ type ChatMessageRepository interface {
 
 	ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*Message, int32, error)
 }
+
+type ProjectRepository interface {
+	Create(ctx context.Context, project *Project) error
+
+	GetById(ctx context.Context, id string) (*Project, error)
+
+	ListByUser(ctx context.Context, userId int, page, pageSize int32) ([]*Project, int32, error)
+}
+
+type ProjectMemberRepository interface {
+	Add(ctx context.Context, projectId string, userId int, createdBy int) error
+
+	GetByProjectId(ctx context.Context, projectId string) ([]int, error)
+
+	IsMember(ctx context.Context, projectId string, userId int) (bool, error)
+}
