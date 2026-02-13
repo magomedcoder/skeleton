@@ -47,9 +47,12 @@ import 'package:legion/domain/usecases/auth/revoke_device_usecase.dart';
 import 'package:legion/domain/usecases/editor/transform_text_usecase.dart';
 import 'package:legion/domain/usecases/project/add_user_to_project_usecase.dart';
 import 'package:legion/domain/usecases/project/create_project_usecase.dart';
+import 'package:legion/domain/usecases/project/create_task_usecase.dart';
 import 'package:legion/domain/usecases/project/get_project_members_usecase.dart';
 import 'package:legion/domain/usecases/project/get_project_usecase.dart';
 import 'package:legion/domain/usecases/project/get_projects_usecase.dart';
+import 'package:legion/domain/usecases/project/get_task_usecase.dart';
+import 'package:legion/domain/usecases/project/get_tasks_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_usecase.dart';
 import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
@@ -66,11 +69,14 @@ import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_bloc.dart';
 import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
+import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  sl.registerLazySingleton<UserLocalDataSourceImpl>(() => UserLocalDataSourceImpl());
+  sl.registerLazySingleton<UserLocalDataSourceImpl>(
+    () => UserLocalDataSourceImpl(),
+  );
   await sl<UserLocalDataSourceImpl>().init();
 
   sl.registerLazySingleton<ServerConfig>(() => ServerConfig());
@@ -81,20 +87,18 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<AuthGuard>(
-    () => AuthGuard(
-      () async {
-        final storage = sl<UserLocalDataSourceImpl>();
-        final refreshToken = storage.refreshToken;
-        if (refreshToken == null || refreshToken.isEmpty) return false;
-        try {
-          final tokens = await sl<RefreshTokenUseCase>()(refreshToken);
-          storage.saveTokens(tokens.accessToken, tokens.refreshToken);
-          return true;
-        } catch (_) {
-          return false;
-        }
-      },
-    ),
+    () => AuthGuard(() async {
+      final storage = sl<UserLocalDataSourceImpl>();
+      final refreshToken = storage.refreshToken;
+      if (refreshToken == null || refreshToken.isEmpty) return false;
+      try {
+        final tokens = await sl<RefreshTokenUseCase>()(refreshToken);
+        storage.saveTokens(tokens.accessToken, tokens.refreshToken);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }),
   );
 
   sl.registerLazySingleton<GrpcChannelManager>(
@@ -176,9 +180,11 @@ Future<void> init() async {
   sl.registerFactory(() => LoginUseCase(sl()));
   sl.registerFactory(() => RefreshTokenUseCase(sl()));
   sl.registerFactory(() => LogoutUseCase(sl()));
-  sl.registerFactory(() => ChangePasswordUseCase(
-    sl<AuthRepositoryImpl>(),
-    sl<UserLocalDataSourceImpl>()),
+  sl.registerFactory(
+    () => ChangePasswordUseCase(
+      sl<AuthRepositoryImpl>(),
+      sl<UserLocalDataSourceImpl>(),
+    ),
   );
   sl.registerFactory(() => GetDevicesUseCase(sl()));
   sl.registerFactory(() => RevokeDeviceUseCase(sl()));
@@ -193,6 +199,9 @@ Future<void> init() async {
   sl.registerFactory(() => GetProjectUseCase(sl()));
   sl.registerFactory(() => AddUserToProjectUseCase(sl()));
   sl.registerFactory(() => GetProjectMembersUseCase(sl()));
+  sl.registerFactory(() => CreateTaskUseCase(sl()));
+  sl.registerFactory(() => GetTasksUseCase(sl()));
+  sl.registerFactory(() => GetTaskUseCase(sl()));
 
   sl.registerFactory(
     () => AIChatBloc(
@@ -212,11 +221,7 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerFactory(
-    () => ChatBloc(
-      repository: sl<ChatRepository>(),
-    ),
-  );
+  sl.registerFactory(() => ChatBloc(repository: sl<ChatRepository>()));
 
   sl.registerFactory(
     () => EditorBloc(
@@ -254,10 +259,7 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
-    () => DevicesBloc(
-      getDevicesUseCase: sl(),
-      revokeDeviceUseCase: sl(),
-    ),
+    () => DevicesBloc(getDevicesUseCase: sl(), revokeDeviceUseCase: sl()),
   );
 
   sl.registerFactory(
@@ -268,6 +270,10 @@ Future<void> init() async {
       getProjectMembersUseCase: sl(),
       addUserToProjectUseCase: sl(),
     ),
+  );
+
+  sl.registerFactory(
+    () => TaskBloc(getTasksUseCase: sl(), createTaskUseCase: sl()),
   );
 
   sl.registerFactory(() => ThemeCubit(sl<UserLocalDataSourceImpl>()));

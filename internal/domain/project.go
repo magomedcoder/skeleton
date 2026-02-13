@@ -11,3 +11,12 @@ type ProjectMember struct {
 	UserId    int
 	CreatedBy int
 }
+
+type Task struct {
+	Id          string
+	ProjectId   string
+	Name        string
+	Description string
+	CreatedBy   int
+	CreatedAt   int64
+}

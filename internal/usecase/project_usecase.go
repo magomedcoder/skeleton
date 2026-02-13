@@ -10,17 +10,20 @@ import (
 type ProjectUseCase struct {
 	ProjectRepo       domain.ProjectRepository
 	ProjectMemberRepo domain.ProjectMemberRepository
+	TaskRepo          domain.TaskRepository
 	UserRepo          domain.UserRepository
 }
 
 func NewProjectUseCase(
 	projectRepo domain.ProjectRepository,
 	projectMemberRepo domain.ProjectMemberRepository,
+	taskRepo domain.TaskRepository,
 	userRepo domain.UserRepository,
 ) *ProjectUseCase {
 	return &ProjectUseCase{
 		ProjectRepo:       projectRepo,
 		ProjectMemberRepo: projectMemberRepo,
+		TaskRepo:          taskRepo,
 		UserRepo:          userRepo,
 	}
 }
@@ -125,4 +128,69 @@ func (u *ProjectUseCase) GetProjectMembers(ctx context.Context, projectId string
 	}
 
 	return users, nil
+}
+
+func (u *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name string, description string, createdBy int) (*domain.Task, error) {
+	if name == "" {
+		return nil, errors.New("название задачи обязательно")
+	}
+
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, projectId, createdBy)
+	if err != nil {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	_, err = u.ProjectRepo.GetById(ctx, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	task := &domain.Task{
+		ProjectId:   projectId,
+		Name:        name,
+		Description: description,
+		CreatedBy:   createdBy,
+	}
+	if err := u.TaskRepo.Create(ctx, task); err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+func (u *ProjectUseCase) GetTasks(ctx context.Context, projectId string, userId int) ([]*domain.Task, error) {
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, projectId, userId)
+	if err != nil {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	tasks, err := u.TaskRepo.ListByProjectId(ctx, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+func (u *ProjectUseCase) GetTask(ctx context.Context, taskId string, userId int) (*domain.Task, error) {
+	task, err := u.TaskRepo.GetById(ctx, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, task.ProjectId, userId)
+	if err != nil {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	return task, nil
 }

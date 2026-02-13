@@ -101,3 +101,11 @@ type ProjectMemberRepository interface {
 
 	IsMember(ctx context.Context, projectId string, userId int) (bool, error)
 }
+
+type TaskRepository interface {
+	Create(ctx context.Context, task *Task) error
+
+	GetById(ctx context.Context, id string) (*Task, error)
+
+	ListByProjectId(ctx context.Context, projectId string) ([]*Task, error)
+}

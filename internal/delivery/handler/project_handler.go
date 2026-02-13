@@ -149,3 +149,78 @@ func (p *Project) GetProjectMembers(ctx context.Context, in *projectpb.GetProjec
 		Items: items,
 	}, nil
 }
+
+func (p *Project) CreateTask(ctx context.Context, in *projectpb.CreateTaskRequest) (*projectpb.CreateTaskResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	task, err := p.ProjectUseCase.CreateTask(ctx, in.ProjectId, in.Name, in.Description, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
+	}
+
+	return &projectpb.CreateTaskResponse{
+		Id: task.Id,
+	}, nil
+}
+
+func (p *Project) GetTasks(ctx context.Context, in *projectpb.GetTasksRequest) (*projectpb.GetTasksResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks, err := p.ProjectUseCase.GetTasks(ctx, in.ProjectId, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+
+	items := make([]*projectpb.Task, 0, len(tasks))
+	for _, t := range tasks {
+		items = append(items, &projectpb.Task{
+			Id:          t.Id,
+			Name:        t.Name,
+			Description: t.Description,
+			CreatedAt:   t.CreatedAt,
+		})
+	}
+
+	return &projectpb.GetTasksResponse{
+		Tasks: items,
+	}, nil
+}
+
+func (p *Project) GetTask(ctx context.Context, in *projectpb.GetTaskRequest) (*projectpb.GetTaskResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	task, err := p.ProjectUseCase.GetTask(ctx, in.TaskId, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+
+		if err.Error() == "задача не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+
+	return &projectpb.GetTaskResponse{
+		Id:          task.Id,
+		Name:        task.Name,
+		Description: task.Description,
+		CreatedAt:   task.CreatedAt,
+	}, nil
+}

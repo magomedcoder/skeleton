@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/project.dart';
-import 'package:legion/domain/entities/user.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_event.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_state.dart';
-import 'package:legion/presentation/screens/projects/project_add_members_screen.dart';
+import 'package:legion/presentation/screens/projects/project_detail_screen.dart';
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
@@ -34,29 +33,72 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
   void _showCreateDialog(BuildContext context) {
     _nameController.clear();
+    final isMobile = Breakpoints.isMobile(context);
+    final maxWidth = isMobile ? double.infinity : 400.0;
+    
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Новый проект'),
-        content: TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Название',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-          onSubmitted: (_) => _submitCreate(ctx),
+      builder: (ctx) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 16 : 40,
+          vertical: isMobile ? 16 : 24,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Отмена'),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Новый проект',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      tooltip: 'Закрыть',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Название',
+                    border: OutlineInputBorder(),
+                    hintText: 'Введите название проекта',
+                  ),
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  onSubmitted: (_) => _submitCreate(ctx),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Отмена'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () => _submitCreate(ctx),
+                      child: const Text('Создать'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          FilledButton(
-            onPressed: () => _submitCreate(ctx),
-            child: const Text('Создать'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -69,27 +111,16 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     context.read<ProjectBloc>().add(ProjectCreateRequested(name));
   }
 
-  Future<void> _openAddMembers(Project project) async {
-    final bloc = context.read<ProjectBloc>();
-    final state = bloc.state;
-    final existingIds = state.selectedProject?.id == project.id
-      ? state.members.map((u) => int.tryParse(u.id)).whereType<int>().toList()
-      : <int>[];
-
-    final result = await Navigator.of(context).push<List<int>>(
-      MaterialPageRoute<List<int>>(
-        builder: (_) => ProjectAddMembersScreen(
-          projectId: project.id,
-          existingMemberIds: existingIds,
+  void _openProject(Project project) {
+    final projectBloc = context.read<ProjectBloc>();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider.value(
+          value: projectBloc,
+          child: ProjectDetailScreen(project: project),
         ),
       ),
     );
-
-    if (result != null && result.isNotEmpty && mounted) {
-      context.read<ProjectBloc>().add(
-        ProjectAddMembersRequested(project.id, result),
-      );
-    }
   }
 
   Widget _buildProjectList(ProjectState state) {
@@ -98,73 +129,88 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
 
     if (state.projects.isEmpty) {
-      return const Center(
-        child: Text(
-          'Проектов пока нет.\nСоздайте первый проект.',
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: state.projects.length,
-      itemBuilder: (context, index) {
-        final project = state.projects[index];
-        final isSelected = project.id == state.selectedProject?.id;
-        return ListTile(
-          selected: isSelected,
-          title: Text(project.name),
-          onTap: () {
-            context.read<ProjectBloc>().add(ProjectSelected(project));
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDetail(ProjectState state) {
-    final project = state.selectedProject;
-    if (project == null) {
-      return const Center(child: Text('Выберите проект'));
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  project.name,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              Icon(
+                Icons.folder_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
               ),
-              IconButton(
-                icon: const Icon(Icons.person_add),
-                tooltip: 'Добавить участников',
-                onPressed: () => _openAddMembers(project),
+              const SizedBox(height: 16),
+              Text(
+                'Проектов пока нет',
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Создайте первый проект',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
-        const Divider(height: 1),
-        if (state.isMembersLoading && state.members.isEmpty)
-          const Expanded(child: Center(child: CircularProgressIndicator()))
-        else if (state.members.isEmpty)
-          const Expanded(child: Center(child: Text('Участников пока нет')))
-        else
-          Expanded(
-            child: ListView.builder(
-              itemCount: state.members.length,
-              itemBuilder: (context, index) {
-                final user = state.members[index];
-                return _MemberTile(user: user);
-              },
+      );
+    }
+
+    final isMobile = Breakpoints.isMobile(context);
+    
+    return ListView.builder(
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
+      itemCount: state.projects.length,
+      itemBuilder: (context, index) {
+        final project = state.projects[index];
+        return Card(
+          margin: EdgeInsets.only(bottom: isMobile ? 8 : 12),
+          child: InkWell(
+            onTap: () => _openProject(project),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.folder,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          project.name,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
             ),
           ),
-      ],
+        );
+      },
     );
   }
 
@@ -183,28 +229,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         }
       },
       builder: (context, state) {
-        final isMobile = Breakpoints.isMobile(context);
-        final body = Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (!isMobile)
-              SizedBox(width: 260, child: _buildProjectList(state)),
-            Expanded(child: _buildDetail(state)),
-          ],
-        );
-
         return Scaffold(
           appBar: AppBar(
-            leading: isMobile && state.selectedProject != null
-              ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  context.read<ProjectBloc>().add(
-                    const ProjectClearSelection(),
-                  );
-                },
-              )
-              : null,
             title: const Text('Проекты'),
             actions: [
               IconButton(
@@ -214,33 +240,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               ),
             ],
           ),
-          body: isMobile
-            ? state.selectedProject == null
-              ? _buildProjectList(state)
-              : _buildDetail(state)
-            : body,
-          drawer: isMobile && state.selectedProject == null
-            ? Drawer(child: SafeArea(child: _buildProjectList(state)))
-            : null,
+          body: _buildProjectList(state),
         );
       },
-    );
-  }
-}
-
-class _MemberTile extends StatelessWidget {
-  final User user;
-
-  const _MemberTile({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        child: Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?'),
-      ),
-      title: Text(user.username),
-      subtitle: Text('${user.name} ${user.surname}'),
     );
   }
 }

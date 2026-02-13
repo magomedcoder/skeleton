@@ -1,4 +1,5 @@
 import 'package:legion/domain/entities/project.dart';
+import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/user.dart';
 
 abstract class ProjectRepository {
@@ -11,4 +12,10 @@ abstract class ProjectRepository {
   Future<void> addUserToProject(String projectId, List<int> userIds);
 
   Future<List<User>> getProjectMembers(String projectId);
+
+  Future<Task> createTask(String projectId, String name, String description);
+
+  Future<List<Task>> getTasks(String projectId);
+
+  Future<Task> getTask(String taskId);
 }

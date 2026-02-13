@@ -16,11 +16,24 @@ service ProjectService {
   rpc AddUserToProject(AddUserToProjectRequest) returns (AddUserToProjectResponse);
 
   rpc GetProjectMembers(GetProjectMembersRequest) returns (GetProjectMembersResponse);
+
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+
+  rpc GetTasks(GetTasksRequest) returns (GetTasksResponse);
+
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
 }
 
 message Project {
   string id = 1;
   string name = 2;
+}
+
+message Task {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
 }
 
 message CreateProjectRequest {
@@ -59,4 +72,33 @@ message GetProjectMembersRequest {
 
 message GetProjectMembersResponse {
   repeated legion.User items = 1;
+}
+
+message CreateTaskRequest {
+  string project_id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message CreateTaskResponse {
+  string id = 1;
+}
+
+message GetTasksRequest {
+  string project_id = 1;
+}
+
+message GetTasksResponse {
+  repeated Task tasks = 1;
+}
+
+message GetTaskRequest {
+  string task_id = 1;
+}
+
+message GetTaskResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
 }
