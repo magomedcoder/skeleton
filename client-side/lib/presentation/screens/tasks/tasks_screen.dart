@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/project.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_event.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_state.dart';
@@ -29,17 +30,35 @@ class _TasksScreenState extends State<TasksScreen> {
 
   void _showCreateDialog(BuildContext context) {
     final taskBloc = context.read<TaskBloc>();
+    ProjectBloc? projectBloc;
+    try {
+      projectBloc = context.read<ProjectBloc>();
+    } catch (e) {
+
+    }
+    
     showDialog<void>(
       context: context,
-      builder: (ctx) => BlocProvider.value(
-        value: taskBloc,
-        child: TaskCreateDialog(
-          projectId: widget.project.id,
-          onCreated: () {
-            context.read<TaskBloc>().add(TasksLoadRequested(widget.project.id));
-          },
-        ),
-      ),
+      builder: (ctx) {
+        Widget dialog = BlocProvider.value(
+          value: taskBloc,
+          child: TaskCreateDialog(
+            projectId: widget.project.id,
+            onCreated: () {
+              context.read<TaskBloc>().add(TasksLoadRequested(widget.project.id));
+            },
+          ),
+        );
+        
+        if (projectBloc != null) {
+          dialog = BlocProvider.value(
+            value: projectBloc,
+            child: dialog,
+          );
+        }
+        
+        return dialog;
+      },
     );
   }
 

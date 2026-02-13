@@ -130,7 +130,7 @@ func (u *ProjectUseCase) GetProjectMembers(ctx context.Context, projectId string
 	return users, nil
 }
 
-func (u *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name string, description string, createdBy int) (*domain.Task, error) {
+func (u *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name string, description string, createdBy int, executor int) (*domain.Task, error) {
 	if name == "" {
 		return nil, errors.New("название задачи обязательно")
 	}
@@ -148,11 +148,22 @@ func (u *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name 
 		return nil, err
 	}
 
+	isExecutorMember, err := u.ProjectMemberRepo.IsMember(ctx, projectId, executor)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isExecutorMember {
+		return nil, errors.New("ответственный должен быть участником проекта")
+	}
+
 	task := &domain.Task{
 		ProjectId:   projectId,
 		Name:        name,
 		Description: description,
 		CreatedBy:   createdBy,
+		Assigner:    createdBy,
+		Executor:    executor,
 	}
 	if err := u.TaskRepo.Create(ctx, task); err != nil {
 		return nil, err

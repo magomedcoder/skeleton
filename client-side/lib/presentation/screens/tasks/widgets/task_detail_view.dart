@@ -1,13 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:legion/domain/entities/task.dart';
+import 'package:legion/domain/entities/user.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_event.dart';
 import 'package:legion/presentation/widgets/code_block_builder.dart';
 
-class TaskDetailView extends StatelessWidget {
+class TaskDetailView extends StatefulWidget {
   final Task task;
+  final String projectId;
   final VoidCallback? onBack;
 
-  const TaskDetailView({super.key, required this.task, this.onBack});
+  const TaskDetailView({
+    super.key,
+    required this.task,
+    required this.projectId,
+    this.onBack,
+  });
+
+  @override
+  State<TaskDetailView> createState() => _TaskDetailViewState();
+}
+
+class _TaskDetailViewState extends State<TaskDetailView> {
+  List<User>? _members;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMembers();
+  }
+
+  void _loadMembers() {
+    try {
+      final projectBloc = context.read<ProjectBloc>();
+      projectBloc.add(ProjectMembersLoadRequested(widget.projectId));
+      
+      projectBloc.stream.listen((state) {
+        if (state.members.isNotEmpty && mounted) {
+          setState(() {
+            _members = state.members;
+          });
+        }
+      });
+    } catch (e) {
+
+    }
+  }
+
+  String _getUserName(int userId) {
+    if (_members == null) return 'ID: $userId';
+    
+    final user = _members!.firstWhere(
+      (u) => u.id == userId.toString(),
+      orElse: () => User(
+        id: userId.toString(),
+        username: '',
+        name: '',
+        surname: '',
+        role: 0,
+      ),
+    );
+    
+    final name = '${user.name} ${user.surname}'.trim();
+    return name.isNotEmpty ? name : user.username.isNotEmpty ? '@${user.username}' : 'ID: $userId';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +76,13 @@ class TaskDetailView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            task.name,
+            widget.task.name,
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
-          if (task.description.isNotEmpty) ...[
+          if (widget.task.description.isNotEmpty) ...[
             Text(
               'Описание',
               style: Theme.of(
@@ -40,7 +98,7 @@ class TaskDetailView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: MarkdownBody(
-                data: task.description,
+                data: widget.task.description,
                 selectable: true,
                 styleSheet: MarkdownStyleSheet(
                   p: Theme.of(context).textTheme.bodyLarge,
@@ -80,8 +138,20 @@ class TaskDetailView extends StatelessWidget {
           ],
           _InfoRow(
             label: 'Создано',
-            value: _formatDate(task.createdAt),
+            value: _formatDate(widget.task.createdAt),
             icon: Icons.access_time,
+          ),
+          const SizedBox(height: 12),
+          _InfoRow(
+            label: 'Постановщик',
+            value: _getUserName(widget.task.assigner),
+            icon: Icons.person_add,
+          ),
+          const SizedBox(height: 12),
+          _InfoRow(
+            label: 'Исполнитель',
+            value: _getUserName(widget.task.executor),
+            icon: Icons.person,
           ),
         ],
       ),
@@ -90,6 +160,7 @@ class TaskDetailView extends StatelessWidget {
 
   String _formatDate(int timestamp) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+
     return '${date.day}.${date.month}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

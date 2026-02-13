@@ -19,4 +19,6 @@ type Task struct {
 	Description string
 	CreatedBy   int
 	CreatedAt   int64
+	Assigner    int
+	Executor    int
 }

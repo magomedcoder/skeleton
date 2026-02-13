@@ -14,6 +14,8 @@ type TaskModel struct {
 	Description string    `gorm:"column:description"`
 	CreatedBy   int       `gorm:"column:created_by"`
 	CreatedAt   time.Time `gorm:"column:created_at"`
+	Assigner    int       `gorm:"column:assigner"`
+	Executor    int       `gorm:"column:executor"`
 }
 
 func (TaskModel) TableName() string {
@@ -32,6 +34,8 @@ func taskModelToDomain(m *TaskModel) *domain.Task {
 		Description: m.Description,
 		CreatedBy:   m.CreatedBy,
 		CreatedAt:   m.CreatedAt.Unix(),
+		Assigner:    m.Assigner,
+		Executor:    m.Executor,
 	}
 }
 
@@ -53,5 +57,7 @@ func taskDomainToModel(t *domain.Task) *TaskModel {
 		Description: t.Description,
 		CreatedBy:   t.CreatedBy,
 		CreatedAt:   time.Unix(t.CreatedAt, 0),
+		Assigner:    t.Assigner,
+		Executor:    t.Executor,
 	}
 }

@@ -9,6 +9,8 @@ class TaskMapper {
       name: proto.name,
       description: proto.description,
       createdAt: proto.createdAt.toInt(),
+      assigner: proto.assigner.toInt(),
+      executor: proto.executor.toInt(),
     );
   }
 

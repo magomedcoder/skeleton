@@ -6,5 +6,5 @@ class CreateTaskUseCase {
 
   CreateTaskUseCase(this.repo);
 
-  Future<Task> call(String projectId, String name, String description) => repo.createTask(projectId, name, description);
+  Future<Task> call(String projectId, String name, String description, int executor) => repo.createTask(projectId, name, description, executor);
 }

@@ -29,6 +29,8 @@ func (r *taskRepository) Create(ctx context.Context, task *domain.Task) error {
 		Name:        task.Name,
 		Description: task.Description,
 		CreatedBy:   task.CreatedBy,
+		Assigner:    task.Assigner,
+		Executor:    task.Executor,
 	}
 	if err := r.db.WithContext(ctx).Create(m).Error; err != nil {
 		return err

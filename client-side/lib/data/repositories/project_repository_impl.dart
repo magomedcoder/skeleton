@@ -71,9 +71,10 @@ class ProjectRepositoryImpl implements ProjectRepository {
     String projectId,
     String name,
     String description,
+    int executor,
   ) async {
     try {
-      return await _remote.createTask(projectId, name, description);
+      return await _remote.createTask(projectId, name, description, executor);
     } catch (e) {
       if (e is Failure) rethrow;
       Logs().e('ProjectRepository: неожиданная ошибка в createTask', e);

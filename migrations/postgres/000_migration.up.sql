@@ -104,7 +104,9 @@ CREATE TABLE IF NOT EXISTS tasks
     name        VARCHAR(255) NOT NULL,
     description TEXT,
     created_by  INTEGER      NOT NULL REFERENCES users (id),
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    assigner    INTEGER      NOT NULL REFERENCES users (id),
+    executor    INTEGER      NOT NULL REFERENCES users (id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);

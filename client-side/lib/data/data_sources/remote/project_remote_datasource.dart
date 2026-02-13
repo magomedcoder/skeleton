@@ -24,7 +24,7 @@ abstract class IProjectRemoteDataSource {
 
   Future<List<User>> getProjectMembers(String projectId);
 
-  Future<Task> createTask(String projectId, String name, String description);
+  Future<Task> createTask(String projectId, String name, String description, int executor);
 
   Future<List<Task>> getTasks(String projectId);
 
@@ -132,24 +132,31 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
     String projectId,
     String name,
     String description,
+    int executor,
   ) async {
     Logs().d(
-      'ProjectRemoteDataSource: createTask projectId=$projectId, name=$name',
+      'ProjectRemoteDataSource: createTask projectId=$projectId, name=$name, executor=$executor',
     );
     try {
       final req = projectpb.CreateTaskRequest(
         projectId: projectId,
         name: name,
         description: description,
+        executor: Int64(executor),
       );
       final resp = await _authGuard.execute(() => _client.createTask(req));
 
+      final taskReq = projectpb.GetTaskRequest(taskId: resp.id);
+      final taskResp = await _authGuard.execute(() => _client.getTask(taskReq));
+
       return Task(
-        id: resp.id,
+        id: taskResp.id,
         projectId: projectId,
-        name: name,
-        description: description,
-        createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        name: taskResp.name,
+        description: taskResp.description,
+        createdAt: taskResp.createdAt.toInt(),
+        assigner: taskResp.assigner.toInt(),
+        executor: taskResp.executor.toInt(),
       );
     } on GrpcError catch (e) {
       Logs().e('ProjectRemoteDataSource: ошибка gRPC в createTask', e);
@@ -190,6 +197,8 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
         name: resp.name,
         description: resp.description,
         createdAt: resp.createdAt.toInt(),
+        assigner: resp.assigner.toInt(),
+        executor: resp.executor.toInt(),
       );
     } on GrpcError catch (e) {
       Logs().e('ProjectRemoteDataSource: ошибка gRPC в getTask', e);

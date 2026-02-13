@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/domain/entities/user.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_event.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_state.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_event.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_state.dart';
@@ -20,6 +25,44 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   bool _isSubmitting = false;
+  int? _selectedExecutorId;
+  List<User> _members = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMembers();
+  }
+
+  void _loadMembers() {
+    try {
+      final projectBloc = context.read<ProjectBloc>();
+      projectBloc.add(ProjectMembersLoadRequested(widget.projectId));
+      
+      projectBloc.stream.listen((state) {
+        if (state.members.isNotEmpty && mounted) {
+          setState(() {
+            _members = state.members;
+            if (_selectedExecutorId == null) {
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId = authState.user?.id;
+              if (currentUserId != null) {
+                final currentUser = _members.firstWhere(
+                  (u) => u.id == currentUserId,
+                  orElse: () => _members.first,
+                );
+                _selectedExecutorId = int.tryParse(currentUser.id) ?? int.tryParse(_members.first.id);
+              } else if (_members.isNotEmpty) {
+                _selectedExecutorId = int.tryParse(_members.first.id);
+              }
+            }
+          });
+        }
+      });
+    } catch (e) {
+
+    }
+  }
 
   @override
   void dispose() {
@@ -30,6 +73,15 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedExecutorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Выберите ответственного'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
@@ -38,6 +90,7 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
         projectId: widget.projectId,
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
+        executor: _selectedExecutorId!,
       ),
     );
 
@@ -47,6 +100,11 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
       Navigator.of(context).pop();
       widget.onCreated?.call();
     }
+  }
+
+  String _getUserDisplayName(User user) {
+    final name = '${user.name} ${user.surname}'.trim();
+    return name.isNotEmpty ? name : '@${user.username}';
   }
 
   @override
@@ -155,6 +213,51 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
                             border: OutlineInputBorder(),
                             isDense: true,
                           ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Ответственный',
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        BlocBuilder<ProjectBloc, ProjectState>(
+                          builder: (context, projectState) {
+                            if (projectState.isMembersLoading && _members.isEmpty) {
+                              return const SizedBox(
+                                height: 56,
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            
+                            return DropdownButtonFormField<int>(
+                              initialValue: _selectedExecutorId,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              items: _members.map((user) {
+                                final userId = int.tryParse(user.id);
+                                if (userId == null) return null;
+                                return DropdownMenuItem<int>(
+                                  value: userId,
+                                  child: Text(_getUserDisplayName(user)),
+                                );
+                              }).whereType<DropdownMenuItem<int>>().toList(),
+                              onChanged: _isSubmitting
+                                ? null
+                                : (value) {
+                                    setState(() {
+                                      _selectedExecutorId = value;
+                                    });
+                                  },
+                              validator: (value) {
+                                if (value == null) {
+                                  return 'Выберите ответственного';
+                                }
+                                return null;
+                              },
+                            );
+                          },
                         ),
                       ],
                     ),

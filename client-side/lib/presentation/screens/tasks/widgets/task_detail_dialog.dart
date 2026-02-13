@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/task.dart';
+import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:legion/presentation/screens/tasks/widgets/task_detail_view.dart';
 
 class TaskDetailDialog extends StatelessWidget {
@@ -13,19 +15,37 @@ class TaskDetailDialog extends StatelessWidget {
     final maxWidth = isMobile ? double.infinity : 600.0;
     final maxHeight = isMobile ? double.infinity : 700.0;
 
+    ProjectBloc? projectBloc;
+    try {
+      projectBloc = context.read<ProjectBloc>();
+    } catch (e) {
+
+    }
+
     showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) => Dialog(
-        insetPadding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 16 : 40,
-          vertical: isMobile ? 16 : 24,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
-          child: TaskDetailDialog(task: task),
-        ),
-      ),
+      builder: (dialogContext) {
+        Widget dialogContent = TaskDetailDialog(task: task);
+
+        if (projectBloc != null) {
+          dialogContent = BlocProvider.value(
+            value: projectBloc,
+            child: dialogContent,
+          );
+        }
+
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 40,
+            vertical: isMobile ? 16 : 24,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
+            child: dialogContent,
+          ),
+        );
+      },
     );
   }
 
@@ -35,7 +55,6 @@ class TaskDetailDialog extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: theme.dialogBackgroundColor,
       borderRadius: BorderRadius.circular(isMobile ? 0 : 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -69,6 +88,7 @@ class TaskDetailDialog extends StatelessWidget {
             child: SingleChildScrollView(
               child: TaskDetailView(
                 task: task,
+                projectId: task.projectId,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),

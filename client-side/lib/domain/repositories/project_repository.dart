@@ -13,7 +13,7 @@ abstract class ProjectRepository {
 
   Future<List<User>> getProjectMembers(String projectId);
 
-  Future<Task> createTask(String projectId, String name, String description);
+  Future<Task> createTask(String projectId, String name, String description, int executor);
 
   Future<List<Task>> getTasks(String projectId);
 

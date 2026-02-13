@@ -21,15 +21,17 @@ class TaskCreateRequested extends TaskEvent {
   final String projectId;
   final String name;
   final String description;
+  final int executor;
 
   const TaskCreateRequested({
     required this.projectId,
     required this.name,
     required this.description,
+    required this.executor,
   });
 
   @override
-  List<Object?> get props => [projectId, name, description];
+  List<Object?> get props => [projectId, name, description, executor];
 }
 
 class TaskSelected extends TaskEvent {

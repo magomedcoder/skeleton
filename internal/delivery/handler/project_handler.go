@@ -156,7 +156,12 @@ func (p *Project) CreateTask(ctx context.Context, in *projectpb.CreateTaskReques
 		return nil, err
 	}
 
-	task, err := p.ProjectUseCase.CreateTask(ctx, in.ProjectId, in.Name, in.Description, uid)
+	if in.Executor <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "executor обязателен")
+	}
+
+	executor := int(in.Executor)
+	task, err := p.ProjectUseCase.CreateTask(ctx, in.ProjectId, in.Name, in.Description, uid, executor)
 	if err != nil {
 		if err.Error() == "доступ запрещён" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
@@ -190,6 +195,8 @@ func (p *Project) GetTasks(ctx context.Context, in *projectpb.GetTasksRequest) (
 			Name:        t.Name,
 			Description: t.Description,
 			CreatedAt:   t.CreatedAt,
+			Assigner:    int64(t.Assigner),
+			Executor:    int64(t.Executor),
 		})
 	}
 
@@ -222,5 +229,7 @@ func (p *Project) GetTask(ctx context.Context, in *projectpb.GetTaskRequest) (*p
 		Name:        task.Name,
 		Description: task.Description,
 		CreatedAt:   task.CreatedAt,
+		Assigner:    int64(task.Assigner),
+		Executor:    int64(task.Executor),
 	}, nil
 }

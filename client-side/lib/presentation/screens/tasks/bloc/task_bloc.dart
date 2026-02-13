@@ -47,6 +47,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
         event.projectId,
         name,
         event.description,
+        event.executor,
       );
       final tasks = [...state.tasks, task];
       emit(state.copyWith(isLoading: false, tasks: tasks));
