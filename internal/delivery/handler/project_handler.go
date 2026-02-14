@@ -197,6 +197,7 @@ func (p *Project) GetTasks(ctx context.Context, in *projectpb.GetTasksRequest) (
 			CreatedAt:   t.CreatedAt,
 			Assigner:    int64(t.Assigner),
 			Executor:    int64(t.Executor),
+			ColumnId:    t.ColumnId,
 		})
 	}
 
@@ -231,5 +232,148 @@ func (p *Project) GetTask(ctx context.Context, in *projectpb.GetTaskRequest) (*p
 		CreatedAt:   task.CreatedAt,
 		Assigner:    int64(task.Assigner),
 		Executor:    int64(task.Executor),
+		ColumnId:    task.ColumnId,
 	}, nil
+}
+
+func (p *Project) UpdateTaskColumnId(ctx context.Context, in *projectpb.UpdateTaskColumnIdRequest) (*projectpb.UpdateTaskColumnIdResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.ProjectUseCase.UpdateTaskColumnId(ctx, in.TaskId, in.ColumnId, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if err.Error() == "задача не найдена" || err.Error() == "колонка не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
+	}
+
+	return &projectpb.UpdateTaskColumnIdResponse{}, nil
+}
+
+func (p *Project) GetProjectColumns(ctx context.Context, in *projectpb.GetProjectColumnsRequest) (*projectpb.GetProjectColumnsResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cols, err := p.ProjectUseCase.GetProjectColumns(ctx, in.ProjectId, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+	items := make([]*projectpb.ProjectColumn, 0, len(cols))
+	for _, c := range cols {
+		items = append(items, &projectpb.ProjectColumn{
+			Id:        c.Id,
+			ProjectId: c.ProjectId,
+			Title:     c.Title,
+			Color:     c.Color,
+			StatusKey: c.StatusKey,
+			Position:  c.Position,
+		})
+	}
+	return &projectpb.GetProjectColumnsResponse{Columns: items}, nil
+}
+
+func (p *Project) CreateProjectColumn(ctx context.Context, in *projectpb.CreateProjectColumnRequest) (*projectpb.CreateProjectColumnResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if in.Title == "" {
+		return nil, status.Error(codes.InvalidArgument, "название обязательно")
+	}
+	statusKey := in.StatusKey
+	if statusKey == "" {
+		statusKey = slugFromTitle(in.Title)
+	}
+	color := in.Color
+	if color == "" {
+		color = "#9E9E9E"
+	}
+	col, err := p.ProjectUseCase.CreateProjectColumn(ctx, in.ProjectId, in.Title, color, statusKey, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if err.Error() == "колонка с таким ключом статуса уже существует" {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
+	}
+	return &projectpb.CreateProjectColumnResponse{Id: col.Id}, nil
+}
+
+func (p *Project) UpdateProjectColumn(ctx context.Context, in *projectpb.UpdateProjectColumnRequest) (*projectpb.UpdateProjectColumnResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if in.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id колонки обязателен")
+	}
+	position := int32(-1)
+	if in.Position >= 0 {
+		position = in.Position
+	}
+	_, err = p.ProjectUseCase.UpdateProjectColumn(ctx, in.Id, in.Title, in.Color, in.StatusKey, position, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if err.Error() == "колонка не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		if err.Error() == "колонка с таким ключом статуса уже существует" {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+	return &projectpb.UpdateProjectColumnResponse{}, nil
+}
+
+func (p *Project) DeleteProjectColumn(ctx context.Context, in *projectpb.DeleteProjectColumnRequest) (*projectpb.DeleteProjectColumnResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := p.ProjectUseCase.DeleteProjectColumn(ctx, in.Id, uid); err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if err.Error() == "колонка не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+	return &projectpb.DeleteProjectColumnResponse{}, nil
+}
+
+func slugFromTitle(title string) string {
+	var b []byte
+	for _, r := range title {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b = append(b, byte(r))
+		} else if r >= 'A' && r <= 'Z' {
+			b = append(b, byte(r+32))
+		} else if r == ' ' || r == '-' || r == '_' {
+			if len(b) > 0 && b[len(b)-1] != '_' {
+				b = append(b, '_')
+			}
+		}
+	}
+	if len(b) == 0 {
+		return "column"
+	}
+	if b[len(b)-1] == '_' {
+		b = b[:len(b)-1]
+	}
+	return string(b)
 }

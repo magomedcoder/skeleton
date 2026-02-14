@@ -11,6 +11,7 @@ type ProjectUseCase struct {
 	ProjectRepo       domain.ProjectRepository
 	ProjectMemberRepo domain.ProjectMemberRepository
 	TaskRepo          domain.TaskRepository
+	ProjectColumnRepo domain.ProjectColumnRepository
 	UserRepo          domain.UserRepository
 }
 
@@ -18,12 +19,14 @@ func NewProjectUseCase(
 	projectRepo domain.ProjectRepository,
 	projectMemberRepo domain.ProjectMemberRepository,
 	taskRepo domain.TaskRepository,
+	projectColumnRepo domain.ProjectColumnRepository,
 	userRepo domain.UserRepository,
 ) *ProjectUseCase {
 	return &ProjectUseCase{
 		ProjectRepo:       projectRepo,
 		ProjectMemberRepo: projectMemberRepo,
 		TaskRepo:          taskRepo,
+		ProjectColumnRepo: projectColumnRepo,
 		UserRepo:          userRepo,
 	}
 }
@@ -43,6 +46,30 @@ func (u *ProjectUseCase) CreateProject(ctx context.Context, name string, created
 
 	if err := u.ProjectMemberRepo.Add(ctx, project.Id, createdBy, createdBy); err != nil {
 		return nil, err
+	}
+
+	defaultColumns := []struct {
+		title     string
+		color     string
+		statusKey string
+		position  int32
+	}{
+		{"К выполнению", "#9E9E9E", "todo", 0},
+		{"В работе", "#2196F3", "in_progress", 1},
+		{"Готово", "#4CAF50", "done", 2},
+	}
+
+	for _, dc := range defaultColumns {
+		col := &domain.ProjectColumn{
+			ProjectId: project.Id,
+			Title:     dc.title,
+			Color:     dc.color,
+			StatusKey: dc.statusKey,
+			Position:  dc.position,
+		}
+		if err := u.ProjectColumnRepo.Create(ctx, col); err != nil {
+			continue
+		}
 	}
 
 	return project, nil
@@ -157,6 +184,15 @@ func (u *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name 
 		return nil, errors.New("ответственный должен быть участником проекта")
 	}
 
+	columns, err := u.ProjectColumnRepo.ListByProjectId(ctx, projectId)
+	if err != nil {
+		return nil, err
+	}
+	var columnId string
+	if len(columns) > 0 {
+		columnId = columns[0].Id
+	}
+
 	task := &domain.Task{
 		ProjectId:   projectId,
 		Name:        name,
@@ -164,6 +200,7 @@ func (u *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name 
 		CreatedBy:   createdBy,
 		Assigner:    createdBy,
 		Executor:    executor,
+		ColumnId:    columnId,
 	}
 	if err := u.TaskRepo.Create(ctx, task); err != nil {
 		return nil, err
@@ -204,4 +241,154 @@ func (u *ProjectUseCase) GetTask(ctx context.Context, taskId string, userId int)
 	}
 
 	return task, nil
+}
+
+func (u *ProjectUseCase) UpdateTaskColumnId(ctx context.Context, taskId string, columnId string, userId int) error {
+	task, err := u.TaskRepo.GetById(ctx, taskId)
+	if err != nil {
+		return err
+	}
+
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, task.ProjectId, userId)
+	if err != nil {
+		return err
+	}
+	if !isMember {
+		return errors.New("доступ запрещён")
+	}
+
+	if columnId != "" {
+		col, err := u.ProjectColumnRepo.GetById(ctx, columnId)
+		if err != nil {
+			return errors.New("колонка не найдена")
+		}
+		if col.ProjectId != task.ProjectId {
+			return errors.New("колонка не принадлежит проекту")
+		}
+	}
+
+	return u.TaskRepo.UpdateColumnId(ctx, taskId, columnId)
+}
+
+func (u *ProjectUseCase) GetProjectColumns(ctx context.Context, projectId string, userId int) ([]*domain.ProjectColumn, error) {
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, projectId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	return u.ProjectColumnRepo.ListByProjectId(ctx, projectId)
+}
+
+func (u *ProjectUseCase) CreateProjectColumn(ctx context.Context, projectId string, title string, color string, statusKey string, userId int) (*domain.ProjectColumn, error) {
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, projectId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	if title == "" {
+		return nil, errors.New("название колонки обязательно")
+	}
+
+	if statusKey == "" {
+		return nil, errors.New("ключ статуса обязателен")
+	}
+
+	exists, err := u.ProjectColumnRepo.ExistsStatusKey(ctx, projectId, statusKey, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, errors.New("колонка с таким ключом статуса уже существует")
+	}
+
+	list, err := u.ProjectColumnRepo.ListByProjectId(ctx, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	position := int32(len(list))
+	col := &domain.ProjectColumn{
+		ProjectId: projectId,
+		Title:     title,
+		Color:     color,
+		StatusKey: statusKey,
+		Position:  position,
+	}
+	if err := u.ProjectColumnRepo.Create(ctx, col); err != nil {
+		return nil, err
+	}
+
+	return col, nil
+}
+
+func (u *ProjectUseCase) UpdateProjectColumn(ctx context.Context, colId string, title string, color string, statusKey string, position int32, userId int) (*domain.ProjectColumn, error) {
+	col, err := u.ProjectColumnRepo.GetById(ctx, colId)
+	if err != nil {
+		return nil, err
+	}
+
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, col.ProjectId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	if title != "" {
+		col.Title = title
+	}
+
+	if color != "" {
+		col.Color = color
+	}
+
+	if statusKey != "" {
+		exists, err := u.ProjectColumnRepo.ExistsStatusKey(ctx, col.ProjectId, statusKey, colId)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("колонка с таким ключом статуса уже существует")
+		}
+		col.StatusKey = statusKey
+	}
+
+	if position >= 0 {
+		col.Position = position
+	}
+
+	if err := u.ProjectColumnRepo.Update(ctx, col); err != nil {
+		return nil, err
+	}
+
+	return u.ProjectColumnRepo.GetById(ctx, col.Id)
+}
+
+func (u *ProjectUseCase) DeleteProjectColumn(ctx context.Context, colId string, userId int) error {
+	col, err := u.ProjectColumnRepo.GetById(ctx, colId)
+	if err != nil {
+		return err
+	}
+
+	isMember, err := u.ProjectMemberRepo.IsMember(ctx, col.ProjectId, userId)
+	if err != nil {
+		return err
+	}
+
+	if !isMember {
+		return errors.New("доступ запрещён")
+	}
+
+	return u.ProjectColumnRepo.Delete(ctx, colId)
 }

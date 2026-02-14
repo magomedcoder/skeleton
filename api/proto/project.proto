@@ -22,6 +22,16 @@ service ProjectService {
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse);
 
   rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+
+  rpc UpdateTaskColumnId(UpdateTaskColumnIdRequest) returns (UpdateTaskColumnIdResponse);
+
+  rpc GetProjectColumns(GetProjectColumnsRequest) returns (GetProjectColumnsResponse);
+
+  rpc CreateProjectColumn(CreateProjectColumnRequest) returns (CreateProjectColumnResponse);
+
+  rpc UpdateProjectColumn(UpdateProjectColumnRequest) returns (UpdateProjectColumnResponse);
+
+  rpc DeleteProjectColumn(DeleteProjectColumnRequest) returns (DeleteProjectColumnResponse);
 }
 
 message Project {
@@ -36,6 +46,7 @@ message Task {
   int64 created_at = 4;
   int64 assigner = 5;
   int64 executor = 6;
+  string column_id = 7;
 }
 
 message CreateProjectRequest {
@@ -106,4 +117,56 @@ message GetTaskResponse {
   int64 created_at = 4;
   int64 assigner = 5;
   int64 executor = 6;
+  string column_id = 7;
 }
+
+message UpdateTaskColumnIdRequest {
+  string task_id = 1;
+  string column_id = 2;
+}
+
+message UpdateTaskColumnIdResponse {}
+
+message ProjectColumn {
+  string id = 1;
+  string project_id = 2;
+  string title = 3;
+  string color = 4;
+  string status_key = 5;
+  int32 position = 6;
+}
+
+message GetProjectColumnsRequest {
+  string project_id = 1;
+}
+
+message GetProjectColumnsResponse {
+  repeated ProjectColumn columns = 1;
+}
+
+message CreateProjectColumnRequest {
+  string project_id = 1;
+  string title = 2;
+  string color = 3;
+  string status_key = 4;
+}
+
+message CreateProjectColumnResponse {
+  string id = 1;
+}
+
+message UpdateProjectColumnRequest {
+  string id = 1;
+  string title = 2;
+  string color = 3;
+  string status_key = 4;
+  int32 position = 5;
+}
+
+message UpdateProjectColumnResponse {}
+
+message DeleteProjectColumnRequest {
+  string id = 1;
+}
+
+message DeleteProjectColumnResponse {}

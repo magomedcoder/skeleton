@@ -21,4 +21,14 @@ type Task struct {
 	CreatedAt   int64
 	Assigner    int
 	Executor    int
+	ColumnId    string
+}
+
+type ProjectColumn struct {
+	Id        string
+	ProjectId string
+	Title     string
+	Color     string
+	StatusKey string
+	Position  int32
 }

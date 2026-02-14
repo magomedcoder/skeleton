@@ -97,16 +97,28 @@ CREATE TABLE IF NOT EXISTS project_members
     UNIQUE (project_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS project_columns
+(
+    id         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    project_id UUID         NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+    title      VARCHAR(255) NOT NULL,
+    color      VARCHAR(20)  NOT NULL DEFAULT '#9E9E9E',
+    status_key VARCHAR(64)  NOT NULL,
+    position   INTEGER      NOT NULL DEFAULT 0,
+    UNIQUE (project_id, status_key)
+);
+
 CREATE TABLE IF NOT EXISTS tasks
 (
     id          UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
-    project_id  UUID      NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+    project_id  UUID         NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
     created_by  INTEGER      NOT NULL REFERENCES users (id),
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
     assigner    INTEGER      NOT NULL REFERENCES users (id),
-    executor    INTEGER      NOT NULL REFERENCES users (id)
+    executor    INTEGER      NOT NULL REFERENCES users (id),
+    column_id   UUID         NULL REFERENCES project_columns (id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
@@ -133,4 +145,7 @@ CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects (created_by);
 CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects (created_at);
 CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members (project_id);
 CREATE INDEX IF NOT EXISTS idx_project_members_user_id ON project_members (user_id);
+CREATE INDEX IF NOT EXISTS idx_project_columns_project_id ON project_columns (project_id);
+CREATE INDEX IF NOT EXISTS idx_project_columns_position ON project_columns (project_id, position);
 CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks (project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_column_id ON tasks (column_id);

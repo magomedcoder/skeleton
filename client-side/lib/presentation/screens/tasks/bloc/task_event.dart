@@ -50,3 +50,16 @@ class TaskClearSelection extends TaskEvent {
 class TaskClearError extends TaskEvent {
   const TaskClearError();
 }
+
+class TaskColumnIdUpdateRequested extends TaskEvent {
+  final String taskId;
+  final String columnId;
+
+  const TaskColumnIdUpdateRequested({
+    required this.taskId,
+    required this.columnId,
+  });
+
+  @override
+  List<Object?> get props => [taskId, columnId];
+}

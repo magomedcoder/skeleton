@@ -11,6 +11,7 @@ class TaskMapper {
       createdAt: proto.createdAt.toInt(),
       assigner: proto.assigner.toInt(),
       executor: proto.executor.toInt(),
+      columnId: proto.columnId.isNotEmpty ? proto.columnId : '',
     );
   }
 

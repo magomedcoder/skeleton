@@ -8,6 +8,8 @@ import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/mappers/project_mapper.dart';
 import 'package:legion/data/mappers/task_mapper.dart';
 import 'package:legion/data/mappers/user_mapper.dart';
+import 'package:legion/data/mappers/board_column_mapper.dart';
+import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/user.dart';
@@ -29,6 +31,16 @@ abstract class IProjectRemoteDataSource {
   Future<List<Task>> getTasks(String projectId);
 
   Future<Task> getTask(String taskId);
+
+  Future<void> updateTaskColumnId(String taskId, String columnId);
+
+  Future<List<BoardColumn>> getProjectColumns(String projectId);
+
+  Future<BoardColumn> createProjectColumn(String projectId, String title, String color, {String? statusKey});
+
+  Future<void> updateProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
+
+  Future<void> deleteProjectColumn(String id);
 }
 
 class ProjectRemoteDataSource implements IProjectRemoteDataSource {
@@ -157,6 +169,7 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
         createdAt: taskResp.createdAt.toInt(),
         assigner: taskResp.assigner.toInt(),
         executor: taskResp.executor.toInt(),
+        columnId: taskResp.columnId.isNotEmpty ? taskResp.columnId : '',
       );
     } on GrpcError catch (e) {
       Logs().e('ProjectRemoteDataSource: ошибка gRPC в createTask', e);
@@ -199,6 +212,7 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
         createdAt: resp.createdAt.toInt(),
         assigner: resp.assigner.toInt(),
         executor: resp.executor.toInt(),
+        columnId: resp.columnId.isNotEmpty ? resp.columnId : '',
       );
     } on GrpcError catch (e) {
       Logs().e('ProjectRemoteDataSource: ошибка gRPC в getTask', e);
@@ -207,5 +221,138 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
       Logs().e('ProjectRemoteDataSource: ошибка в getTask', e);
       throw ApiFailure('Ошибка получения задачи');
     }
+  }
+
+  @override
+  Future<void> updateTaskColumnId(String taskId, String columnId) async {
+    Logs().d('ProjectRemoteDataSource: updateTaskColumnId taskId=$taskId, columnId=$columnId');
+    try {
+      final req = projectpb.UpdateTaskColumnIdRequest(
+        taskId: taskId,
+        columnId: columnId,
+      );
+      await _authGuard.execute(() => _client.updateTaskColumnId(req));
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в updateTaskColumnId', e);
+      throwGrpcError(e, 'Ошибка обновления колонки задачи');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в updateTaskColumnId', e);
+      throw ApiFailure('Ошибка обновления колонки задачи');
+    }
+  }
+
+  @override
+  Future<List<BoardColumn>> getProjectColumns(String projectId) async {
+    Logs().d('ProjectRemoteDataSource: getProjectColumns projectId=$projectId');
+    try {
+      final req = projectpb.GetProjectColumnsRequest(projectId: projectId);
+      final resp = await _authGuard.execute(() => _client.getProjectColumns(req));
+      return BoardColumnMapper.listFromProto(resp.columns);
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в getProjectColumns', e);
+      throwGrpcError(e, 'Ошибка загрузки колонок');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в getProjectColumns', e);
+      throw ApiFailure('Ошибка загрузки колонок');
+    }
+  }
+
+  @override
+  Future<BoardColumn> createProjectColumn(
+    String projectId,
+    String title,
+    String color, {
+    String? statusKey,
+  }) async {
+    Logs().d('ProjectRemoteDataSource: createProjectColumn projectId=$projectId, title=$title');
+    try {
+      final req = projectpb.CreateProjectColumnRequest(
+        projectId: projectId,
+        title: title,
+        color: color,
+        statusKey: statusKey ?? '',
+      );
+      final resp = await _authGuard.execute(() => _client.createProjectColumn(req));
+      final list = await getProjectColumns(projectId);
+      try {
+        return list.firstWhere((c) => c.id == resp.id);
+      } catch (_) {}
+      return BoardColumn(
+        id: resp.id,
+        projectId: projectId,
+        title: title,
+        color: color,
+        statusKey: statusKey ?? _slugFromTitle(title),
+        position: list.length,
+      );
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в createProjectColumn', e);
+      throwGrpcError(e, 'Ошибка создания колонки');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в createProjectColumn', e);
+      throw ApiFailure('Ошибка создания колонки');
+    }
+  }
+
+  @override
+  Future<void> updateProjectColumn(
+    String id, {
+    String? title,
+    String? color,
+    String? statusKey,
+    int? position,
+  }) async {
+    Logs().d('ProjectRemoteDataSource: updateProjectColumn id=$id');
+    try {
+      final req = projectpb.UpdateProjectColumnRequest(
+        id: id,
+        title: title ?? '',
+        color: color ?? '',
+        statusKey: statusKey ?? '',
+        position: position ?? -1,
+      );
+      await _authGuard.execute(() => _client.updateProjectColumn(req));
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в updateProjectColumn', e);
+      throwGrpcError(e, 'Ошибка обновления колонки');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в updateProjectColumn', e);
+      throw ApiFailure('Ошибка обновления колонки');
+    }
+  }
+
+  @override
+  Future<void> deleteProjectColumn(String id) async {
+    Logs().d('ProjectRemoteDataSource: deleteProjectColumn id=$id');
+    try {
+      final req = projectpb.DeleteProjectColumnRequest(id: id);
+      await _authGuard.execute(() => _client.deleteProjectColumn(req));
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в deleteProjectColumn', e);
+      throwGrpcError(e, 'Ошибка удаления колонки');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в deleteProjectColumn', e);
+      throw ApiFailure('Ошибка удаления колонки');
+    }
+  }
+
+  static String _slugFromTitle(String title) {
+    final sb = StringBuffer();
+    for (var i = 0; i < title.length; i++) {
+      final r = title.codeUnitAt(i);
+      if (r >= 0x61 && r <= 0x7a || r >= 0x30 && r <= 0x39) {
+        sb.writeCharCode(r);
+      } else if (r >= 0x41 && r <= 0x5a) {
+        sb.writeCharCode(r + 32);
+      } else if (r == 0x20 || r == 0x2d || r == 0x5f) {
+        if (sb.length > 0 && sb.toString().codeUnitAt(sb.length - 1) != 0x5f) {
+          sb.writeCharCode(0x5f);
+        }
+      }
+    }
+    var s = sb.toString();
+    if (s.isEmpty) return 'column';
+    if (s.codeUnitAt(s.length - 1) == 0x5f) s = s.substring(0, s.length - 1);
+    return s;
   }
 }

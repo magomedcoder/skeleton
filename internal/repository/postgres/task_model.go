@@ -8,14 +8,15 @@ import (
 )
 
 type TaskModel struct {
-	Id          uuid.UUID `gorm:"column:id;type:uuid;DEFAULT:gen_random_uuid()"`
-	ProjectId   uuid.UUID `gorm:"column:project_id"`
-	Name        string    `gorm:"column:name"`
-	Description string    `gorm:"column:description"`
-	CreatedBy   int       `gorm:"column:created_by"`
-	CreatedAt   time.Time `gorm:"column:created_at"`
-	Assigner    int       `gorm:"column:assigner"`
-	Executor    int       `gorm:"column:executor"`
+	Id          uuid.UUID  `gorm:"column:id;type:uuid;DEFAULT:gen_random_uuid()"`
+	ProjectId   uuid.UUID  `gorm:"column:project_id"`
+	Name        string     `gorm:"column:name"`
+	Description string      `gorm:"column:description"`
+	CreatedBy   int         `gorm:"column:created_by"`
+	CreatedAt   time.Time   `gorm:"column:created_at"`
+	Assigner    int         `gorm:"column:assigner"`
+	Executor    int         `gorm:"column:executor"`
+	ColumnId    *uuid.UUID  `gorm:"column:column_id"`
 }
 
 func (TaskModel) TableName() string {
@@ -27,6 +28,11 @@ func taskModelToDomain(m *TaskModel) *domain.Task {
 		return nil
 	}
 
+	columnId := ""
+	if m.ColumnId != nil {
+		columnId = m.ColumnId.String()
+	}
+
 	return &domain.Task{
 		Id:          m.Id.String(),
 		ProjectId:   m.ProjectId.String(),
@@ -36,6 +42,7 @@ func taskModelToDomain(m *TaskModel) *domain.Task {
 		CreatedAt:   m.CreatedAt.Unix(),
 		Assigner:    m.Assigner,
 		Executor:    m.Executor,
+		ColumnId:    columnId,
 	}
 }
 
@@ -50,6 +57,12 @@ func taskDomainToModel(t *domain.Task) *TaskModel {
 		taskId, _ = uuid.Parse(t.Id)
 	}
 
+	var columnId *uuid.UUID
+	if t.ColumnId != "" {
+		parsed, _ := uuid.Parse(t.ColumnId)
+		columnId = &parsed
+	}
+
 	return &TaskModel{
 		Id:          taskId,
 		ProjectId:   projectId,
@@ -59,5 +72,6 @@ func taskDomainToModel(t *domain.Task) *TaskModel {
 		CreatedAt:   time.Unix(t.CreatedAt, 0),
 		Assigner:    t.Assigner,
 		Executor:    t.Executor,
+		ColumnId:    columnId,
 	}
 }

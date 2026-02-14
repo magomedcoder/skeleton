@@ -1,3 +1,4 @@
+import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/user.dart';
@@ -18,4 +19,14 @@ abstract class ProjectRepository {
   Future<List<Task>> getTasks(String projectId);
 
   Future<Task> getTask(String taskId);
+
+  Future<void> updateTaskColumnId(String taskId, String columnId);
+
+  Future<List<BoardColumn>> getProjectColumns(String projectId);
+
+  Future<BoardColumn> createProjectColumn(String projectId, String title, String color, {String? statusKey});
+
+  Future<void> updateProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
+
+  Future<void> deleteProjectColumn(String id);
 }

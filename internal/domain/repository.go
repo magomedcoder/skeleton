@@ -108,4 +108,20 @@ type TaskRepository interface {
 	GetById(ctx context.Context, id string) (*Task, error)
 
 	ListByProjectId(ctx context.Context, projectId string) ([]*Task, error)
+
+	UpdateColumnId(ctx context.Context, id string, columnId string) error
+}
+
+type ProjectColumnRepository interface {
+	Create(ctx context.Context, col *ProjectColumn) error
+
+	GetById(ctx context.Context, id string) (*ProjectColumn, error)
+
+	ListByProjectId(ctx context.Context, projectId string) ([]*ProjectColumn, error)
+
+	Update(ctx context.Context, col *ProjectColumn) error
+
+	Delete(ctx context.Context, id string) error
+
+	ExistsStatusKey(ctx context.Context, projectId string, statusKey string, excludeId string) (bool, error)
 }

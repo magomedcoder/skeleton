@@ -53,6 +53,7 @@ import 'package:legion/domain/usecases/project/get_project_usecase.dart';
 import 'package:legion/domain/usecases/project/get_projects_usecase.dart';
 import 'package:legion/domain/usecases/project/get_task_usecase.dart';
 import 'package:legion/domain/usecases/project/get_tasks_usecase.dart';
+import 'package:legion/domain/usecases/project/update_task_column_id_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_usecase.dart';
 import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
@@ -202,6 +203,7 @@ Future<void> init() async {
   sl.registerFactory(() => CreateTaskUseCase(sl()));
   sl.registerFactory(() => GetTasksUseCase(sl()));
   sl.registerFactory(() => GetTaskUseCase(sl()));
+  sl.registerFactory(() => UpdateTaskColumnIdUseCase(sl()));
 
   sl.registerFactory(
     () => AIChatBloc(
@@ -273,7 +275,11 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
-    () => TaskBloc(getTasksUseCase: sl(), createTaskUseCase: sl()),
+    () => TaskBloc(
+      getTasksUseCase: sl(),
+      createTaskUseCase: sl(),
+      updateTaskColumnIdUseCase: sl(),
+    ),
   );
 
   sl.registerFactory(() => ThemeCubit(sl<UserLocalDataSourceImpl>()));

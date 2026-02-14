@@ -1,6 +1,7 @@
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/remote/project_remote_datasource.dart';
+import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/user.dart';
@@ -101,6 +102,78 @@ class ProjectRepositoryImpl implements ProjectRepository {
       if (e is Failure) rethrow;
       Logs().e('ProjectRepository: неожиданная ошибка в getTask', e);
       throw ApiFailure('Ошибка получения задачи');
+    }
+  }
+
+  @override
+  Future<void> updateTaskColumnId(String taskId, String columnId) async {
+    try {
+      return await _remote.updateTaskColumnId(taskId, columnId);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в updateTaskColumnId', e);
+      throw ApiFailure('Ошибка обновления колонки задачи');
+    }
+  }
+
+  @override
+  Future<List<BoardColumn>> getProjectColumns(String projectId) async {
+    try {
+      return await _remote.getProjectColumns(projectId);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в getProjectColumns', e);
+      throw ApiFailure('Ошибка загрузки колонок');
+    }
+  }
+
+  @override
+  Future<BoardColumn> createProjectColumn(
+    String projectId,
+    String title,
+    String color, {
+    String? statusKey,
+  }) async {
+    try {
+      return await _remote.createProjectColumn(projectId, title, color, statusKey: statusKey);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в createProjectColumn', e);
+      throw ApiFailure('Ошибка создания колонки');
+    }
+  }
+
+  @override
+  Future<void> updateProjectColumn(
+    String id, {
+    String? title,
+    String? color,
+    String? statusKey,
+    int? position,
+  }) async {
+    try {
+      return await _remote.updateProjectColumn(
+        id,
+        title: title,
+        color: color,
+        statusKey: statusKey,
+        position: position,
+      );
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в updateProjectColumn', e);
+      throw ApiFailure('Ошибка обновления колонки');
+    }
+  }
+
+  @override
+  Future<void> deleteProjectColumn(String id) async {
+    try {
+      return await _remote.deleteProjectColumn(id);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в deleteProjectColumn', e);
+      throw ApiFailure('Ошибка удаления колонки');
     }
   }
 }
