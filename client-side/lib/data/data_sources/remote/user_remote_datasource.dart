@@ -48,6 +48,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
       final resp = await _authGuard.execute(() => _client.getUsers(req));
       final users = UserMapper.listFromProto(resp.users);
       Logs().i('UserRemoteDataSource: получено пользователей: ${users.length}');
+
       return users;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.permissionDenied) {
@@ -81,6 +82,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
       );
       final resp = await _authGuard.execute(() => _client.createUser(req));
       Logs().i('UserRemoteDataSource: пользователь создан');
+
       return UserMapper.fromProto(resp.user);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.invalidArgument) {
@@ -121,6 +123,7 @@ class UserRemoteDataSource implements IUserRemoteDataSource {
       );
       final resp = await _authGuard.execute(() => _client.editUser(req));
       Logs().i('UserRemoteDataSource: пользователь обновлён');
+
       return UserMapper.fromProto(resp.user);
     } on GrpcError catch (e) {
       if (e.code == StatusCode.invalidArgument) {

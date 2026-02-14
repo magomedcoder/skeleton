@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
@@ -14,17 +15,21 @@ class TaskDetailDialog extends StatefulWidget {
 
   static void show(BuildContext context, Task task) {
     final isMobile = Breakpoints.isMobile(context);
-    final maxWidth = isMobile ? double.infinity : 600.0;
+    final maxWidth = isMobile ? double.infinity : 720.0;
     final maxHeight = isMobile ? double.infinity : 700.0;
 
     ProjectBloc? projectBloc;
     TaskBloc? taskBloc;
     try {
       projectBloc = context.read<ProjectBloc>();
-    } catch (e) {}
+    } catch (e) {
+      Logs().d('TaskDetailDialog: ProjectBloc', e);
+    }
     try {
       taskBloc = context.read<TaskBloc>();
-    } catch (e) {}
+    } catch (e) {
+      Logs().d('TaskDetailDialog: TaskBloc', e);
+    }
 
     showDialog<void>(
       context: context,

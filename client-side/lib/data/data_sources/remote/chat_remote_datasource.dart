@@ -41,6 +41,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     try {
       final req = chatpb.CreateChatRequest(userId: userId);
       final resp = await _authGuard.execute(() => _client.createChat(req));
+
       return ChatMapper.fromProto(resp);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка gRPC в createChat', e);
@@ -60,6 +61,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     try {
       final req = chatpb.GetChatsRequest(page: page, pageSize: pageSize);
       final resp = await _authGuard.execute(() => _client.getChats(req));
+
       return ChatMapper.listFromProto(resp.chats);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка gRPC в getChats', e);
@@ -79,6 +81,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     try {
       final req = chatpb.SendMessageRequest(chatId: chatId, content: content);
       final resp = await _authGuard.execute(() => _client.sendMessage(req));
+
       return MessageMapper.fromProto(resp);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка gRPC в sendMessage', e);
@@ -103,6 +106,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
         pageSize: pageSize,
       );
       final resp = await _authGuard.execute(() => _client.getMessages(req));
+
       return MessageMapper.listFromProto(resp.messages);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка gRPC в getMessages', e);

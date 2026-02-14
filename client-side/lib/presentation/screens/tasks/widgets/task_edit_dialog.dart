@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:legion/presentation/screens/projects/bloc/project_state.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_event.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_state.dart';
+import 'package:legion/presentation/widgets/markdown_editor.dart';
 
 class TaskEditDialog extends StatefulWidget {
   final Task task;
@@ -111,7 +113,9 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
           });
         }
       });
-    } catch (e) {}
+    } catch (e) {
+      Logs().d('TaskEditDialog: _loadMembers', e);
+    }
   }
 
   @override
@@ -151,11 +155,6 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
         executor: _selectedExecutorId!,
       ),
     );
-  }
-
-  String _getUserDisplayName(User user) {
-    final name = '${user.name} ${user.surname}'.trim();
-    return name.isNotEmpty ? name : '@${user.username}';
   }
 
   @override
@@ -256,15 +255,11 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    MarkdownEditor(
                       controller: _descriptionController,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        hintText: 'Добавьте описание задачи',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
+                      hintText: 'Добавьте описание задачи (поддерживается Markdown)',
+                      minLines: 6,
+                      maxLines: 12,
                     ),
                     const SizedBox(height: 20),
                     Text(
@@ -291,7 +286,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                             if (userId == null) return null;
                             return DropdownMenuItem<int>(
                               value: userId,
-                              child: Text(_getUserDisplayName(user)),
+                              child: Text(user.displayName),
                             );
                           })
                           .whereType<DropdownMenuItem<int>>()
@@ -333,7 +328,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                             if (userId == null) return null;
                             return DropdownMenuItem<int>(
                               value: userId,
-                              child: Text(_getUserDisplayName(user)),
+                              child: Text(user.displayName),
                             );
                           })
                           .whereType<DropdownMenuItem<int>>()

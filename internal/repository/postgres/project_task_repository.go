@@ -10,15 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type taskRepository struct {
+type projectTaskRepository struct {
 	db *gorm.DB
 }
 
-func NewTaskRepository(db *gorm.DB) domain.TaskRepository {
-	return &taskRepository{db: db}
+func NewProjectTaskRepository(db *gorm.DB) domain.ProjectTaskRepository {
+	return &projectTaskRepository{db: db}
 }
 
-func (r *taskRepository) Create(ctx context.Context, task *domain.Task) error {
+func (p *projectTaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	projectId, err := uuid.Parse(task.ProjectId)
 	if err != nil {
 		return errors.New("неверный project_id")
@@ -33,7 +33,7 @@ func (r *taskRepository) Create(ctx context.Context, task *domain.Task) error {
 		columnId = &parsed
 	}
 
-	m := &TaskModel{
+	m := &ProjectTaskModel{
 		ProjectId:   projectId,
 		Name:        task.Name,
 		Description: task.Description,
@@ -42,7 +42,7 @@ func (r *taskRepository) Create(ctx context.Context, task *domain.Task) error {
 		Executor:    task.Executor,
 		ColumnId:    columnId,
 	}
-	if err := r.db.WithContext(ctx).Create(m).Error; err != nil {
+	if err := p.db.WithContext(ctx).Create(m).Error; err != nil {
 		return err
 	}
 
@@ -54,14 +54,14 @@ func (r *taskRepository) Create(ctx context.Context, task *domain.Task) error {
 	return nil
 }
 
-func (r *taskRepository) GetById(ctx context.Context, id string) (*domain.Task, error) {
+func (p *projectTaskRepository) GetById(ctx context.Context, id string) (*domain.Task, error) {
 	parsed, err := uuid.Parse(id)
 	if err != nil {
 		return nil, errors.New("задача не найдена")
 	}
 
-	var m TaskModel
-	if err := r.db.WithContext(ctx).Where("id = ?", parsed).First(&m).Error; err != nil {
+	var m ProjectTaskModel
+	if err := p.db.WithContext(ctx).Where("id = ?", parsed).First(&m).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.HandleNotFound(err, "задача не найдена")
 		}
@@ -71,14 +71,14 @@ func (r *taskRepository) GetById(ctx context.Context, id string) (*domain.Task, 
 	return taskModelToDomain(&m), nil
 }
 
-func (r *taskRepository) ListByProjectId(ctx context.Context, projectId string) ([]*domain.Task, error) {
+func (p *projectTaskRepository) ListByProjectId(ctx context.Context, projectId string) ([]*domain.Task, error) {
 	parsed, err := uuid.Parse(projectId)
 	if err != nil {
 		return nil, errors.New("неверный project_id")
 	}
 
-	var list []TaskModel
-	if err := r.db.WithContext(ctx).
+	var list []ProjectTaskModel
+	if err := p.db.WithContext(ctx).
 		Where("project_id = ?", parsed).
 		Order("created_at DESC").
 		Find(&list).Error; err != nil {
@@ -93,7 +93,7 @@ func (r *taskRepository) ListByProjectId(ctx context.Context, projectId string) 
 	return tasks, nil
 }
 
-func (r *taskRepository) EditColumnId(ctx context.Context, id string, columnId string) error {
+func (p *projectTaskRepository) EditColumnId(ctx context.Context, id string, columnId string) error {
 	parsed, err := uuid.Parse(id)
 	if err != nil {
 		return errors.New("неверный id задачи")
@@ -108,8 +108,8 @@ func (r *taskRepository) EditColumnId(ctx context.Context, id string, columnId s
 		colId = &parsedCol
 	}
 
-	if err := r.db.WithContext(ctx).
-		Model(&TaskModel{}).
+	if err := p.db.WithContext(ctx).
+		Model(&ProjectTaskModel{}).
 		Where("id = ?", parsed).
 		Update("column_id", colId).Error; err != nil {
 		return err
@@ -118,7 +118,7 @@ func (r *taskRepository) EditColumnId(ctx context.Context, id string, columnId s
 	return nil
 }
 
-func (r *taskRepository) Edit(ctx context.Context, task *domain.Task) error {
+func (p *projectTaskRepository) Edit(ctx context.Context, task *domain.Task) error {
 	parsed, err := uuid.Parse(task.Id)
 	if err != nil {
 		return errors.New("неверный id задачи")
@@ -141,8 +141,8 @@ func (r *taskRepository) Edit(ctx context.Context, task *domain.Task) error {
 		"column_id":   columnId,
 	}
 
-	if err := r.db.WithContext(ctx).
-		Model(&TaskModel{}).
+	if err := p.db.WithContext(ctx).
+		Model(&ProjectTaskModel{}).
 		Where("id = ?", parsed).
 		Updates(updates).Error; err != nil {
 		return err

@@ -3,6 +3,7 @@ import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/remote/project_remote_datasource.dart';
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
+import 'package:legion/domain/entities/project_activity.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
@@ -208,6 +209,28 @@ class ProjectRepositoryImpl implements ProjectRepository {
       if (e is Failure) rethrow;
       Logs().e('ProjectRepository: неожиданная ошибка в addTaskComment', e);
       throw ApiFailure('Ошибка добавления комментария');
+    }
+  }
+
+  @override
+  Future<List<ProjectActivity>> getProjectHistory(String projectId) async {
+    try {
+      return await _remote.getProjectHistory(projectId);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в getProjectHistory', e);
+      throw ApiFailure('Ошибка загрузки истории');
+    }
+  }
+
+  @override
+  Future<List<ProjectActivity>> getTaskHistory(String taskId) async {
+    try {
+      return await _remote.getTaskHistory(taskId);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в getTaskHistory', e);
+      throw ApiFailure('Ошибка загрузки истории задачи');
     }
   }
 }

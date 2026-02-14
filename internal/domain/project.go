@@ -40,3 +40,13 @@ type TaskComment struct {
 	Body      string
 	CreatedAt int64
 }
+
+type ProjectActivity struct {
+	Id        string
+	ProjectId string
+	TaskId    string
+	UserId    int
+	Action    string
+	Payload   string
+	CreatedAt int64
+}

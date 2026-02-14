@@ -44,6 +44,7 @@ class EditorRemoteDataSource implements IEditorRemoteDataSource {
       final resp = await _authGuard.execute(
         () => _client.transform(request),
       );
+
       return resp.text;
     } on GrpcError catch (e) {
       Logs().e('EditorRemoteDataSource: ошибка transform', e);

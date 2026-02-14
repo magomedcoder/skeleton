@@ -4,34 +4,38 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type ProjectUseCase struct {
-	ProjectRepo        domain.ProjectRepository
-	ProjectMemberRepo domain.ProjectMemberRepository
-	TaskRepo          domain.TaskRepository
-	TaskCommentRepo   domain.TaskCommentRepository
-	ProjectColumnRepo domain.ProjectColumnRepository
-	UserRepo          domain.UserRepository
+	ProjectRepo            domain.ProjectRepository
+	ProjectMemberRepo      domain.ProjectMemberRepository
+	ProjectTaskRepo        domain.ProjectTaskRepository
+	ProjectTaskCommentRepo domain.ProjectTaskCommentRepository
+	ProjectColumnRepo      domain.ProjectColumnRepository
+	ProjectActivityRepo    domain.ProjectActivityRepository
+	UserRepo               domain.UserRepository
 }
 
 func NewProjectUseCase(
 	projectRepo domain.ProjectRepository,
 	projectMemberRepo domain.ProjectMemberRepository,
-	taskRepo domain.TaskRepository,
-	taskCommentRepo domain.TaskCommentRepository,
+	projectTaskRepo domain.ProjectTaskRepository,
+	projectTaskCommentRepo domain.ProjectTaskCommentRepository,
 	projectColumnRepo domain.ProjectColumnRepository,
+	projectActivityRepo domain.ProjectActivityRepository,
 	userRepo domain.UserRepository,
 ) *ProjectUseCase {
 	return &ProjectUseCase{
-		ProjectRepo:        projectRepo,
-		ProjectMemberRepo:  projectMemberRepo,
-		TaskRepo:           taskRepo,
-		TaskCommentRepo:    taskCommentRepo,
-		ProjectColumnRepo:  projectColumnRepo,
-		UserRepo:           userRepo,
+		ProjectRepo:            projectRepo,
+		ProjectMemberRepo:      projectMemberRepo,
+		ProjectTaskRepo:        projectTaskRepo,
+		ProjectTaskCommentRepo: projectTaskCommentRepo,
+		ProjectColumnRepo:      projectColumnRepo,
+		ProjectActivityRepo:    projectActivityRepo,
+		UserRepo:               userRepo,
 	}
 }
 
@@ -76,7 +80,24 @@ func (p *ProjectUseCase) CreateProject(ctx context.Context, name string, created
 		}
 	}
 
+	if err := p.recordActivity(ctx, project.Id, "", createdBy, "created_project", ""); err != nil {
+
+	}
+
 	return project, nil
+}
+
+func (p *ProjectUseCase) recordActivity(ctx context.Context, projectId, taskId string, userId int, action, payload string) error {
+	a := &domain.ProjectActivity{
+		ProjectId: projectId,
+		TaskId:    taskId,
+		UserId:    userId,
+		Action:    action,
+		Payload:   payload,
+		CreatedAt: time.Now().Unix(),
+	}
+
+	return p.ProjectActivityRepo.Create(ctx, a)
 }
 
 func (p *ProjectUseCase) GetProjects(ctx context.Context, userId int, page, pageSize int32) ([]*domain.Project, int32, error) {
@@ -128,6 +149,7 @@ func (p *ProjectUseCase) AddUserToProject(ctx context.Context, projectId string,
 		if err := p.ProjectMemberRepo.Add(ctx, projectId, userId, createdBy); err != nil {
 			return err
 		}
+		_ = p.recordActivity(ctx, projectId, "", createdBy, "member_added", "")
 	}
 
 	return nil
@@ -206,9 +228,10 @@ func (p *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name 
 		Executor:    executor,
 		ColumnId:    columnId,
 	}
-	if err := p.TaskRepo.Create(ctx, task); err != nil {
+	if err := p.ProjectTaskRepo.Create(ctx, task); err != nil {
 		return nil, err
 	}
+	_ = p.recordActivity(ctx, projectId, task.Id, createdBy, "created_task", "")
 
 	return task, nil
 }
@@ -222,7 +245,7 @@ func (p *ProjectUseCase) GetTasks(ctx context.Context, projectId string, userId 
 		return nil, errors.New("доступ запрещён")
 	}
 
-	tasks, err := p.TaskRepo.ListByProjectId(ctx, projectId)
+	tasks, err := p.ProjectTaskRepo.ListByProjectId(ctx, projectId)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +254,7 @@ func (p *ProjectUseCase) GetTasks(ctx context.Context, projectId string, userId 
 }
 
 func (p *ProjectUseCase) GetTask(ctx context.Context, taskId string, userId int) (*domain.Task, error) {
-	task, err := p.TaskRepo.GetById(ctx, taskId)
+	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +271,7 @@ func (p *ProjectUseCase) GetTask(ctx context.Context, taskId string, userId int)
 }
 
 func (p *ProjectUseCase) EditTaskColumnId(ctx context.Context, taskId string, columnId string, userId int) error {
-	task, err := p.TaskRepo.GetById(ctx, taskId)
+	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
 	if err != nil {
 		return err
 	}
@@ -271,11 +294,16 @@ func (p *ProjectUseCase) EditTaskColumnId(ctx context.Context, taskId string, co
 		}
 	}
 
-	return p.TaskRepo.EditColumnId(ctx, taskId, columnId)
+	if err := p.ProjectTaskRepo.EditColumnId(ctx, taskId, columnId); err != nil {
+		return err
+	}
+	_ = p.recordActivity(ctx, task.ProjectId, taskId, userId, "moved_task", columnId)
+
+	return nil
 }
 
 func (p *ProjectUseCase) EditTask(ctx context.Context, taskId string, name string, description string, assigner int, executor int, userId int) (*domain.Task, error) {
-	task, err := p.TaskRepo.GetById(ctx, taskId)
+	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
 	if err != nil {
 		return nil, err
 	}
@@ -313,9 +341,10 @@ func (p *ProjectUseCase) EditTask(ctx context.Context, taskId string, name strin
 	task.Assigner = assigner
 	task.Executor = executor
 
-	if err := p.TaskRepo.Edit(ctx, task); err != nil {
+	if err := p.ProjectTaskRepo.Edit(ctx, task); err != nil {
 		return nil, err
 	}
+	_ = p.recordActivity(ctx, task.ProjectId, task.Id, userId, "edited_task", "")
 
 	return task, nil
 }
@@ -376,6 +405,7 @@ func (p *ProjectUseCase) CreateProjectColumn(ctx context.Context, projectId stri
 	if err := p.ProjectColumnRepo.Create(ctx, col); err != nil {
 		return nil, err
 	}
+	_ = p.recordActivity(ctx, projectId, "", userId, "column_created", col.Title)
 
 	return col, nil
 }
@@ -421,6 +451,7 @@ func (p *ProjectUseCase) EditProjectColumn(ctx context.Context, colId string, ti
 	if err := p.ProjectColumnRepo.Edit(ctx, col); err != nil {
 		return nil, err
 	}
+	_ = p.recordActivity(ctx, col.ProjectId, "", userId, "column_edited", col.Title)
 
 	return p.ProjectColumnRepo.GetById(ctx, col.Id)
 }
@@ -439,12 +470,13 @@ func (p *ProjectUseCase) DeleteProjectColumn(ctx context.Context, colId string, 
 	if !isMember {
 		return errors.New("доступ запрещён")
 	}
+	_ = p.recordActivity(ctx, col.ProjectId, "", userId, "column_deleted", col.Title)
 
 	return p.ProjectColumnRepo.Delete(ctx, colId)
 }
 
 func (p *ProjectUseCase) AddTaskComment(ctx context.Context, taskId string, body string, userId int) (*domain.TaskComment, error) {
-	task, err := p.TaskRepo.GetById(ctx, taskId)
+	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
 	if err != nil {
 		return nil, err
 	}
@@ -467,15 +499,16 @@ func (p *ProjectUseCase) AddTaskComment(ctx context.Context, taskId string, body
 		UserId: userId,
 		Body:   body,
 	}
-	if err := p.TaskCommentRepo.Create(ctx, comment); err != nil {
+	if err := p.ProjectTaskCommentRepo.Create(ctx, comment); err != nil {
 		return nil, err
 	}
+	_ = p.recordActivity(ctx, task.ProjectId, taskId, userId, "comment_added", "")
 
 	return comment, nil
 }
 
 func (p *ProjectUseCase) GetTaskComments(ctx context.Context, taskId string, userId int) ([]*domain.TaskComment, error) {
-	task, err := p.TaskRepo.GetById(ctx, taskId)
+	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
 	if err != nil {
 		return nil, err
 	}
@@ -488,5 +521,36 @@ func (p *ProjectUseCase) GetTaskComments(ctx context.Context, taskId string, use
 		return nil, errors.New("доступ запрещён")
 	}
 
-	return p.TaskCommentRepo.ListByTaskId(ctx, taskId)
+	return p.ProjectTaskCommentRepo.ListByTaskId(ctx, taskId)
+}
+
+func (p *ProjectUseCase) GetProjectHistory(ctx context.Context, projectId string, userId int) ([]*domain.ProjectActivity, error) {
+	isMember, err := p.ProjectMemberRepo.IsMember(ctx, projectId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	return p.ProjectActivityRepo.ListByProjectId(ctx, projectId, 200)
+}
+
+func (p *ProjectUseCase) GetTaskHistory(ctx context.Context, taskId string, userId int) ([]*domain.ProjectActivity, error) {
+	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	isMember, err := p.ProjectMemberRepo.IsMember(ctx, task.ProjectId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	return p.ProjectActivityRepo.ListByTaskId(ctx, taskId, 200)
 }

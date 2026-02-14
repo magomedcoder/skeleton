@@ -17,6 +17,12 @@ class User extends Equatable {
 
   bool get isAdmin => role == 1;
 
+  String get displayName {
+    final n = '$name $surname'.trim();
+
+    return n.isNotEmpty ? n : '@$username';
+  }
+
   @override
   List<Object?> get props => [id, username, name, surname, role];
 }

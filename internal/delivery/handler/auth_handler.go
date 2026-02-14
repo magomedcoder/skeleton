@@ -27,6 +27,15 @@ func NewAuthHandler(cfg *config.Config, authUseCase *usecase.AuthUseCase) *AuthH
 	}
 }
 
+func (a *AuthHandler) getSession(ctx context.Context) (*middleware.JSession, error) {
+	session := middleware.GetSession(ctx)
+	if session == nil {
+		return nil, status.Error(codes.Unauthenticated, "сессия не найдена")
+	}
+
+	return session, nil
+}
+
 func (a *AuthHandler) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	logger.D("AuthHandler: вход пользователя %s", req.Username)
 	user, accessToken, refreshToken, err := a.authUseCase.Login(ctx, req.Username, req.Password)
@@ -59,9 +68,9 @@ func (a *AuthHandler) RefreshToken(ctx context.Context, req *authpb.RefreshToken
 }
 
 func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
-	session := middleware.GetSession(ctx)
-	if session == nil {
-		return nil, status.Error(codes.Unauthenticated, "сессия не найдена")
+	session, err := a.getSession(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	logger.D("AuthHandler: выход пользователя %d", session.Uid)
@@ -77,11 +86,10 @@ func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*a
 }
 
 func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePasswordRequest) (*authpb.ChangePasswordResponse, error) {
-	session := middleware.GetSession(ctx)
-	if session == nil {
-		return nil, status.Error(codes.Unauthenticated, "сессия не найдена")
+	session, err := a.getSession(ctx)
+	if err != nil {
+		return nil, err
 	}
-
 	logger.D("AuthHandler: смена пароля пользователя %d", session.Uid)
 	if err := a.authUseCase.ChangePassword(ctx, session.Uid, req.OldPassword, req.NewPassword, req.GetCurrentRefreshToken()); err != nil {
 		logger.W("AuthHandler: ошибка смены пароля: %v", err)
@@ -108,9 +116,9 @@ func (a *AuthHandler) CheckVersion(ctx context.Context, req *authpb.CheckVersion
 }
 
 func (a *AuthHandler) GetDevices(ctx context.Context, req *authpb.GetDevicesRequest) (*authpb.GetDevicesResponse, error) {
-	session := middleware.GetSession(ctx)
-	if session == nil {
-		return nil, status.Error(codes.Unauthenticated, "сессия не найдена")
+	session, err := a.getSession(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	tokens, err := a.authUseCase.GetDevices(ctx, session.Uid)
@@ -131,11 +139,11 @@ func (a *AuthHandler) GetDevices(ctx context.Context, req *authpb.GetDevicesRequ
 }
 
 func (a *AuthHandler) RevokeDevice(ctx context.Context, req *authpb.RevokeDeviceRequest) (*authpb.RevokeDeviceResponse, error) {
-	session := middleware.GetSession(ctx)
-	if session == nil {
-		return nil, status.Error(codes.Unauthenticated, "сессия не найдена")
+	session, err := a.getSession(ctx)
+	if err != nil {
+		return nil, err
 	}
-
+	
 	if err := a.authUseCase.RevokeDevice(ctx, session.Uid, int(req.GetDeviceId())); err != nil {
 		logger.W("AuthHandler: ошибка отзыва устройства: %v", err)
 		return nil, error2.ToStatusError(codes.NotFound, err)

@@ -38,6 +38,10 @@ service ProjectService {
   rpc AddTaskComment(AddTaskCommentRequest) returns (AddTaskCommentResponse);
 
   rpc GetTaskComments(GetTaskCommentsRequest) returns (GetTaskCommentsResponse);
+
+  rpc GetProjectHistory(GetProjectHistoryRequest) returns (GetProjectHistoryResponse);
+
+  rpc GetTaskHistory(GetTaskHistoryRequest) returns (GetTaskHistoryResponse);
 }
 
 message Project {
@@ -210,4 +214,30 @@ message GetTaskCommentsRequest {
 
 message GetTaskCommentsResponse {
   repeated TaskComment comments = 1;
+}
+
+message ProjectActivity {
+  string id = 1;
+  string project_id = 2;
+  string task_id = 3;
+  int64 user_id = 4;
+  string action = 5;
+  string payload = 6;
+  int64 created_at = 7;
+}
+
+message GetProjectHistoryRequest {
+  string project_id = 1;
+}
+
+message GetProjectHistoryResponse {
+  repeated ProjectActivity items = 1;
+}
+
+message GetTaskHistoryRequest {
+  string task_id = 1;
+}
+
+message GetTaskHistoryResponse {
+  repeated ProjectActivity items = 1;
 }

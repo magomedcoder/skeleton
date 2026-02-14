@@ -44,6 +44,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       final response = await _client.login(request);
       final result = AuthMapper.loginResponseFromProto(response);
       Logs().i('AuthRemoteDataSource: вход выполнен успешно');
+
       return result;
     } on GrpcError catch (e) {
       Logs().e('AuthRemoteDataSource: ошибка входа (gRPC)', e);
@@ -67,6 +68,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       final response = await _client.refreshToken(request);
       final tokens = AuthMapper.refreshTokenResponseFromProto(response);
       Logs().i('AuthRemoteDataSource: токен обновлён');
+
       return tokens;
     } on GrpcError catch (e) {
       Logs().e('AuthRemoteDataSource: ошибка обновления токена', e);
@@ -130,15 +132,15 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     try {
       final request = authpb.GetDevicesRequest();
       final response = await _client.getDevices(request);
-      final devices = response.devices
-        .map((d) => Device(
-          id: d.id,
-          createdAt: DateTime.fromMillisecondsSinceEpoch(
-            d.createdAtSeconds.toInt() * 1000,
-          ),
-        ))
-        .toList();
+      final devices = response.devices.map((d) => Device(
+        id: d.id,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          d.createdAtSeconds.toInt() * 1000,
+        ),
+      ))
+      .toList();
       Logs().i('AuthRemoteDataSource: получено ${devices.length} устройств');
+
       return devices;
     } on GrpcError catch (e) {
       Logs().e('AuthRemoteDataSource: ошибка списка устройств', e);

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
+import 'package:legion/presentation/screens/projects/project_history_view.dart';
 import 'package:legion/presentation/screens/projects/project_members_screen.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/tasks_screen.dart';
@@ -29,27 +30,40 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
+  void _openHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProjectHistoryView(projectId: widget.project.id),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => sl<TaskBloc>(),
-      child: Builder(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: Text(widget.project.name),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.people),
-                tooltip: 'Участники проекта',
-                onPressed: _openMembers,
-              ),
-            ],
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          body: BlocProvider.value(
+          title: Text(widget.project.name),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'История',
+              onPressed: _openHistory,
+            ),
+            IconButton(
+              icon: const Icon(Icons.people),
+              tooltip: 'Участники проекта',
+              onPressed: _openMembers,
+            ),
+          ],
+        ),
+        body: Builder(
+          builder: (context) => BlocProvider.value(
             value: context.read<TaskBloc>(),
             child: TasksScreen(project: widget.project),
           ),

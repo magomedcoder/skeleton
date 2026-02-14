@@ -57,6 +57,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
     try {
       final response = await _client.checkConnection(commonpb.Empty());
       Logs().i('ChatRemoteDataSource: подключение ${response.isConnected ? "установлено" : "нет"}');
+
       return response.isConnected;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unavailable) {
@@ -77,6 +78,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
     try {
       final response = await _client.getModels(commonpb.Empty());
       Logs().i('ChatRemoteDataSource: получено моделей: ${response.models.length}');
+
       return response.models;
     } on GrpcError catch (e) {
       if (e.code == StatusCode.unavailable) {
@@ -148,6 +150,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
         () => _client.createSession(request),
       );
       Logs().i('ChatRemoteDataSource: сессия создана');
+
       return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка создания сессии', e);
@@ -167,6 +170,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
       final response = await _authGuard.execute(
         () => _client.getSession(request),
       );
+
       return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка получения сессии', e);
@@ -194,6 +198,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
       );
       final sessions = AIChatSessionMapper.listFromProto(response.sessions);
       Logs().i('ChatRemoteDataSource: получено сессий: ${sessions.length}');
+
       return sessions;
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка получения сессий', e);
@@ -221,6 +226,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
       final response = await _authGuard.execute(
         () => _client.getSessionMessages(request),
       );
+
       return AIMessageMapper.listFromProto(response.messages);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка получения сообщений', e);
@@ -261,6 +267,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
         () => _client.updateSessionTitle(request),
       );
       Logs().i('ChatRemoteDataSource: заголовок обновлён');
+
       return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка обновления заголовка', e);
@@ -284,6 +291,7 @@ class AIChatRemoteDataSource implements IAIChatRemoteDataSource {
         () => _client.updateSessionModel(request),
       );
       Logs().i('ChatRemoteDataSource: модель сессии обновлена');
+
       return AIChatSessionMapper.fromProto(response);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка обновления модели сессии', e);

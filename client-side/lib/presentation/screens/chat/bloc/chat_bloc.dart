@@ -1,14 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/chat.dart';
-import 'package:legion/domain/repositories/user_chat_repository.dart';
+import 'package:legion/domain/usecases/chat/create_chat_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_chat_messages_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
+import 'package:legion/domain/usecases/chat/send_chat_message_usecase.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  final ChatRepository repository;
+  final GetChatsUseCase getChatsUseCase;
+  final CreateChatUseCase createChatUseCase;
+  final GetChatMessagesUseCase getChatMessagesUseCase;
+  final SendChatMessageUseCase sendChatMessageUseCase;
 
-  ChatBloc({required this.repository}) : super(const ChatState()) {
+  ChatBloc({
+    required this.getChatsUseCase,
+    required this.createChatUseCase,
+    required this.getChatMessagesUseCase,
+    required this.sendChatMessageUseCase,
+  }) : super(const ChatState()) {
     on<ChatStarted>(_onStarted);
     on<ChatLoadChats>(_onLoadChats);
     on<ChatOpenWithUser>(_onOpenWithUser);
@@ -35,7 +46,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final chats = await repository.getChats(page: page, pageSize: pageSize);
+      final chats = await getChatsUseCase(page: page, pageSize: pageSize);
       emit(state.copyWith(isLoading: false, chats: chats, error: null));
     } catch (e) {
       Logs().e('ChatBloc: ошибка загрузки чатов', e);
@@ -49,8 +60,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final chat = await repository.createChat(event.userId);
-      final chats = await repository.getChats(page: 1, pageSize: 50);
+      final chat = await createChatUseCase(event.userId);
+      final chats = await getChatsUseCase(page: 1, pageSize: 50);
       emit(state.copyWith(isLoading: false, chats: chats, selectedChat: chat));
       await _loadMessagesForChat(chat, emit);
     } catch (e) {
@@ -76,7 +87,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _loadMessagesForChat(Chat chat, Emitter<ChatState> emit) async {
     try {
-      final messages = await repository.getMessages(
+      final messages = await getChatMessagesUseCase(
         chatId: chat.id,
         page: 1,
         pageSize: 100,
@@ -104,7 +115,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     emit(state.copyWith(isSending: true, error: null));
     try {
-      final message = await repository.sendMessage(
+      final message = await sendChatMessageUseCase(
         chatId: chat.id,
         content: text,
       );

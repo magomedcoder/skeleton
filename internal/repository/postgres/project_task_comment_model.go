@@ -7,7 +7,7 @@ import (
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
-type TaskCommentModel struct {
+type ProjectTaskCommentModel struct {
 	Id        uuid.UUID `gorm:"column:id;type:uuid;DEFAULT:gen_random_uuid()"`
 	TaskId    uuid.UUID `gorm:"column:task_id"`
 	UserId    int       `gorm:"column:user_id"`
@@ -15,25 +15,25 @@ type TaskCommentModel struct {
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
 }
 
-func (TaskCommentModel) TableName() string {
-	return "task_comments"
+func (ProjectTaskCommentModel) TableName() string {
+	return "project_task_comments"
 }
 
-func taskCommentModelToDomain(m *TaskCommentModel) *domain.TaskComment {
-	if m == nil {
+func taskCommentModelToDomain(p *ProjectTaskCommentModel) *domain.TaskComment {
+	if p == nil {
 		return nil
 	}
 
 	return &domain.TaskComment{
-		Id:        m.Id.String(),
-		TaskId:    m.TaskId.String(),
-		UserId:    m.UserId,
-		Body:      m.Body,
-		CreatedAt: m.CreatedAt.Unix(),
+		Id:        p.Id.String(),
+		TaskId:    p.TaskId.String(),
+		UserId:    p.UserId,
+		Body:      p.Body,
+		CreatedAt: p.CreatedAt.Unix(),
 	}
 }
 
-func taskCommentDomainToModel(c *domain.TaskComment) *TaskCommentModel {
+func projectTaskCommentDomainToModel(c *domain.TaskComment) *ProjectTaskCommentModel {
 	if c == nil {
 		return nil
 	}
@@ -44,7 +44,7 @@ func taskCommentDomainToModel(c *domain.TaskComment) *TaskCommentModel {
 		commentId, _ = uuid.Parse(c.Id)
 	}
 
-	return &TaskCommentModel{
+	return &ProjectTaskCommentModel{
 		Id:        commentId,
 		TaskId:    taskId,
 		UserId:    c.UserId,

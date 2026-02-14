@@ -39,6 +39,7 @@ class SearchRemoteDataSource implements ISearchRemoteDataSource {
       );
       final resp = await _authGuard.execute(() => _client.users(req));
       final users = UserMapper.listFromProto(resp.users);
+
       return (users, resp.total);
     } on GrpcError catch (e) {
       Logs().e('SearchRemoteDataSource: ошибка gRPC', e);

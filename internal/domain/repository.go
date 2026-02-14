@@ -116,7 +116,13 @@ type ProjectColumnRepository interface {
 	ExistsStatusKey(ctx context.Context, projectId string, statusKey string, excludeId string) (bool, error)
 }
 
-type TaskRepository interface {
+type ProjectTaskCommentRepository interface {
+	Create(ctx context.Context, comment *TaskComment) error
+
+	ListByTaskId(ctx context.Context, taskId string) ([]*TaskComment, error)
+}
+
+type ProjectTaskRepository interface {
 	Create(ctx context.Context, task *Task) error
 
 	GetById(ctx context.Context, id string) (*Task, error)
@@ -128,8 +134,10 @@ type TaskRepository interface {
 	Edit(ctx context.Context, task *Task) error
 }
 
-type TaskCommentRepository interface {
-	Create(ctx context.Context, comment *TaskComment) error
+type ProjectActivityRepository interface {
+	Create(ctx context.Context, a *ProjectActivity) error
 
-	ListByTaskId(ctx context.Context, taskId string) ([]*TaskComment, error)
+	ListByProjectId(ctx context.Context, projectId string, limit int) ([]*ProjectActivity, error)
+
+	ListByTaskId(ctx context.Context, taskId string, limit int) ([]*ProjectActivity, error)
 }

@@ -55,6 +55,18 @@ import 'package:legion/domain/usecases/project/get_task_usecase.dart';
 import 'package:legion/domain/usecases/project/get_tasks_usecase.dart';
 import 'package:legion/domain/usecases/project/edit_task_column_id_usecase.dart';
 import 'package:legion/domain/usecases/project/edit_task_usecase.dart';
+import 'package:legion/domain/usecases/project/get_task_comments_usecase.dart';
+import 'package:legion/domain/usecases/project/add_task_comment_usecase.dart';
+import 'package:legion/domain/usecases/project/get_project_columns_usecase.dart';
+import 'package:legion/domain/usecases/project/create_project_column_usecase.dart';
+import 'package:legion/domain/usecases/project/edit_project_column_usecase.dart';
+import 'package:legion/domain/usecases/project/delete_project_column_usecase.dart';
+import 'package:legion/domain/usecases/project/get_project_history_usecase.dart';
+import 'package:legion/domain/usecases/project/get_task_history_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
+import 'package:legion/domain/usecases/chat/create_chat_usecase.dart';
+import 'package:legion/domain/usecases/chat/get_chat_messages_usecase.dart';
+import 'package:legion/domain/usecases/chat/send_chat_message_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_usecase.dart';
 import 'package:legion/domain/usecases/runners/set_runner_enabled_usecase.dart';
@@ -206,6 +218,18 @@ Future<void> init() async {
   sl.registerFactory(() => GetTaskUseCase(sl()));
   sl.registerFactory(() => EditTaskColumnIdUseCase(sl()));
   sl.registerFactory(() => EditTaskUseCase(sl()));
+  sl.registerFactory(() => GetTaskCommentsUseCase(sl()));
+  sl.registerFactory(() => AddTaskCommentUseCase(sl()));
+  sl.registerFactory(() => GetProjectColumnsUseCase(sl()));
+  sl.registerFactory(() => CreateProjectColumnUseCase(sl()));
+  sl.registerFactory(() => EditProjectColumnUseCase(sl()));
+  sl.registerFactory(() => DeleteProjectColumnUseCase(sl()));
+  sl.registerFactory(() => GetProjectHistoryUseCase(sl()));
+  sl.registerFactory(() => GetTaskHistoryUseCase(sl()));
+  sl.registerFactory(() => GetChatsUseCase(sl()));
+  sl.registerFactory(() => CreateChatUseCase(sl()));
+  sl.registerFactory(() => GetChatMessagesUseCase(sl()));
+  sl.registerFactory(() => SendChatMessageUseCase(sl()));
 
   sl.registerFactory(
     () => AIChatBloc(
@@ -225,7 +249,14 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerFactory(() => ChatBloc(repository: sl<ChatRepository>()));
+  sl.registerFactory(
+    () => ChatBloc(
+      getChatsUseCase: sl(),
+      createChatUseCase: sl(),
+      getChatMessagesUseCase: sl(),
+      sendChatMessageUseCase: sl(),
+    ),
+  );
 
   sl.registerFactory(
     () => EditorBloc(

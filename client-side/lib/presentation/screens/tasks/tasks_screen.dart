@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
-import 'package:legion/domain/repositories/project_repository.dart';
+import 'package:legion/domain/usecases/project/get_project_columns_usecase.dart';
+import 'package:legion/domain/usecases/project/create_project_column_usecase.dart';
+import 'package:legion/domain/usecases/project/edit_project_column_usecase.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_event.dart';
@@ -39,8 +42,7 @@ class _TasksScreenState extends State<TasksScreen> {
   Future<void> _loadColumns() async {
     setState(() => _columnsLoading = true);
     try {
-      final repo = di.sl<ProjectRepository>();
-      final list = await repo.getProjectColumns(widget.project.id);
+      final list = await di.sl<GetProjectColumnsUseCase>()(widget.project.id);
       if (mounted) setState(() => _columns = list..sort((a, b) => a.position.compareTo(b.position)));
     } catch (_) {
       if (mounted) setState(() => _columns = const []);
@@ -53,8 +55,7 @@ class _TasksScreenState extends State<TasksScreen> {
     ColumnEditDialog.showCreate(
       context,
       onSave: (title, colorHex) async {
-        final repo = di.sl<ProjectRepository>();
-        await repo.createProjectColumn(widget.project.id, title, colorHex);
+        await di.sl<CreateProjectColumnUseCase>()(widget.project.id, title, colorHex);
         await _loadColumns();
       },
     );
@@ -65,8 +66,7 @@ class _TasksScreenState extends State<TasksScreen> {
       context,
       column: column,
       onSave: (title, colorHex) async {
-        final repo = di.sl<ProjectRepository>();
-        await repo.editProjectColumn(column.id, title: title, color: colorHex);
+        await di.sl<EditProjectColumnUseCase>()(column.id, title: title, color: colorHex);
         await _loadColumns();
       },
     );
@@ -78,9 +78,9 @@ class _TasksScreenState extends State<TasksScreen> {
     try {
       projectBloc = context.read<ProjectBloc>();
     } catch (e) {
-
+      Logs().d('TasksScreen: _showCreateDialog ProjectBloc', e);
     }
-    
+
     showDialog<void>(
       context: context,
       builder: (ctx) {

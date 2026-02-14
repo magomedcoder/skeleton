@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
+import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:legion/presentation/screens/projects/bloc/project_state.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_event.dart';
 import 'package:legion/presentation/screens/tasks/bloc/task_state.dart';
+import 'package:legion/presentation/widgets/markdown_editor.dart';
 
 class TaskCreateDialog extends StatefulWidget {
   final String projectId;
@@ -60,7 +62,7 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
         }
       });
     } catch (e) {
-
+      Logs().d('TaskCreateDialog: _loadMembers', e);
     }
   }
 
@@ -100,11 +102,6 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
       Navigator.of(context).pop();
       widget.onCreated?.call();
     }
-  }
-
-  String _getUserDisplayName(User user) {
-    final name = '${user.name} ${user.surname}'.trim();
-    return name.isNotEmpty ? name : '@${user.username}';
   }
 
   @override
@@ -204,15 +201,11 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         const SizedBox(height: 8),
-                        TextField(
+                        MarkdownEditor(
                           controller: _descriptionController,
-                          minLines: 1,
-                          maxLines: 4,
-                          decoration: const InputDecoration(
-                            hintText: 'Добавьте описание задачи',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
+                          hintText: 'Добавьте описание задачи (поддерживается Markdown)',
+                          minLines: 6,
+                          maxLines: 12,
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -240,7 +233,7 @@ class _TaskCreateDialogState extends State<TaskCreateDialog> {
                                 if (userId == null) return null;
                                 return DropdownMenuItem<int>(
                                   value: userId,
-                                  child: Text(_getUserDisplayName(user)),
+                                  child: Text(user.displayName),
                                 );
                               }).whereType<DropdownMenuItem<int>>().toList(),
                               onChanged: _isSubmitting

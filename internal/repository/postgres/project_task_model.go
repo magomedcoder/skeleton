@@ -7,46 +7,46 @@ import (
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
-type TaskModel struct {
+type ProjectTaskModel struct {
 	Id          uuid.UUID  `gorm:"column:id;type:uuid;DEFAULT:gen_random_uuid()"`
 	ProjectId   uuid.UUID  `gorm:"column:project_id"`
 	Name        string     `gorm:"column:name"`
-	Description string      `gorm:"column:description"`
-	CreatedBy   int         `gorm:"column:created_by"`
-	CreatedAt   time.Time   `gorm:"column:created_at"`
-	Assigner    int         `gorm:"column:assigner"`
-	Executor    int         `gorm:"column:executor"`
-	ColumnId    *uuid.UUID  `gorm:"column:column_id"`
+	Description string     `gorm:"column:description"`
+	CreatedBy   int        `gorm:"column:created_by"`
+	CreatedAt   time.Time  `gorm:"column:created_at"`
+	Assigner    int        `gorm:"column:assigner"`
+	Executor    int        `gorm:"column:executor"`
+	ColumnId    *uuid.UUID `gorm:"column:column_id"`
 }
 
-func (TaskModel) TableName() string {
-	return "tasks"
+func (ProjectTaskModel) TableName() string {
+	return "project_tasks"
 }
 
-func taskModelToDomain(m *TaskModel) *domain.Task {
-	if m == nil {
+func taskModelToDomain(p *ProjectTaskModel) *domain.Task {
+	if p == nil {
 		return nil
 	}
 
 	columnId := ""
-	if m.ColumnId != nil {
-		columnId = m.ColumnId.String()
+	if p.ColumnId != nil {
+		columnId = p.ColumnId.String()
 	}
 
 	return &domain.Task{
-		Id:          m.Id.String(),
-		ProjectId:   m.ProjectId.String(),
-		Name:        m.Name,
-		Description: m.Description,
-		CreatedBy:   m.CreatedBy,
-		CreatedAt:   m.CreatedAt.Unix(),
-		Assigner:    m.Assigner,
-		Executor:    m.Executor,
+		Id:          p.Id.String(),
+		ProjectId:   p.ProjectId.String(),
+		Name:        p.Name,
+		Description: p.Description,
+		CreatedBy:   p.CreatedBy,
+		CreatedAt:   p.CreatedAt.Unix(),
+		Assigner:    p.Assigner,
+		Executor:    p.Executor,
 		ColumnId:    columnId,
 	}
 }
 
-func taskDomainToModel(t *domain.Task) *TaskModel {
+func projectTaskDomainToModel(t *domain.Task) *ProjectTaskModel {
 	if t == nil {
 		return nil
 	}
@@ -63,7 +63,7 @@ func taskDomainToModel(t *domain.Task) *TaskModel {
 		columnId = &parsed
 	}
 
-	return &TaskModel{
+	return &ProjectTaskModel{
 		Id:          taskId,
 		ProjectId:   projectId,
 		Name:        t.Name,

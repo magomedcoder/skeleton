@@ -9,26 +9,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type taskCommentRepository struct {
+type projectTaskCommentRepository struct {
 	db *gorm.DB
 }
 
-func NewTaskCommentRepository(db *gorm.DB) domain.TaskCommentRepository {
-	return &taskCommentRepository{db: db}
+func NewProjectTaskCommentRepository(db *gorm.DB) domain.ProjectTaskCommentRepository {
+	return &projectTaskCommentRepository{db: db}
 }
 
-func (r *taskCommentRepository) Create(ctx context.Context, comment *domain.TaskComment) error {
+func (p *projectTaskCommentRepository) Create(ctx context.Context, comment *domain.TaskComment) error {
 	taskId, err := uuid.Parse(comment.TaskId)
 	if err != nil {
 		return errors.New("неверный task_id")
 	}
 
-	m := &TaskCommentModel{
+	m := &ProjectTaskCommentModel{
 		TaskId: taskId,
 		UserId: comment.UserId,
 		Body:   comment.Body,
 	}
-	if err := r.db.WithContext(ctx).Create(m).Error; err != nil {
+	if err := p.db.WithContext(ctx).Create(m).Error; err != nil {
 		return err
 	}
 
@@ -40,14 +40,14 @@ func (r *taskCommentRepository) Create(ctx context.Context, comment *domain.Task
 	return nil
 }
 
-func (r *taskCommentRepository) ListByTaskId(ctx context.Context, taskId string) ([]*domain.TaskComment, error) {
+func (p *projectTaskCommentRepository) ListByTaskId(ctx context.Context, taskId string) ([]*domain.TaskComment, error) {
 	parsed, err := uuid.Parse(taskId)
 	if err != nil {
 		return nil, errors.New("неверный task_id")
 	}
 
-	var list []TaskCommentModel
-	if err := r.db.WithContext(ctx).
+	var list []ProjectTaskCommentModel
+	if err := p.db.WithContext(ctx).
 		Where("task_id = ?", parsed).
 		Order("created_at ASC").
 		Find(&list).Error; err != nil {

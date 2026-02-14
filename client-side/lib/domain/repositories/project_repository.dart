@@ -1,5 +1,6 @@
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
+import 'package:legion/domain/entities/project_activity.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
@@ -36,4 +37,8 @@ abstract class ProjectRepository {
   Future<List<TaskComment>> getTaskComments(String taskId);
 
   Future<void> addTaskComment(String taskId, String body);
+
+  Future<List<ProjectActivity>> getProjectHistory(String projectId);
+
+  Future<List<ProjectActivity>> getTaskHistory(String taskId);
 }

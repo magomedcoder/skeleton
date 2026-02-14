@@ -11,6 +11,7 @@ import 'package:legion/data/mappers/user_mapper.dart';
 import 'package:legion/data/mappers/board_column_mapper.dart';
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
+import 'package:legion/domain/entities/project_activity.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
@@ -48,6 +49,10 @@ abstract class IProjectRemoteDataSource {
   Future<List<TaskComment>> getTaskComments(String taskId);
 
   Future<void> addTaskComment(String taskId, String body);
+
+  Future<List<ProjectActivity>> getProjectHistory(String projectId);
+
+  Future<List<ProjectActivity>> getTaskHistory(String taskId);
 }
 
 class ProjectRemoteDataSource implements IProjectRemoteDataSource {
@@ -414,6 +419,54 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
     }
   }
 
+  @override
+  Future<List<ProjectActivity>> getProjectHistory(String projectId) async {
+    Logs().d('ProjectRemoteDataSource: getProjectHistory projectId=$projectId');
+    try {
+      final req = projectpb.GetProjectHistoryRequest(projectId: projectId);
+      final resp = await _authGuard.execute(() => _client.getProjectHistory(req));
+      return resp.items.map((a) => ProjectActivity(
+        id: a.id,
+        projectId: a.projectId,
+        taskId: a.taskId,
+        userId: a.userId.toInt(),
+        action: a.action,
+        payload: a.payload,
+        createdAt: a.createdAt.toInt(),
+      )).toList();
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в getProjectHistory', e);
+      throwGrpcError(e, 'Ошибка загрузки истории');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в getProjectHistory', e);
+      throw ApiFailure('Ошибка загрузки истории');
+    }
+  }
+
+  @override
+  Future<List<ProjectActivity>> getTaskHistory(String taskId) async {
+    Logs().d('ProjectRemoteDataSource: getTaskHistory taskId=$taskId');
+    try {
+      final req = projectpb.GetTaskHistoryRequest(taskId: taskId);
+      final resp = await _authGuard.execute(() => _client.getTaskHistory(req));
+      return resp.items.map((a) => ProjectActivity(
+        id: a.id,
+        projectId: a.projectId,
+        taskId: a.taskId,
+        userId: a.userId.toInt(),
+        action: a.action,
+        payload: a.payload,
+        createdAt: a.createdAt.toInt(),
+      )).toList();
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в getTaskHistory', e);
+      throwGrpcError(e, 'Ошибка загрузки истории задачи');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в getTaskHistory', e);
+      throw ApiFailure('Ошибка загрузки истории задачи');
+    }
+  }
+
   static String _slugFromTitle(String title) {
     final sb = StringBuffer();
     for (var i = 0; i < title.length; i++) {
@@ -429,8 +482,15 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
       }
     }
     var s = sb.toString();
-    if (s.isEmpty) return 'column';
-    if (s.codeUnitAt(s.length - 1) == 0x5f) s = s.substring(0, s.length - 1);
+
+    if (s.isEmpty) {
+      return 'column';
+    }
+
+    if (s.codeUnitAt(s.length - 1) == 0x5f) {
+      s = s.substring(0, s.length - 1);
+    }
+
     return s;
   }
 }
