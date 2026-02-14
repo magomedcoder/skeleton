@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:legion/core/injector.dart' as di;
 import 'package:legion/domain/entities/task.dart';
+import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
+import 'package:legion/domain/repositories/project_repository.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_event.dart';
 import 'package:legion/presentation/widgets/code_block_builder.dart';
@@ -25,11 +28,56 @@ class TaskDetailView extends StatefulWidget {
 
 class _TaskDetailViewState extends State<TaskDetailView> {
   List<User>? _members;
+  List<TaskComment> _comments = [];
+  bool _commentsLoading = false;
+  final TextEditingController _commentController = TextEditingController();
+  bool _commentSending = false;
 
   @override
   void initState() {
     super.initState();
     _loadMembers();
+    _loadComments();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadComments() async {
+    if (!mounted) return;
+    setState(() => _commentsLoading = true);
+    try {
+      final repo = di.sl<ProjectRepository>();
+      final list = await repo.getTaskComments(widget.task.id);
+      if (mounted) setState(() => _comments = list);
+    } catch (_) {
+      if (mounted) setState(() => _comments = []);
+    } finally {
+      if (mounted) setState(() => _commentsLoading = false);
+    }
+  }
+
+  Future<void> _sendComment() async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty || _commentSending) return;
+    setState(() => _commentSending = true);
+    try {
+      final repo = di.sl<ProjectRepository>();
+      await repo.addTaskComment(widget.task.id, text);
+      _commentController.clear();
+      await _loadComments();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось добавить комментарий')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _commentSending = false);
+    }
   }
 
   void _loadMembers() {
@@ -153,6 +201,64 @@ class _TaskDetailViewState extends State<TaskDetailView> {
             value: _getUserName(widget.task.executor),
             icon: Icons.person,
           ),
+          const SizedBox(height: 24),
+          Text(
+            'Комментарии',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_commentsLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            ..._comments.map(
+              (c) => _CommentTile(
+                comment: c,
+                userName: _getUserName(c.userId),
+                formatDate: _formatDate,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    decoration: const InputDecoration(
+                      hintText: 'Написать комментарий...',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    maxLines: 2,
+                    minLines: 1,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendComment(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _commentSending
+                    ? null
+                    : () => _sendComment(),
+                  child: _commentSending
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Text('Отправить'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -199,6 +305,58 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CommentTile extends StatelessWidget {
+  final TaskComment comment;
+  final String userName;
+  final String Function(int) formatDate;
+
+  const _CommentTile({
+    required this.comment,
+    required this.userName,
+    required this.formatDate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                userName,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                formatDate(comment.createdAt),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SelectableText(
+            comment.body,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
+      ),
     );
   }
 }

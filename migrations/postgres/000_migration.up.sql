@@ -121,6 +121,15 @@ CREATE TABLE IF NOT EXISTS tasks
     column_id   UUID         NULL REFERENCES project_columns (id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS task_comments
+(
+    id         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    task_id    UUID         NOT NULL REFERENCES tasks (id) ON DELETE CASCADE,
+    user_id    INTEGER      NOT NULL REFERENCES users (id),
+    body       TEXT         NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users (deleted_at);
@@ -149,3 +158,5 @@ CREATE INDEX IF NOT EXISTS idx_project_columns_project_id ON project_columns (pr
 CREATE INDEX IF NOT EXISTS idx_project_columns_position ON project_columns (project_id, position);
 CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks (project_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_column_id ON tasks (column_id);
+CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments (task_id);
+CREATE INDEX IF NOT EXISTS idx_task_comments_created_at ON task_comments (created_at);

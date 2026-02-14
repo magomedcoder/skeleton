@@ -3,14 +3,16 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/magomedcoder/legion/internal/domain"
 )
 
 type ProjectUseCase struct {
-	ProjectRepo       domain.ProjectRepository
+	ProjectRepo        domain.ProjectRepository
 	ProjectMemberRepo domain.ProjectMemberRepository
 	TaskRepo          domain.TaskRepository
+	TaskCommentRepo   domain.TaskCommentRepository
 	ProjectColumnRepo domain.ProjectColumnRepository
 	UserRepo          domain.UserRepository
 }
@@ -19,15 +21,17 @@ func NewProjectUseCase(
 	projectRepo domain.ProjectRepository,
 	projectMemberRepo domain.ProjectMemberRepository,
 	taskRepo domain.TaskRepository,
+	taskCommentRepo domain.TaskCommentRepository,
 	projectColumnRepo domain.ProjectColumnRepository,
 	userRepo domain.UserRepository,
 ) *ProjectUseCase {
 	return &ProjectUseCase{
-		ProjectRepo:       projectRepo,
-		ProjectMemberRepo: projectMemberRepo,
-		TaskRepo:          taskRepo,
-		ProjectColumnRepo: projectColumnRepo,
-		UserRepo:          userRepo,
+		ProjectRepo:        projectRepo,
+		ProjectMemberRepo:  projectMemberRepo,
+		TaskRepo:           taskRepo,
+		TaskCommentRepo:    taskCommentRepo,
+		ProjectColumnRepo:  projectColumnRepo,
+		UserRepo:           userRepo,
 	}
 }
 
@@ -437,4 +441,52 @@ func (p *ProjectUseCase) DeleteProjectColumn(ctx context.Context, colId string, 
 	}
 
 	return p.ProjectColumnRepo.Delete(ctx, colId)
+}
+
+func (p *ProjectUseCase) AddTaskComment(ctx context.Context, taskId string, body string, userId int) (*domain.TaskComment, error) {
+	task, err := p.TaskRepo.GetById(ctx, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	isMember, err := p.ProjectMemberRepo.IsMember(ctx, task.ProjectId, userId)
+	if err != nil {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	body = strings.TrimSpace(body)
+	if body == "" {
+		return nil, errors.New("текст комментария не может быть пустым")
+	}
+
+	comment := &domain.TaskComment{
+		TaskId: taskId,
+		UserId: userId,
+		Body:   body,
+	}
+	if err := p.TaskCommentRepo.Create(ctx, comment); err != nil {
+		return nil, err
+	}
+
+	return comment, nil
+}
+
+func (p *ProjectUseCase) GetTaskComments(ctx context.Context, taskId string, userId int) ([]*domain.TaskComment, error) {
+	task, err := p.TaskRepo.GetById(ctx, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	isMember, err := p.ProjectMemberRepo.IsMember(ctx, task.ProjectId, userId)
+	if err != nil {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.New("доступ запрещён")
+	}
+
+	return p.TaskCommentRepo.ListByTaskId(ctx, taskId)
 }

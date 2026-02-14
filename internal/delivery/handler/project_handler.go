@@ -390,6 +390,77 @@ func (p *Project) DeleteProjectColumn(ctx context.Context, in *projectpb.DeleteP
 	return &projectpb.DeleteProjectColumnResponse{}, nil
 }
 
+func (p *Project) AddTaskComment(ctx context.Context, in *projectpb.AddTaskCommentRequest) (*projectpb.AddTaskCommentResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.TaskId == "" {
+		return nil, status.Error(codes.InvalidArgument, "task_id обязателен")
+	}
+
+	if in.Body == "" {
+		return nil, status.Error(codes.InvalidArgument, "текст комментария обязателен")
+	}
+
+	comment, err := p.ProjectUseCase.AddTaskComment(ctx, in.TaskId, in.Body, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+
+		if err.Error() == "задача не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
+		if err.Error() == "текст комментария не может быть пустым" {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
+	}
+
+	return &projectpb.AddTaskCommentResponse{Id: comment.Id}, nil
+}
+
+func (p *Project) GetTaskComments(ctx context.Context, in *projectpb.GetTaskCommentsRequest) (*projectpb.GetTaskCommentsResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.TaskId == "" {
+		return nil, status.Error(codes.InvalidArgument, "task_id обязателен")
+	}
+
+	comments, err := p.ProjectUseCase.GetTaskComments(ctx, in.TaskId, uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+
+		if err.Error() == "задача не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+
+	items := make([]*projectpb.TaskComment, 0, len(comments))
+	for _, c := range comments {
+		items = append(items, &projectpb.TaskComment{
+			Id:        c.Id,
+			TaskId:    c.TaskId,
+			UserId:    int64(c.UserId),
+			Body:      c.Body,
+			CreatedAt: c.CreatedAt,
+		})
+	}
+
+	return &projectpb.GetTaskCommentsResponse{Comments: items}, nil
+}
+
 func slugFromTitle(title string) string {
 	var b []byte
 	for _, r := range title {

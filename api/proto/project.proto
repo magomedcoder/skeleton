@@ -34,6 +34,10 @@ service ProjectService {
   rpc EditProjectColumn(EditProjectColumnRequest) returns (EditProjectColumnResponse);
 
   rpc DeleteProjectColumn(DeleteProjectColumnRequest) returns (DeleteProjectColumnResponse);
+
+  rpc AddTaskComment(AddTaskCommentRequest) returns (AddTaskCommentResponse);
+
+  rpc GetTaskComments(GetTaskCommentsRequest) returns (GetTaskCommentsResponse);
 }
 
 message Project {
@@ -49,6 +53,14 @@ message Task {
   int64 assigner = 5;
   int64 executor = 6;
   string column_id = 7;
+}
+
+message TaskComment {
+  string id = 1;
+  string task_id = 2;
+  int64 user_id = 3;
+  string body = 4;
+  int64 created_at = 5;
 }
 
 message CreateProjectRequest {
@@ -182,3 +194,20 @@ message DeleteProjectColumnRequest {
 }
 
 message DeleteProjectColumnResponse {}
+
+message AddTaskCommentRequest {
+  string task_id = 1;
+  string body = 2;
+}
+
+message AddTaskCommentResponse {
+  string id = 1;
+}
+
+message GetTaskCommentsRequest {
+  string task_id = 1;
+}
+
+message GetTaskCommentsResponse {
+  repeated TaskComment comments = 1;
+}

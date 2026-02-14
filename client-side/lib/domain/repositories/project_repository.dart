@@ -1,6 +1,7 @@
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/domain/entities/task.dart';
+import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
 
 abstract class ProjectRepository {
@@ -31,4 +32,8 @@ abstract class ProjectRepository {
   Future<void> editProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
 
   Future<void> deleteProjectColumn(String id);
+
+  Future<List<TaskComment>> getTaskComments(String taskId);
+
+  Future<void> addTaskComment(String taskId, String body);
 }

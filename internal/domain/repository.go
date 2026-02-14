@@ -127,3 +127,9 @@ type TaskRepository interface {
 
 	Edit(ctx context.Context, task *Task) error
 }
+
+type TaskCommentRepository interface {
+	Create(ctx context.Context, comment *TaskComment) error
+
+	ListByTaskId(ctx context.Context, taskId string) ([]*TaskComment, error)
+}

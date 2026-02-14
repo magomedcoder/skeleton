@@ -12,6 +12,7 @@ import 'package:legion/data/mappers/board_column_mapper.dart';
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/domain/entities/task.dart';
+import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/generated/grpc_pb/project.pbgrpc.dart' as projectpb;
 
@@ -43,6 +44,10 @@ abstract class IProjectRemoteDataSource {
   Future<void> editProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
 
   Future<void> deleteProjectColumn(String id);
+
+  Future<List<TaskComment>> getTaskComments(String taskId);
+
+  Future<void> addTaskComment(String taskId, String body);
 }
 
 class ProjectRemoteDataSource implements IProjectRemoteDataSource {
@@ -368,6 +373,44 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
     } catch (e) {
       Logs().e('ProjectRemoteDataSource: ошибка в deleteProjectColumn', e);
       throw ApiFailure('Ошибка удаления колонки');
+    }
+  }
+
+  @override
+  Future<List<TaskComment>> getTaskComments(String taskId) async {
+    Logs().d('ProjectRemoteDataSource: getTaskComments taskId=$taskId');
+    try {
+      final req = projectpb.GetTaskCommentsRequest(taskId: taskId);
+      final resp = await _authGuard.execute(() => _client.getTaskComments(req));
+      return resp.comments.map((c) => TaskComment(
+        id: c.id,
+        taskId: c.taskId,
+        userId: c.userId.toInt(),
+        body: c.body,
+        createdAt: c.createdAt.toInt(),
+      ))
+      .toList();
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в getTaskComments', e);
+      throwGrpcError(e, 'Ошибка загрузки комментариев');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в getTaskComments', e);
+      throw ApiFailure('Ошибка загрузки комментариев');
+    }
+  }
+
+  @override
+  Future<void> addTaskComment(String taskId, String body) async {
+    Logs().d('ProjectRemoteDataSource: addTaskComment taskId=$taskId');
+    try {
+      final req = projectpb.AddTaskCommentRequest(taskId: taskId, body: body);
+      await _authGuard.execute(() => _client.addTaskComment(req));
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в addTaskComment', e);
+      throwGrpcError(e, 'Ошибка добавления комментария');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в addTaskComment', e);
+      throw ApiFailure('Ошибка добавления комментария');
     }
   }
 

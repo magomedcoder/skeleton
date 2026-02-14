@@ -4,6 +4,7 @@ import 'package:legion/data/data_sources/remote/project_remote_datasource.dart';
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/project.dart';
 import 'package:legion/domain/entities/task.dart';
+import 'package:legion/domain/entities/task_comment.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/domain/repositories/project_repository.dart';
 
@@ -185,6 +186,28 @@ class ProjectRepositoryImpl implements ProjectRepository {
       if (e is Failure) rethrow;
       Logs().e('ProjectRepository: неожиданная ошибка в deleteProjectColumn', e);
       throw ApiFailure('Ошибка удаления колонки');
+    }
+  }
+
+  @override
+  Future<List<TaskComment>> getTaskComments(String taskId) async {
+    try {
+      return await _remote.getTaskComments(taskId);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в getTaskComments', e);
+      throw ApiFailure('Ошибка загрузки комментариев');
+    }
+  }
+
+  @override
+  Future<void> addTaskComment(String taskId, String body) async {
+    try {
+      return await _remote.addTaskComment(taskId, body);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в addTaskComment', e);
+      throw ApiFailure('Ошибка добавления комментария');
     }
   }
 }

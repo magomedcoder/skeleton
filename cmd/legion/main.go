@@ -77,6 +77,7 @@ func main() {
 	projectRepo := postgres.NewProjectRepository(db)
 	projectMemberRepo := postgres.NewProjectMemberRepository(db)
 	taskRepo := postgres.NewTaskRepository(db)
+	taskCommentRepo := postgres.NewTaskCommentRepository(db)
 	projectColumnRepo := postgres.NewProjectColumnRepository(db)
 
 	jwtService := service.NewJWTService(cfg)
@@ -94,7 +95,7 @@ func main() {
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
 	searchUseCase := usecase.NewSearchUseCase(userRepo)
-	projectUseCase := usecase.NewProjectUseCase(projectRepo, projectMemberRepo, taskRepo, projectColumnRepo, userRepo)
+	projectUseCase := usecase.NewProjectUseCase(projectRepo, projectMemberRepo, taskRepo, taskCommentRepo, projectColumnRepo, userRepo)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
 	chatHandler := handler.NewAIChatHandler(chatUseCase, authUseCase)

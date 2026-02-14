@@ -32,3 +32,11 @@ type ProjectColumn struct {
 	StatusKey string
 	Position  int32
 }
+
+type TaskComment struct {
+	Id        string
+	TaskId    string
+	UserId    int
+	Body      string
+	CreatedAt int64
+}
