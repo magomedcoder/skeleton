@@ -93,7 +93,7 @@ func (r *taskRepository) ListByProjectId(ctx context.Context, projectId string) 
 	return tasks, nil
 }
 
-func (r *taskRepository) UpdateColumnId(ctx context.Context, id string, columnId string) error {
+func (r *taskRepository) EditColumnId(ctx context.Context, id string, columnId string) error {
 	parsed, err := uuid.Parse(id)
 	if err != nil {
 		return errors.New("неверный id задачи")
@@ -112,6 +112,39 @@ func (r *taskRepository) UpdateColumnId(ctx context.Context, id string, columnId
 		Model(&TaskModel{}).
 		Where("id = ?", parsed).
 		Update("column_id", colId).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *taskRepository) Edit(ctx context.Context, task *domain.Task) error {
+	parsed, err := uuid.Parse(task.Id)
+	if err != nil {
+		return errors.New("неверный id задачи")
+	}
+
+	var columnId *uuid.UUID
+	if task.ColumnId != "" {
+		parsedCol, err := uuid.Parse(task.ColumnId)
+		if err != nil {
+			return errors.New("неверный column_id")
+		}
+		columnId = &parsedCol
+	}
+
+	updates := map[string]interface{}{
+		"name":        task.Name,
+		"description": task.Description,
+		"assigner":    task.Assigner,
+		"executor":    task.Executor,
+		"column_id":   columnId,
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&TaskModel{}).
+		Where("id = ?", parsed).
+		Updates(updates).Error; err != nil {
 		return err
 	}
 

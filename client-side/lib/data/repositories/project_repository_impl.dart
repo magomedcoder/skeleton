@@ -106,13 +106,24 @@ class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   @override
-  Future<void> updateTaskColumnId(String taskId, String columnId) async {
+  Future<void> editTaskColumnId(String taskId, String columnId) async {
     try {
-      return await _remote.updateTaskColumnId(taskId, columnId);
+      return await _remote.editTaskColumnId(taskId, columnId);
     } catch (e) {
       if (e is Failure) rethrow;
-      Logs().e('ProjectRepository: неожиданная ошибка в updateTaskColumnId', e);
+      Logs().e('ProjectRepository: неожиданная ошибка в editTaskColumnId', e);
       throw ApiFailure('Ошибка обновления колонки задачи');
+    }
+  }
+
+  @override
+  Future<Task> editTask(String taskId, String name, String description, int assigner, int executor) async {
+    try {
+      return await _remote.editTask(taskId, name, description, assigner, executor);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ProjectRepository: неожиданная ошибка в editTask', e);
+      throw ApiFailure('Ошибка обновления задачи');
     }
   }
 
@@ -144,7 +155,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   @override
-  Future<void> updateProjectColumn(
+  Future<void> editProjectColumn(
     String id, {
     String? title,
     String? color,
@@ -152,7 +163,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
     int? position,
   }) async {
     try {
-      return await _remote.updateProjectColumn(
+      return await _remote.editProjectColumn(
         id,
         title: title,
         color: color,
@@ -161,7 +172,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
       );
     } catch (e) {
       if (e is Failure) rethrow;
-      Logs().e('ProjectRepository: неожиданная ошибка в updateProjectColumn', e);
+      Logs().e('ProjectRepository: неожиданная ошибка в editProjectColumn', e);
       throw ApiFailure('Ошибка обновления колонки');
     }
   }

@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
+import 'package:legion/presentation/screens/tasks/bloc/task_bloc.dart';
 import 'package:legion/presentation/screens/tasks/widgets/task_detail_view.dart';
+import 'package:legion/presentation/screens/tasks/widgets/task_edit_dialog.dart';
 
-class TaskDetailDialog extends StatelessWidget {
+class TaskDetailDialog extends StatefulWidget {
   final Task task;
 
   const TaskDetailDialog({super.key, required this.task});
@@ -16,21 +18,28 @@ class TaskDetailDialog extends StatelessWidget {
     final maxHeight = isMobile ? double.infinity : 700.0;
 
     ProjectBloc? projectBloc;
+    TaskBloc? taskBloc;
     try {
       projectBloc = context.read<ProjectBloc>();
-    } catch (e) {
-
-    }
+    } catch (e) {}
+    try {
+      taskBloc = context.read<TaskBloc>();
+    } catch (e) {}
 
     showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
         Widget dialogContent = TaskDetailDialog(task: task);
-
         if (projectBloc != null) {
-          dialogContent = BlocProvider.value(
+          dialogContent = BlocProvider<ProjectBloc>.value(
             value: projectBloc,
+            child: dialogContent,
+          );
+        }
+        if (taskBloc != null) {
+          dialogContent = BlocProvider<TaskBloc>.value(
+            value: taskBloc,
             child: dialogContent,
           );
         }
@@ -47,6 +56,33 @@ class TaskDetailDialog extends StatelessWidget {
         );
       },
     );
+  }
+
+  @override
+  State<TaskDetailDialog> createState() => _TaskDetailDialogState();
+}
+
+class _TaskDetailDialogState extends State<TaskDetailDialog> {
+  late Task _task;
+
+  @override
+  void initState() {
+    super.initState();
+    _task = widget.task;
+  }
+
+  Future<void> _openEdit() async {
+    final taskBloc = context.read<TaskBloc>();
+    final projectBloc = context.read<ProjectBloc>();
+    final updated = await TaskEditDialog.show(
+      context,
+      _task,
+      taskBloc: taskBloc,
+      projectBloc: projectBloc,
+    );
+    if (updated != null && mounted) {
+      setState(() => _task = updated);
+    }
   }
 
   @override
@@ -77,6 +113,11 @@ class TaskDetailDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: _openEdit,
+                  tooltip: 'Редактировать',
+                ),
+                IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
                   tooltip: 'Закрыть',
@@ -87,8 +128,8 @@ class TaskDetailDialog extends StatelessWidget {
           Flexible(
             child: SingleChildScrollView(
               child: TaskDetailView(
-                task: task,
-                projectId: task.projectId,
+                task: _task,
+                projectId: _task.projectId,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),

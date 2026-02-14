@@ -46,8 +46,17 @@ class _ColumnEditDialogState extends State<ColumnEditDialog> {
 
   static const List<Color> _presetColors = [
     Color(0xFF9E9E9E),
-    Color(0xFF2196F3),
-    Color(0xFF4CAF50),
+    Color(0xFF4A6FA5),
+    Color(0xFF5865F2),
+    Color(0xFF0088CC),
+    Color(0xFF0366D6),
+    Color(0xFF25D366),
+    Color(0xFF2EB886),
+    Color(0xFFFF9800),
+    Color(0xFFF44336),
+    Color(0xFF9C27B0),
+    Color(0xFF00BCD4),
+    Color(0xFF795548),
   ];
 
   @override

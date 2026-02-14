@@ -102,16 +102,6 @@ type ProjectMemberRepository interface {
 	IsMember(ctx context.Context, projectId string, userId int) (bool, error)
 }
 
-type TaskRepository interface {
-	Create(ctx context.Context, task *Task) error
-
-	GetById(ctx context.Context, id string) (*Task, error)
-
-	ListByProjectId(ctx context.Context, projectId string) ([]*Task, error)
-
-	UpdateColumnId(ctx context.Context, id string, columnId string) error
-}
-
 type ProjectColumnRepository interface {
 	Create(ctx context.Context, col *ProjectColumn) error
 
@@ -119,9 +109,21 @@ type ProjectColumnRepository interface {
 
 	ListByProjectId(ctx context.Context, projectId string) ([]*ProjectColumn, error)
 
-	Update(ctx context.Context, col *ProjectColumn) error
+	Edit(ctx context.Context, col *ProjectColumn) error
 
 	Delete(ctx context.Context, id string) error
 
 	ExistsStatusKey(ctx context.Context, projectId string, statusKey string, excludeId string) (bool, error)
+}
+
+type TaskRepository interface {
+	Create(ctx context.Context, task *Task) error
+
+	GetById(ctx context.Context, id string) (*Task, error)
+
+	ListByProjectId(ctx context.Context, projectId string) ([]*Task, error)
+
+	EditColumnId(ctx context.Context, id string, columnId string) error
+
+	Edit(ctx context.Context, task *Task) error
 }

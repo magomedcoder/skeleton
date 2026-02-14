@@ -32,13 +32,15 @@ abstract class IProjectRemoteDataSource {
 
   Future<Task> getTask(String taskId);
 
-  Future<void> updateTaskColumnId(String taskId, String columnId);
+  Future<void> editTaskColumnId(String taskId, String columnId);
+
+  Future<Task> editTask(String taskId, String name, String description, int assigner, int executor);
 
   Future<List<BoardColumn>> getProjectColumns(String projectId);
 
   Future<BoardColumn> createProjectColumn(String projectId, String title, String color, {String? statusKey});
 
-  Future<void> updateProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
+  Future<void> editProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
 
   Future<void> deleteProjectColumn(String id);
 }
@@ -224,20 +226,53 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
   }
 
   @override
-  Future<void> updateTaskColumnId(String taskId, String columnId) async {
-    Logs().d('ProjectRemoteDataSource: updateTaskColumnId taskId=$taskId, columnId=$columnId');
+  Future<void> editTaskColumnId(String taskId, String columnId) async {
+    Logs().d('ProjectRemoteDataSource: editTaskColumnId taskId=$taskId, columnId=$columnId');
     try {
-      final req = projectpb.UpdateTaskColumnIdRequest(
+      final req = projectpb.EditTaskColumnIdRequest(
         taskId: taskId,
         columnId: columnId,
       );
-      await _authGuard.execute(() => _client.updateTaskColumnId(req));
+      await _authGuard.execute(() => _client.editTaskColumnId(req));
     } on GrpcError catch (e) {
-      Logs().e('ProjectRemoteDataSource: ошибка gRPC в updateTaskColumnId', e);
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в editTaskColumnId', e);
       throwGrpcError(e, 'Ошибка обновления колонки задачи');
     } catch (e) {
-      Logs().e('ProjectRemoteDataSource: ошибка в updateTaskColumnId', e);
+      Logs().e('ProjectRemoteDataSource: ошибка в editTaskColumnId', e);
       throw ApiFailure('Ошибка обновления колонки задачи');
+    }
+  }
+
+  @override
+  Future<Task> editTask(String taskId, String name, String description, int assigner, int executor) async {
+    Logs().d('ProjectRemoteDataSource: editTask taskId=$taskId');
+    try {
+      final req = projectpb.EditTaskRequest(
+        taskId: taskId,
+        name: name,
+        description: description,
+        assigner: Int64(assigner),
+        executor: Int64(executor),
+      );
+      await _authGuard.execute(() => _client.editTask(req));
+      final taskReq = projectpb.GetTaskRequest(taskId: taskId);
+      final taskResp = await _authGuard.execute(() => _client.getTask(taskReq));
+      return Task(
+        id: taskResp.id,
+        projectId: '',
+        name: taskResp.name,
+        description: taskResp.description,
+        createdAt: taskResp.createdAt.toInt(),
+        assigner: taskResp.assigner.toInt(),
+        executor: taskResp.executor.toInt(),
+        columnId: taskResp.columnId.isNotEmpty ? taskResp.columnId : '',
+      );
+    } on GrpcError catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в editTask', e);
+      throwGrpcError(e, 'Ошибка обновления задачи');
+    } catch (e) {
+      Logs().e('ProjectRemoteDataSource: ошибка в editTask', e);
+      throw ApiFailure('Ошибка обновления задачи');
     }
   }
 
@@ -295,28 +330,28 @@ class ProjectRemoteDataSource implements IProjectRemoteDataSource {
   }
 
   @override
-  Future<void> updateProjectColumn(
+  Future<void> editProjectColumn(
     String id, {
     String? title,
     String? color,
     String? statusKey,
     int? position,
   }) async {
-    Logs().d('ProjectRemoteDataSource: updateProjectColumn id=$id');
+    Logs().d('ProjectRemoteDataSource: editProjectColumn id=$id');
     try {
-      final req = projectpb.UpdateProjectColumnRequest(
+      final req = projectpb.EditProjectColumnRequest(
         id: id,
         title: title ?? '',
         color: color ?? '',
         statusKey: statusKey ?? '',
         position: position ?? -1,
       );
-      await _authGuard.execute(() => _client.updateProjectColumn(req));
+      await _authGuard.execute(() => _client.editProjectColumn(req));
     } on GrpcError catch (e) {
-      Logs().e('ProjectRemoteDataSource: ошибка gRPC в updateProjectColumn', e);
+      Logs().e('ProjectRemoteDataSource: ошибка gRPC в editProjectColumn', e);
       throwGrpcError(e, 'Ошибка обновления колонки');
     } catch (e) {
-      Logs().e('ProjectRemoteDataSource: ошибка в updateProjectColumn', e);
+      Logs().e('ProjectRemoteDataSource: ошибка в editProjectColumn', e);
       throw ApiFailure('Ошибка обновления колонки');
     }
   }

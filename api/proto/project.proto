@@ -23,13 +23,15 @@ service ProjectService {
 
   rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
 
-  rpc UpdateTaskColumnId(UpdateTaskColumnIdRequest) returns (UpdateTaskColumnIdResponse);
+  rpc EditTaskColumnId(EditTaskColumnIdRequest) returns (EditTaskColumnIdResponse);
+
+  rpc EditTask(EditTaskRequest) returns (EditTaskResponse);
 
   rpc GetProjectColumns(GetProjectColumnsRequest) returns (GetProjectColumnsResponse);
 
   rpc CreateProjectColumn(CreateProjectColumnRequest) returns (CreateProjectColumnResponse);
 
-  rpc UpdateProjectColumn(UpdateProjectColumnRequest) returns (UpdateProjectColumnResponse);
+  rpc EditProjectColumn(EditProjectColumnRequest) returns (EditProjectColumnResponse);
 
   rpc DeleteProjectColumn(DeleteProjectColumnRequest) returns (DeleteProjectColumnResponse);
 }
@@ -120,12 +122,22 @@ message GetTaskResponse {
   string column_id = 7;
 }
 
-message UpdateTaskColumnIdRequest {
+message EditTaskColumnIdRequest {
   string task_id = 1;
   string column_id = 2;
 }
 
-message UpdateTaskColumnIdResponse {}
+message EditTaskColumnIdResponse {}
+
+message EditTaskRequest {
+  string task_id = 1;
+  string name = 2;
+  string description = 3;
+  int64 assigner = 4;
+  int64 executor = 5;
+}
+
+message EditTaskResponse {}
 
 message ProjectColumn {
   string id = 1;
@@ -155,7 +167,7 @@ message CreateProjectColumnResponse {
   string id = 1;
 }
 
-message UpdateProjectColumnRequest {
+message EditProjectColumnRequest {
   string id = 1;
   string title = 2;
   string color = 3;
@@ -163,7 +175,7 @@ message UpdateProjectColumnRequest {
   int32 position = 5;
 }
 
-message UpdateProjectColumnResponse {}
+message EditProjectColumnResponse {}
 
 message DeleteProjectColumnRequest {
   string id = 1;

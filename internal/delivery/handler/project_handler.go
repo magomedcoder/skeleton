@@ -236,13 +236,13 @@ func (p *Project) GetTask(ctx context.Context, in *projectpb.GetTaskRequest) (*p
 	}, nil
 }
 
-func (p *Project) UpdateTaskColumnId(ctx context.Context, in *projectpb.UpdateTaskColumnIdRequest) (*projectpb.UpdateTaskColumnIdResponse, error) {
+func (p *Project) EditTaskColumnId(ctx context.Context, in *projectpb.EditTaskColumnIdRequest) (*projectpb.EditTaskColumnIdResponse, error) {
 	uid, err := p.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.ProjectUseCase.UpdateTaskColumnId(ctx, in.TaskId, in.ColumnId, uid)
+	err = p.ProjectUseCase.EditTaskColumnId(ctx, in.TaskId, in.ColumnId, uid)
 	if err != nil {
 		if err.Error() == "доступ запрещён" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
@@ -253,7 +253,41 @@ func (p *Project) UpdateTaskColumnId(ctx context.Context, in *projectpb.UpdateTa
 		return nil, error2.ToStatusError(codes.InvalidArgument, err)
 	}
 
-	return &projectpb.UpdateTaskColumnIdResponse{}, nil
+	return &projectpb.EditTaskColumnIdResponse{}, nil
+}
+
+func (p *Project) EditTask(ctx context.Context, in *projectpb.EditTaskRequest) (*projectpb.EditTaskResponse, error) {
+	uid, err := p.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.Name == "" {
+		return nil, status.Error(codes.InvalidArgument, "название задачи обязательно")
+	}
+
+	if in.Assigner <= 0 || in.Executor <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "постановщик и исполнитель обязательны")
+	}
+
+	_, err = p.ProjectUseCase.EditTask(ctx, in.TaskId, in.Name, in.Description, int(in.Assigner), int(in.Executor), uid)
+	if err != nil {
+		if err.Error() == "доступ запрещён" {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+
+		if err.Error() == "задача не найдена" {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
+		if err.Error() == "постановщик должен быть участником проекта" || err.Error() == "исполнитель должен быть участником проекта" {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
+		return nil, error2.ToStatusError(codes.InvalidArgument, err)
+	}
+
+	return &projectpb.EditTaskResponse{}, nil
 }
 
 func (p *Project) GetProjectColumns(ctx context.Context, in *projectpb.GetProjectColumnsRequest) (*projectpb.GetProjectColumnsResponse, error) {
@@ -311,7 +345,7 @@ func (p *Project) CreateProjectColumn(ctx context.Context, in *projectpb.CreateP
 	return &projectpb.CreateProjectColumnResponse{Id: col.Id}, nil
 }
 
-func (p *Project) UpdateProjectColumn(ctx context.Context, in *projectpb.UpdateProjectColumnRequest) (*projectpb.UpdateProjectColumnResponse, error) {
+func (p *Project) EditProjectColumn(ctx context.Context, in *projectpb.EditProjectColumnRequest) (*projectpb.EditProjectColumnResponse, error) {
 	uid, err := p.getUserID(ctx)
 	if err != nil {
 		return nil, err
@@ -323,7 +357,7 @@ func (p *Project) UpdateProjectColumn(ctx context.Context, in *projectpb.UpdateP
 	if in.Position >= 0 {
 		position = in.Position
 	}
-	_, err = p.ProjectUseCase.UpdateProjectColumn(ctx, in.Id, in.Title, in.Color, in.StatusKey, position, uid)
+	_, err = p.ProjectUseCase.EditProjectColumn(ctx, in.Id, in.Title, in.Color, in.StatusKey, position, uid)
 	if err != nil {
 		if err.Error() == "доступ запрещён" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
@@ -336,7 +370,7 @@ func (p *Project) UpdateProjectColumn(ctx context.Context, in *projectpb.UpdateP
 		}
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
-	return &projectpb.UpdateProjectColumnResponse{}, nil
+	return &projectpb.EditProjectColumnResponse{}, nil
 }
 
 func (p *Project) DeleteProjectColumn(ctx context.Context, in *projectpb.DeleteProjectColumnRequest) (*projectpb.DeleteProjectColumnResponse, error) {

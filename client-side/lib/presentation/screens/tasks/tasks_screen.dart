@@ -66,7 +66,7 @@ class _TasksScreenState extends State<TasksScreen> {
       column: column,
       onSave: (title, colorHex) async {
         final repo = di.sl<ProjectRepository>();
-        await repo.updateProjectColumn(column.id, title: title, color: colorHex);
+        await repo.editProjectColumn(column.id, title: title, color: colorHex);
         await _loadColumns();
       },
     );
@@ -150,7 +150,7 @@ class _TasksScreenState extends State<TasksScreen> {
               },
               onTaskColumnIdChanged: (task, newColumnId) {
                 context.read<TaskBloc>().add(
-                  TaskColumnIdUpdateRequested(
+                  TaskColumnIdEditRequested(
                     taskId: task.id,
                     columnId: newColumnId,
                   ),

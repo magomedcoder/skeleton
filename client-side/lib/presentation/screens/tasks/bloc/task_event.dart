@@ -51,15 +51,34 @@ class TaskClearError extends TaskEvent {
   const TaskClearError();
 }
 
-class TaskColumnIdUpdateRequested extends TaskEvent {
+class TaskColumnIdEditRequested extends TaskEvent {
   final String taskId;
   final String columnId;
 
-  const TaskColumnIdUpdateRequested({
+  const TaskColumnIdEditRequested({
     required this.taskId,
     required this.columnId,
   });
 
   @override
   List<Object?> get props => [taskId, columnId];
+}
+
+class TaskEditRequested extends TaskEvent {
+  final String taskId;
+  final String name;
+  final String description;
+  final int assigner;
+  final int executor;
+
+  const TaskEditRequested({
+    required this.taskId,
+    required this.name,
+    required this.description,
+    required this.assigner,
+    required this.executor,
+  });
+
+  @override
+  List<Object?> get props => [taskId, name, description, assigner, executor];
 }

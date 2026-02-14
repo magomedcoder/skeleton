@@ -20,13 +20,15 @@ abstract class ProjectRepository {
 
   Future<Task> getTask(String taskId);
 
-  Future<void> updateTaskColumnId(String taskId, String columnId);
+  Future<void> editTaskColumnId(String taskId, String columnId);
+
+  Future<Task> editTask(String taskId, String name, String description, int assigner, int executor);
 
   Future<List<BoardColumn>> getProjectColumns(String projectId);
 
   Future<BoardColumn> createProjectColumn(String projectId, String title, String color, {String? statusKey});
 
-  Future<void> updateProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
+  Future<void> editProjectColumn(String id, {String? title, String? color, String? statusKey, int? position});
 
   Future<void> deleteProjectColumn(String id);
 }

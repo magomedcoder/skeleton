@@ -84,7 +84,7 @@ func (r *projectColumnRepository) ListByProjectId(ctx context.Context, projectId
 	return out, nil
 }
 
-func (r *projectColumnRepository) Update(ctx context.Context, col *domain.ProjectColumn) error {
+func (r *projectColumnRepository) Edit(ctx context.Context, col *domain.ProjectColumn) error {
 	parsed, err := uuid.Parse(col.Id)
 	if err != nil {
 		return errors.New("неверный id колонки")
