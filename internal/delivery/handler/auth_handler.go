@@ -85,21 +85,6 @@ func (a *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*a
 	}, nil
 }
 
-func (a *AuthHandler) ChangePassword(ctx context.Context, req *authpb.ChangePasswordRequest) (*authpb.ChangePasswordResponse, error) {
-	session, err := a.getSession(ctx)
-	if err != nil {
-		return nil, err
-	}
-	logger.D("AuthHandler: смена пароля пользователя %d", session.Uid)
-	if err := a.authUseCase.ChangePassword(ctx, session.Uid, req.OldPassword, req.NewPassword, req.GetCurrentRefreshToken()); err != nil {
-		logger.W("AuthHandler: ошибка смены пароля: %v", err)
-		return nil, error2.ToStatusError(codes.InvalidArgument, err)
-	}
-	logger.I("AuthHandler: пароль изменён")
-
-	return &authpb.ChangePasswordResponse{Success: true}, nil
-}
-
 func (a *AuthHandler) CheckVersion(ctx context.Context, req *authpb.CheckVersionRequest) (*authpb.CheckVersionResponse, error) {
 	clientBuild := req.GetClientBuild()
 	compatible := clientBuild >= a.cfg.MinClientBuild
@@ -113,42 +98,4 @@ func (a *AuthHandler) CheckVersion(ctx context.Context, req *authpb.CheckVersion
 		Compatible: compatible,
 		Message:    msg,
 	}, nil
-}
-
-func (a *AuthHandler) GetDevices(ctx context.Context, req *authpb.GetDevicesRequest) (*authpb.GetDevicesResponse, error) {
-	session, err := a.getSession(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	tokens, err := a.authUseCase.GetDevices(ctx, session.Uid)
-	if err != nil {
-		logger.E("AuthHandler: ошибка списка устройств: %v", err)
-		return nil, status.Error(codes.Internal, "не удалось получить список устройств")
-	}
-
-	devices := make([]*authpb.Device, 0, len(tokens))
-	for _, t := range tokens {
-		devices = append(devices, &authpb.Device{
-			Id:               int32(t.Id),
-			CreatedAtSeconds: t.CreatedAt.Unix(),
-		})
-	}
-
-	return &authpb.GetDevicesResponse{Devices: devices}, nil
-}
-
-func (a *AuthHandler) RevokeDevice(ctx context.Context, req *authpb.RevokeDeviceRequest) (*authpb.RevokeDeviceResponse, error) {
-	session, err := a.getSession(ctx)
-	if err != nil {
-		return nil, err
-	}
-	
-	if err := a.authUseCase.RevokeDevice(ctx, session.Uid, int(req.GetDeviceId())); err != nil {
-		logger.W("AuthHandler: ошибка отзыва устройства: %v", err)
-		return nil, error2.ToStatusError(codes.NotFound, err)
-	}
-
-	logger.I("AuthHandler: устройство %d отозвано", req.GetDeviceId())
-	return &authpb.RevokeDeviceResponse{Success: true}, nil
 }

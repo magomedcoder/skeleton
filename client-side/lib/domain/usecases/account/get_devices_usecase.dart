@@ -1,8 +1,8 @@
 import 'package:legion/domain/entities/device.dart';
-import 'package:legion/domain/repositories/auth_repository.dart';
+import 'package:legion/domain/repositories/account_repository.dart';
 
 class GetDevicesUseCase {
-  final AuthRepository repository;
+  final AccountRepository repository;
 
   GetDevicesUseCase(this.repository);
 

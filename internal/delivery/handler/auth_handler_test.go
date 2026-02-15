@@ -74,27 +74,3 @@ func TestAuthHandler_Logout_noAuth(t *testing.T) {
 		t.Errorf("Logout: код %v, ожидался Unauthenticated", code)
 	}
 }
-
-func TestAuthHandler_ChangePassword_noAuth(t *testing.T) {
-	h := NewAuthHandler(&config.Config{}, nil)
-	_, err := h.ChangePassword(context.Background(), &authpb.ChangePasswordRequest{})
-	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("ChangePassword: код %v, ожидался Unauthenticated", code)
-	}
-}
-
-func TestAuthHandler_GetDevices_noAuth(t *testing.T) {
-	h := NewAuthHandler(&config.Config{}, nil)
-	_, err := h.GetDevices(context.Background(), &authpb.GetDevicesRequest{})
-	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("GetDevices: код %v, ожидался Unauthenticated", code)
-	}
-}
-
-func TestAuthHandler_RevokeDevice_noAuth(t *testing.T) {
-	h := NewAuthHandler(&config.Config{}, nil)
-	_, err := h.RevokeDevice(context.Background(), &authpb.RevokeDeviceRequest{})
-	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("RevokeDevice: код %v, ожидался Unauthenticated", code)
-	}
-}

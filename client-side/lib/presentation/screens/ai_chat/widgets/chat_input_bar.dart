@@ -184,6 +184,8 @@ class ChatInputBarState extends State<ChatInputBar> {
 
   Widget _buildFileButton() {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Tooltip(
       message: 'Прикрепить файл',
       child: Material(
@@ -194,10 +196,10 @@ class ChatInputBarState extends State<ChatInputBar> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLow,
+              color: colors.surfaceContainerLow,
               shape: BoxShape.circle,
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                color: colors.outline.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -205,8 +207,8 @@ class ChatInputBarState extends State<ChatInputBar> {
               Icons.attach_file_rounded,
               size: 22,
               color: widget.isEnabled
-                  ? theme.colorScheme.onSurfaceVariant
-                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ? colors.onSurfaceVariant
+                : colors.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -216,6 +218,8 @@ class ChatInputBarState extends State<ChatInputBar> {
 
   Widget _buildSendButton(AIChatState state) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     if (state.isStreaming) {
       return Material(
         color: Colors.transparent,
@@ -225,17 +229,17 @@ class ChatInputBarState extends State<ChatInputBar> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer,
+              color: colors.errorContainer,
               shape: BoxShape.circle,
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                color: colors.outline.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
             child: Icon(
               Icons.stop_rounded,
               size: 22,
-              color: theme.colorScheme.onErrorContainer,
+              color: colors.onErrorContainer,
             ),
           ),
         ),
@@ -252,11 +256,11 @@ class ChatInputBarState extends State<ChatInputBar> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: canSend
-                ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerHighest,
+              ? colors.primary
+              : colors.surfaceContainerHighest,
             shape: BoxShape.circle,
             border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              color: colors.outline.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -264,8 +268,8 @@ class ChatInputBarState extends State<ChatInputBar> {
             Icons.send_rounded,
             size: 22,
             color: canSend
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ? colors.onPrimary
+              : colors.onSurfaceVariant.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -276,13 +280,14 @@ class ChatInputBarState extends State<ChatInputBar> {
   Widget build(BuildContext context) {
     final horizontal = Breakpoints.isMobile(context) ? 12.0 : 20.0;
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return BlocBuilder<AIChatBloc, AIChatState>(
       builder: (context, state) {
         return Container(
           padding: EdgeInsets.fromLTRB(horizontal, 12, horizontal, 16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors.surface,
             border: Border(
               top: BorderSide(
                 color: theme.dividerColor.withValues(alpha: 0.08),
@@ -297,10 +302,10 @@ class ChatInputBarState extends State<ChatInputBar> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    color: colors.primaryContainer.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      color: colors.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -308,7 +313,7 @@ class ChatInputBarState extends State<ChatInputBar> {
                       Icon(
                         Icons.insert_drive_file_rounded,
                         size: 20,
-                        color: theme.colorScheme.primary,
+                        color: colors.primary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -316,7 +321,7 @@ class ChatInputBarState extends State<ChatInputBar> {
                           _fileName(_selectedFile!),
                           style: TextStyle(
                             fontSize: 13,
-                            color: theme.colorScheme.onSurface,
+                            color: colors.onSurface,
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -332,7 +337,7 @@ class ChatInputBarState extends State<ChatInputBar> {
                             child: Icon(
                               Icons.close_rounded,
                               size: 18,
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color: colors.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -351,10 +356,10 @@ class ChatInputBarState extends State<ChatInputBar> {
                     child: Container(
                       constraints: const BoxConstraints(minHeight: 40),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
+                        color: colors.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.15),
+                          color: colors.outline.withValues(alpha: 0.15),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -386,13 +391,13 @@ class ChatInputBarState extends State<ChatInputBar> {
                             style: TextStyle(
                               fontSize: 15,
                               color: widget.isEnabled
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.onSurfaceVariant,
+                                ? colors.onSurface
+                                : colors.onSurfaceVariant,
                             ),
                             decoration: InputDecoration(
                               hintText: widget.isEnabled
-                                  ? 'Напишите сообщение...'
-                                  : 'Обрабатываю...',
+                                ? 'Напишите сообщение...'
+                                : 'Обрабатываю...',
                               hintStyle: TextStyle(
                                 fontSize: 15,
                                 color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),

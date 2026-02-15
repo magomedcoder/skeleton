@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
+import 'package:legion/core/date_formatter.dart';
 import 'package:legion/domain/entities/project_activity.dart';
 import 'package:legion/domain/entities/user.dart';
 import 'package:legion/domain/usecases/project/get_project_history_usecase.dart';
@@ -74,12 +75,6 @@ class _ProjectHistoryViewState extends State<ProjectHistoryView> {
         : 'ID: $userId';
   }
 
-  String _formatDate(int timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-
-    return '${date.day}.${date.month}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,7 +144,7 @@ class _ProjectHistoryViewState extends State<ProjectHistoryView> {
                       ],
                       const SizedBox(height: 4),
                       Text(
-                        '${_formatDate(a.createdAt)} · ${_getUserName(a.userId)}',
+                        '${DateFormatter.formatDate(a.createdAt)} · ${_getUserName(a.userId)}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),

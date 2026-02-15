@@ -2,9 +2,11 @@ import 'package:get_it/get_it.dart';
 import 'package:legion/core/auth_guard.dart';
 import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
+import 'package:legion/core/connection_status.dart';
 import 'package:legion/core/server_config.dart';
 import 'package:legion/data/data_sources/local/session_model_local_data_source.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
+import 'package:legion/data/data_sources/remote/account_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/ai_chat_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/auth_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/chat_remote_datasource.dart';
@@ -14,6 +16,7 @@ import 'package:legion/data/data_sources/remote/runners_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/search_remote_datasource.dart';
 import 'package:legion/data/data_sources/remote/user_remote_datasource.dart';
 import 'package:legion/data/repositories/ai_chat_repository_impl.dart';
+import 'package:legion/data/repositories/account_repository_impl.dart';
 import 'package:legion/data/repositories/auth_repository_impl.dart';
 import 'package:legion/data/repositories/editor_repository_impl.dart';
 import 'package:legion/data/repositories/project_repository_impl.dart';
@@ -21,6 +24,7 @@ import 'package:legion/data/repositories/runners_repository_impl.dart';
 import 'package:legion/data/repositories/user_chat_repository_impl.dart';
 import 'package:legion/data/repositories/user_repository_impl.dart';
 import 'package:legion/domain/repositories/ai_chat_repository.dart';
+import 'package:legion/domain/repositories/account_repository.dart';
 import 'package:legion/domain/repositories/auth_repository.dart';
 import 'package:legion/domain/repositories/editor_repository.dart';
 import 'package:legion/domain/repositories/project_repository.dart';
@@ -38,12 +42,12 @@ import 'package:legion/domain/usecases/ai_chat/send_message_usecase.dart';
 import 'package:legion/domain/usecases/ai_chat/set_session_model_usecase.dart';
 import 'package:legion/domain/usecases/ai_chat/update_session_model_usecase.dart';
 import 'package:legion/domain/usecases/ai_chat/update_session_title_usecase.dart';
-import 'package:legion/domain/usecases/auth/change_password_usecase.dart';
-import 'package:legion/domain/usecases/auth/get_devices_usecase.dart';
+import 'package:legion/domain/usecases/account/change_password_usecase.dart';
+import 'package:legion/domain/usecases/account/get_devices_usecase.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
 import 'package:legion/domain/usecases/auth/logout_usecase.dart';
 import 'package:legion/domain/usecases/auth/refresh_token_usecase.dart';
-import 'package:legion/domain/usecases/auth/revoke_device_usecase.dart';
+import 'package:legion/domain/usecases/account/revoke_device_usecase.dart';
 import 'package:legion/domain/usecases/editor/transform_text_usecase.dart';
 import 'package:legion/domain/usecases/project/add_user_to_project_usecase.dart';
 import 'package:legion/domain/usecases/project/create_project_usecase.dart';
@@ -119,6 +123,10 @@ Future<void> init() async {
     () => GrpcChannelManager(sl<ServerConfig>(), sl<AuthInterceptor>()),
   );
 
+  sl.registerLazySingleton<ConnectionStatusService>(
+    () => ConnectionStatusService(),
+  );
+
   sl.registerLazySingleton<IAIChatRemoteDataSource>(
     () => AIChatRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
@@ -133,6 +141,12 @@ Future<void> init() async {
 
   sl.registerLazySingleton<IAuthRemoteDataSource>(
     () => AuthRemoteDataSource(
+      sl<GrpcChannelManager>(),
+    ),
+  );
+
+  sl.registerLazySingleton<IAccountRemoteDataSource>(
+    () => AccountRemoteDataSource(
       sl<GrpcChannelManager>(),
       sl<UserLocalDataSourceImpl>(),
     ),
@@ -158,11 +172,12 @@ Future<void> init() async {
     () => RunnersRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
 
-  sl.registerLazySingleton<AIChatRepository>(
-    () => AIChatRepositoryImpl(sl(), sl<SessionModelLocalDataSource>()),
-  );
   sl.registerLazySingleton<EditorRepository>(() => EditorRepositoryImpl(sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+  sl.registerLazySingleton<AccountRepository>(() => AccountRepositoryImpl(sl()));
+  sl.registerLazySingleton<AIChatRepository>(
+        () => AIChatRepositoryImpl(sl(), sl<SessionModelLocalDataSource>()),
+  );
   sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(sl()));
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(sl<IChatRemoteDataSource>()),
@@ -196,7 +211,7 @@ Future<void> init() async {
   sl.registerFactory(() => LogoutUseCase(sl()));
   sl.registerFactory(
     () => ChangePasswordUseCase(
-      sl<AuthRepositoryImpl>(),
+      sl<AccountRepositoryImpl>(),
       sl<UserLocalDataSourceImpl>(),
     ),
   );

@@ -1,8 +1,8 @@
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
-import 'package:legion/domain/repositories/auth_repository.dart';
+import 'package:legion/domain/repositories/account_repository.dart';
 
 class ChangePasswordUseCase {
-  final AuthRepository repository;
+  final AccountRepository repository;
   final UserLocalDataSource tokenStorage;
 
   ChangePasswordUseCase(this.repository, this.tokenStorage);

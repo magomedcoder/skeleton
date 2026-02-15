@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:legion/core/date_formatter.dart';
 import 'package:legion/core/layout/responsive.dart';
 import 'package:legion/domain/entities/board_column.dart';
 import 'package:legion/domain/entities/task.dart';
@@ -357,7 +358,7 @@ class _Card extends StatelessWidget {
                     ),
                     SizedBox(width: isMobile ? 3 : 4),
                     Text(
-                      _formatDate(task.createdAt),
+                      DateFormatter.formatRelativeDate(task.createdAt),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
                         fontSize: isMobile ? 11 : null,
@@ -373,19 +374,4 @@ class _Card extends StatelessWidget {
     );
   }
 
-  String _formatDate(int timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return 'Сегодня';
-    } else if (difference.inDays == 1) {
-      return 'Вчера';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} дн. назад';
-    } else {
-      return '${date.day}.${date.month}.${date.year}';
-    }
-  }
 }

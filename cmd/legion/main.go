@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/magomedcoder/legion"
+	"github.com/magomedcoder/legion/api/pb/accountpb"
 	"github.com/magomedcoder/legion/api/pb/aichatpb"
 	"github.com/magomedcoder/legion/api/pb/authpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
@@ -99,6 +100,7 @@ func main() {
 	projectUseCase := usecase.NewProjectUseCase(projectRepo, projectMemberRepo, projectTaskRepo, projectTaskCommentRepo, projectColumnRepo, projectActivityRepo, userRepo)
 
 	authHandler := handler.NewAuthHandler(cfg, authUseCase)
+	accountHandler := handler.NewAccountHandler(cfg, authUseCase)
 	chatHandler := handler.NewAIChatHandler(chatUseCase, authUseCase)
 	userChatHandler := handler.NewChatHandler(userChatUseCase, authUseCase)
 	editorHandler := handler.NewEditorHandler(editorUseCase, authUseCase)
@@ -114,6 +116,7 @@ func main() {
 	)
 
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
+	accountpb.RegisterAccountServiceServer(grpcServer, accountHandler)
 	aichatpb.RegisterAIChatServiceServer(grpcServer, chatHandler)
 	chatpb.RegisterChatServiceServer(grpcServer, userChatHandler)
 	editorpb.RegisterEditorServiceServer(grpcServer, editorHandler)

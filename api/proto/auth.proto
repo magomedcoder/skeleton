@@ -21,17 +21,11 @@ service AuthService {
 
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 
-  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
-
   rpc CheckVersion(CheckVersionRequest) returns (CheckVersionResponse) {
     option (method_conf) = {
       skip_auth: true
     };
   }
-
-  rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse);
-
-  rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
 }
 
 message LoginRequest {
@@ -60,16 +54,6 @@ message LogoutResponse {
   bool success = 1;
 }
 
-message ChangePasswordRequest {
-  string old_password = 1;
-  string new_password = 2;
-  string current_refresh_token = 3;
-}
-
-message ChangePasswordResponse {
-  bool success = 1;
-}
-
 message CheckVersionRequest {
   int32 client_build = 1;
 }
@@ -77,23 +61,4 @@ message CheckVersionRequest {
 message CheckVersionResponse {
   bool compatible = 1;
   string message = 2;
-}
-
-message GetDevicesRequest {}
-
-message Device {
-  int32 id = 1;
-  int64 created_at_seconds = 2;
-}
-
-message GetDevicesResponse {
-  repeated Device devices = 1;
-}
-
-message RevokeDeviceRequest {
-  int32 device_id = 1;
-}
-
-message RevokeDeviceResponse {
-  bool success = 1;
 }

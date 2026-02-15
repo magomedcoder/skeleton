@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package legion;
+
+option go_package = "github.com/magomedcoder/legion/api/pb/accountpb;accountpb";
+
+service AccountService {
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse);
+
+  rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
+}
+
+message ChangePasswordRequest {
+  string old_password = 1;
+  string new_password = 2;
+  string current_refresh_token = 3;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+}
+
+message GetDevicesRequest {}
+
+message Device {
+  int32 id = 1;
+  int64 created_at_seconds = 2;
+}
+
+message GetDevicesResponse {
+  repeated Device devices = 1;
+}
+
+message RevokeDeviceRequest {
+  int32 device_id = 1;
+}
+
+message RevokeDeviceResponse {
+  bool success = 1;
+}

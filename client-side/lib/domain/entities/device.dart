@@ -1,6 +1,6 @@
 class Device {
   final int id;
-  final DateTime createdAt;
+  final int createdAt;
 
   const Device({
     required this.id,

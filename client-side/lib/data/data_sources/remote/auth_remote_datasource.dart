@@ -6,8 +6,6 @@ import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/mappers/auth_mapper.dart';
 import 'package:legion/domain/entities/auth_result.dart';
 import 'package:legion/domain/entities/auth_tokens.dart';
-import 'package:legion/domain/entities/device.dart';
-import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/generated/grpc_pb/auth.pbgrpc.dart' as authpb;
 
 abstract class IAuthRemoteDataSource {
@@ -16,19 +14,12 @@ abstract class IAuthRemoteDataSource {
   Future<AuthTokens> refreshToken(String refreshToken);
 
   Future<void> logout();
-
-  Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]);
-
-  Future<List<Device>> getDevices();
-
-  Future<void> revokeDevice(int deviceId);
 }
 
 class AuthRemoteDataSource implements IAuthRemoteDataSource {
   final GrpcChannelManager _channelManager;
-  final UserLocalDataSourceImpl _tokenStorage;
 
-  AuthRemoteDataSource(this._channelManager, this._tokenStorage);
+  AuthRemoteDataSource(this._channelManager);
 
   authpb.AuthServiceClient get _client => _channelManager.authClient;
 
@@ -95,78 +86,6 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     } catch (e) {
       Logs().e('AuthRemoteDataSource: ошибка выхода', e);
       throw ApiFailure('Ошибка выхода');
-    }
-  }
-
-  @override
-  Future<void> changePassword(String oldPassword, String newPassword, [String? currentRefreshToken]) async {
-    Logs().d('AuthRemoteDataSource: смена пароля');
-    try {
-      final request = authpb.ChangePasswordRequest(
-        oldPassword: oldPassword,
-        newPassword: newPassword,
-      );
-      final refreshToken = currentRefreshToken ?? _tokenStorage.refreshToken;
-      if (refreshToken != null && refreshToken.trim().isNotEmpty) {
-        request.currentRefreshToken = refreshToken.trim();
-      }
-
-      await _client.changePassword(request);
-      Logs().i('AuthRemoteDataSource: пароль изменён');
-    } on GrpcError catch (e) {
-      Logs().e('AuthRemoteDataSource: ошибка смены пароля', e);
-      if (e.code == StatusCode.invalidArgument) {
-        throw NetworkFailure('Неверные данные');
-      }
-
-      throwGrpcError(e, 'Ошибка смены пароля');
-    } catch (e) {
-      Logs().e('AuthRemoteDataSource: ошибка смены пароля', e);
-      throw ApiFailure('Ошибка смены пароля');
-    }
-  }
-
-  @override
-  Future<List<Device>> getDevices() async {
-    Logs().d('AuthRemoteDataSource: список устройств');
-    try {
-      final request = authpb.GetDevicesRequest();
-      final response = await _client.getDevices(request);
-      final devices = response.devices.map((d) => Device(
-        id: d.id,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          d.createdAtSeconds.toInt() * 1000,
-        ),
-      ))
-      .toList();
-      Logs().i('AuthRemoteDataSource: получено ${devices.length} устройств');
-
-      return devices;
-    } on GrpcError catch (e) {
-      Logs().e('AuthRemoteDataSource: ошибка списка устройств', e);
-      throwGrpcError(e, 'Ошибка загрузки устройств');
-    } catch (e) {
-      Logs().e('AuthRemoteDataSource: ошибка списка устройств', e);
-      throw ApiFailure('Ошибка загрузки устройств');
-    }
-  }
-
-  @override
-  Future<void> revokeDevice(int deviceId) async {
-    Logs().d('AuthRemoteDataSource: отзыв устройства $deviceId');
-    try {
-      final request = authpb.RevokeDeviceRequest(deviceId: deviceId);
-      await _client.revokeDevice(request);
-      Logs().i('AuthRemoteDataSource: устройство отозвано');
-    } on GrpcError catch (e) {
-      Logs().e('AuthRemoteDataSource: ошибка отзыва устройства', e);
-      if (e.code == StatusCode.notFound) {
-        throw NetworkFailure('Устройство не найдено');
-      }
-      throwGrpcError(e, 'Ошибка отзыва устройства');
-    } catch (e) {
-      Logs().e('AuthRemoteDataSource: ошибка отзыва устройства', e);
-      throw ApiFailure('Ошибка отзыва устройства');
     }
   }
 }

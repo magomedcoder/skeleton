@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:legion/core/date_formatter.dart';
 import 'package:legion/domain/entities/device.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_bloc.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_event.dart';
@@ -8,17 +9,9 @@ import 'package:legion/presentation/screens/devices/bloc/devices_state.dart';
 class DevicesContent extends StatelessWidget {
   const DevicesContent({super.key});
 
-  static String _formatDate(DateTime d) {
-    final day = d.day.toString().padLeft(2, '0');
-    final month = d.month.toString().padLeft(2, '0');
-    final year = d.year;
-    final hour = d.hour.toString().padLeft(2, '0');
-    final minute = d.minute.toString().padLeft(2, '0');
-    return '$day.$month.$year $hour:$minute';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final bloc = context.read<DevicesBloc>();
     return BlocConsumer<DevicesBloc, DevicesState>(
       listenWhen: (_, current) => current is DevicesError,
@@ -27,7 +20,7 @@ class DevicesContent extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: theme.colorScheme.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -51,13 +44,13 @@ class DevicesContent extends StatelessWidget {
                   Icon(
                     Icons.error_outline_rounded,
                     size: 48,
-                    color: Theme.of(context).colorScheme.error,
+                    color: theme.colorScheme.error,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     state.message,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: theme.textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
@@ -70,9 +63,9 @@ class DevicesContent extends StatelessWidget {
             ),
           );
         }
-        if (state is DevicesLoaded ||
-            state is DevicesRevoking ||
-            state is DevicesRevokeFailed) {
+        if (state is DevicesLoaded
+          || state is DevicesRevoking
+          || state is DevicesRevokeFailed) {
           final devices = switch (state) {
             DevicesLoaded(devices: final d) => d,
             DevicesRevoking(devices: final d) => d,
@@ -88,14 +81,14 @@ class DevicesContent extends StatelessWidget {
                   Icon(
                     Icons.devices_other_rounded,
                     size: 64,
-                    color: Theme.of(context).colorScheme.outline,
+                    color: theme.colorScheme.outline,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Нет активных сессий',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -115,38 +108,36 @@ class DevicesContent extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
+                    backgroundColor: theme.colorScheme.primaryContainer,
                     child: Icon(
                       Icons.smartphone_rounded,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      color: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
                   title: Text(
                     'Устройство',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: theme.textTheme.titleMedium,
                   ),
                   subtitle: Text(
-                    'Вход: ${_formatDate(device.createdAt)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    'Вход: ${DateFormatter.formatDate(device.createdAt)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   trailing: revoking
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Padding(
-                            padding: EdgeInsets.all(2),
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : TextButton(
-                          onPressed: () =>
-                              bloc.add(DevicesRevokeRequested(device)),
-                          child: const Text('Выйти'),
-                        ),
+                    ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Padding(
+                        padding: EdgeInsets.all(2),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                    : TextButton(
+                      onPressed: () =>
+                          bloc.add(DevicesRevokeRequested(device)),
+                      child: const Text('Выйти'),
+                    ),
                 ),
               );
             },

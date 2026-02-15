@@ -17,6 +17,7 @@ import 'package:legion/presentation/screens/editor/editor_screen.dart';
 import 'package:legion/presentation/screens/projects/projects_screen.dart';
 import 'package:legion/presentation/screens/profile/profile_screen.dart';
 import 'package:legion/presentation/widgets/app_bottom_nav.dart';
+import 'package:legion/presentation/widgets/connection_status_bar.dart';
 import 'package:legion/presentation/widgets/side_navigation.dart';
 
 class MainLayout extends StatefulWidget {
@@ -199,16 +200,23 @@ class _MainLayoutState extends State<MainLayout> {
         );
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: isMobile ? Column(
+          body: Stack(
             children: [
-              Expanded(child: _buildBody()),
-              nav,
-            ],
-          ): Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              nav,
-              Expanded(child: _buildBody()),
+              isMobile
+              ? Column(
+                children: [
+                  Expanded(child: _buildBody()),
+                  nav,
+                ],
+              )
+              : Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  nav,
+                  Expanded(child: _buildBody()),
+                ],
+              ),
+              const ConnectionStatusBar(showInScaffold: true),
             ],
           ),
         );

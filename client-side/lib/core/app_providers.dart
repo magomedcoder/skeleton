@@ -1,11 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
+import 'package:legion/core/connection_status.dart';
 import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_bloc.dart';
 import 'package:legion/presentation/screens/editor/bloc/editor_bloc.dart';
 import 'package:legion/presentation/screens/projects/bloc/project_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 class AppProviders {
@@ -20,6 +22,7 @@ class AppProviders {
   ];
 
   static List<SingleChildWidget> get allProviders => [
+    Provider<ConnectionStatusService>.value(value: di.sl<ConnectionStatusService>()),
     ...blocProviders,
   ];
 }

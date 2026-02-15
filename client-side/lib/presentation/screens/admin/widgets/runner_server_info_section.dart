@@ -92,15 +92,17 @@ class RunnerInfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: theme.colorScheme.primary),
+        Icon(icon, size: 16, color: colors.primary),
         const SizedBox(width: 4),
         Text(
           '$label: ',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: colors.onSurfaceVariant,
           ),
         ),
         Text(

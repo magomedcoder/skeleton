@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:legion/core/injector.dart' as di;
 import 'package:legion/core/log/logs.dart';
+import 'package:legion/core/date_formatter.dart';
 import 'package:legion/domain/entities/project_activity.dart';
 import 'package:legion/domain/entities/task.dart';
 import 'package:legion/domain/entities/task_comment.dart';
@@ -213,7 +214,7 @@ class _TaskDetailViewState extends State<TaskDetailView>
                   children: [
                     _InfoRow(
                       label: 'Создано',
-                      value: _formatDate(widget.task.createdAt),
+                      value: DateFormatter.formatDate(widget.task.createdAt),
                       icon: Icons.access_time,
                     ),
                     const SizedBox(height: 12),
@@ -272,7 +273,6 @@ class _TaskDetailViewState extends State<TaskDetailView>
               (c) => _CommentTile(
                 comment: c,
                 userName: _getUserName(c.userId),
-                formatDate: _formatDate,
               ),
             ),
             const SizedBox(height: 12),
@@ -340,17 +340,12 @@ class _TaskDetailViewState extends State<TaskDetailView>
         return _HistoryTile(
           activity: a,
           userName: _getUserName(a.userId),
-          formatDate: _formatDate,
         );
       },
     );
   }
 
-  String _formatDate(int timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
 
-    return '${date.day}.${date.month}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
 }
 
 class _InfoRow extends StatelessWidget {
@@ -410,12 +405,10 @@ class _InfoRow extends StatelessWidget {
 class _CommentTile extends StatelessWidget {
   final TaskComment comment;
   final String userName;
-  final String Function(int) formatDate;
 
   const _CommentTile({
     required this.comment,
     required this.userName,
-    required this.formatDate,
   });
 
   @override
@@ -441,7 +434,7 @@ class _CommentTile extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                formatDate(comment.createdAt),
+                DateFormatter.formatDate(comment.createdAt),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.grey[600],
                 ),
@@ -462,12 +455,10 @@ class _CommentTile extends StatelessWidget {
 class _HistoryTile extends StatelessWidget {
   final ProjectActivity activity;
   final String userName;
-  final String Function(int) formatDate;
 
   const _HistoryTile({
     required this.activity,
     required this.userName,
-    required this.formatDate,
   });
 
   @override
@@ -497,7 +488,7 @@ class _HistoryTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${formatDate(activity.createdAt)} · $userName',
+                  '${DateFormatter.formatDate(activity.createdAt)} · $userName',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
                   ),

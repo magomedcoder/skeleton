@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:legion/domain/usecases/auth/get_devices_usecase.dart';
-import 'package:legion/domain/usecases/auth/revoke_device_usecase.dart';
+import 'package:legion/domain/usecases/account/get_devices_usecase.dart';
+import 'package:legion/domain/usecases/account/revoke_device_usecase.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_event.dart';
 import 'package:legion/presentation/screens/devices/bloc/devices_state.dart';
 

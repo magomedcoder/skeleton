@@ -1,7 +1,7 @@
-import 'package:legion/domain/repositories/auth_repository.dart';
+import 'package:legion/domain/repositories/account_repository.dart';
 
 class RevokeDeviceUseCase {
-  final AuthRepository repository;
+  final AccountRepository repository;
 
   RevokeDeviceUseCase(this.repository);
 

@@ -10,6 +10,7 @@ import 'package:legion/generated/grpc_pb/user.pbgrpc.dart' as userpb;
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as chatpb;
 import 'package:legion/generated/grpc_pb/project.pbgrpc.dart' as projectpb;
 import 'package:legion/generated/grpc_pb/search.pbgrpc.dart' as searchpb;
+import 'package:legion/generated/grpc_pb/account.pbgrpc.dart' as accountpb;
 
 class GrpcChannelManager {
   final ServerConfig _config;
@@ -18,6 +19,7 @@ class GrpcChannelManager {
   ClientChannel? _channel;
   authpb.AuthServiceClient? _authClient;
   authpb.AuthServiceClient? _authClientNoInterceptor;
+  accountpb.AccountServiceClient? _accountClient;
   aichatpb.AIChatServiceClient? _aiChatClient;
   editorpb.EditorServiceClient? _editorClient;
   userpb.UserServiceClient? _userClient;
@@ -49,6 +51,14 @@ class GrpcChannelManager {
       interceptors: [_authInterceptor],
     );
     return _authClient!;
+  }
+
+  accountpb.AccountServiceClient get accountClient {
+    _accountClient ??= accountpb.AccountServiceClient(
+      channel,
+      interceptors: [_authInterceptor],
+    );
+    return _accountClient!;
   }
 
   aichatpb.AIChatServiceClient get aiChatClient {
@@ -123,6 +133,7 @@ class GrpcChannelManager {
     _channel = null;
     _authClient = null;
     _authClientNoInterceptor = null;
+    _accountClient = null;
     _aiChatClient = null;
     _editorClient = null;
     _userClient = null;

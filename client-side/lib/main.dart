@@ -50,14 +50,17 @@ class App extends StatelessWidget {
                   if (authState.needsUpdate) {
                     return const UpdateRequiredScreen();
                   }
+
                   if (authState.isLoading && !authState.isAuthenticated) {
                     return const Scaffold(
                       body: Center(child: CircularProgressIndicator()),
                     );
                   }
+
                   if (authState.isAuthenticated) {
                     return const MainLayout();
                   }
+
                   return const LoginScreen();
                 },
               ),
