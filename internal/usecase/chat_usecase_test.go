@@ -60,6 +60,10 @@ func (m *mockChatMessageRepo) ListByChatId(ctx context.Context, chatId int, page
 	return nil, 0, nil
 }
 
+func (m *mockChatRepo) GetAllUserIds(ctx context.Context, uid int) []int64 {
+	return nil
+}
+
 type mockUserRepoForChat struct {
 	getById func(context.Context, int) (*domain.User, error)
 }
@@ -217,7 +221,7 @@ func TestChatUseCase_SendMessage_success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SendMessage: %v", err)
 	}
-	
+
 	if createdMsg == nil || createdMsg.Content != "hello" || createdMsg.ChatId != 1 || createdMsg.UserId != 1 || createdMsg.ReceiverId != 2 {
 		t.Errorf("ожидалось сообщение hello в чат 1 от 1 к 2, получено %v", createdMsg)
 	}

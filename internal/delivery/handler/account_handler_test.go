@@ -11,7 +11,7 @@ import (
 )
 
 func TestAuthHandler_ChangePassword_noAuth(t *testing.T) {
-	h := NewAccountHandler(&config.Config{}, nil)
+	h := NewAccountHandler(&config.Config{}, nil, nil, nil)
 	_, err := h.ChangePassword(context.Background(), &accountpb.ChangePasswordRequest{})
 	if code := status.Code(err); code != codes.Unauthenticated {
 		t.Errorf("ChangePassword: код %v, ожидался Unauthenticated", code)
@@ -19,7 +19,7 @@ func TestAuthHandler_ChangePassword_noAuth(t *testing.T) {
 }
 
 func TestAuthHandler_GetDevices_noAuth(t *testing.T) {
-	h := NewAccountHandler(&config.Config{}, nil)
+	h := NewAccountHandler(&config.Config{}, nil, nil, nil)
 	_, err := h.GetDevices(context.Background(), &accountpb.GetDevicesRequest{})
 	if code := status.Code(err); code != codes.Unauthenticated {
 		t.Errorf("GetDevices: код %v, ожидался Unauthenticated", code)
@@ -27,7 +27,7 @@ func TestAuthHandler_GetDevices_noAuth(t *testing.T) {
 }
 
 func TestAuthHandler_RevokeDevice_noAuth(t *testing.T) {
-	h := NewAccountHandler(&config.Config{}, nil)
+	h := NewAccountHandler(&config.Config{}, nil, nil, nil)
 	_, err := h.RevokeDevice(context.Background(), &accountpb.RevokeDeviceRequest{})
 	if code := status.Code(err); code != codes.Unauthenticated {
 		t.Errorf("RevokeDevice: код %v, ожидался Unauthenticated", code)

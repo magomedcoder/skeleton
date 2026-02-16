@@ -10,6 +10,54 @@ service AccountService {
   rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse);
 
   rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
+
+  rpc GetUpdates(stream UpdateRequest) returns (stream UpdateResponse);
+}
+
+message UpdateState {
+  int64 pts = 1;
+  int64 date = 2;
+}
+
+message UpdateSystemPingEvent {}
+
+message UpdateSystemPongEvent {}
+
+message UpdateSystemAckEvent {
+  string sid = 1;
+}
+
+message UpdateSystemPingIntervalEvent {
+  string ping_interval = 1;
+  string ping_timeout = 2;
+}
+
+message UpdateSystemEvent {
+  string event = 1;
+  string sid = 2;
+  bool is_ack = 3;
+  int32 retry = 4;
+}
+
+message UpdateSystem {
+  oneof update_system_type {
+    UpdateSystemPingIntervalEvent system_ping_interval_event = 1;
+    UpdateSystemPingEvent system_ping_event = 2;
+    UpdateSystemPongEvent system_pong_event = 3;
+    UpdateSystemAckEvent system_ack_event = 4;
+    UpdateSystemEvent system_event = 5;
+  }
+}
+
+message UpdateUserStatus {
+  int64 user_id = 1;
+  bool  status  = 2;
+}
+
+message Update {
+  oneof update_type {
+    UpdateUserStatus user_status = 1;
+  }
 }
 
 message ChangePasswordRequest {
@@ -39,4 +87,18 @@ message RevokeDeviceRequest {
 
 message RevokeDeviceResponse {
   bool success = 1;
+}
+
+message UpdateRequest {
+  UpdateState state = 1;
+  oneof update {
+    UpdateSystemPingEvent system_ping_event = 2;
+    UpdateSystemPongEvent system_pong_event = 3;
+  }
+}
+
+message UpdateResponse {
+  UpdateState state = 1;
+  UpdateSystem update_system = 2;
+  repeated Update updates = 3;
 }

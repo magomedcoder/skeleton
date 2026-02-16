@@ -15,18 +15,18 @@ func NewChatRepository(db *gorm.DB) domain.ChatRepository {
 	return &chatRepository{db: db}
 }
 
-func (r *chatRepository) GetById(ctx context.Context, id int) (*domain.Chat, error) {
+func (c *chatRepository) GetById(ctx context.Context, id int) (*domain.Chat, error) {
 	var m chatModel
-	if err := r.db.WithContext(ctx).First(&m, id).Error; err != nil {
+	if err := c.db.WithContext(ctx).First(&m, id).Error; err != nil {
 		return nil, err
 	}
 	return chatModelToDomain(&m), nil
 }
 
-func (r *chatRepository) GetOrCreatePrivateChat(ctx context.Context, uid, userId int) (*domain.Chat, error) {
+func (c *chatRepository) GetOrCreatePrivateChat(ctx context.Context, uid, userId int) (*domain.Chat, error) {
 	var m chatModel
 
-	err := r.db.WithContext(ctx).
+	err := c.db.WithContext(ctx).
 		Where("(user_id = ? AND receiver_id = ?) OR (user_id = ? AND receiver_id = ?)", uid, userId, userId, uid).
 		First(&m).Error
 
@@ -45,18 +45,18 @@ func (r *chatRepository) GetOrCreatePrivateChat(ctx context.Context, uid, userId
 	}
 	mNew := chatDomainToModel(newChat)
 
-	if err := r.db.WithContext(ctx).Create(mNew).Error; err != nil {
+	if err := c.db.WithContext(ctx).Create(mNew).Error; err != nil {
 		return nil, err
 	}
 
 	return chatModelToDomain(mNew), nil
 }
 
-func (r *chatRepository) ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, int32, error) {
+func (c *chatRepository) ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, int32, error) {
 	page, pageSize, offset := normalizePagination(page, pageSize)
 
 	var total int64
-	if err := r.db.WithContext(ctx).
+	if err := c.db.WithContext(ctx).
 		Model(&chatModel{}).
 		Where("user_id = ? OR receiver_id = ?", uid, uid).
 		Count(&total).Error; err != nil {
@@ -64,7 +64,7 @@ func (r *chatRepository) ListByUser(ctx context.Context, uid int, page, pageSize
 	}
 
 	var list []chatModel
-	if err := r.db.WithContext(ctx).
+	if err := c.db.WithContext(ctx).
 		Where("user_id = ? OR receiver_id = ?", uid, uid).
 		Order("created_at DESC").
 		Limit(int(pageSize)).
@@ -79,4 +79,14 @@ func (r *chatRepository) ListByUser(ctx context.Context, uid int, page, pageSize
 	}
 
 	return chats, int32(total), nil
+}
+
+func (c *chatRepository) GetAllUserIds(ctx context.Context, uid int) []int64 {
+	var ids []int64
+	c.db.WithContext(ctx).
+		Model(&chatModel{}).
+		Where("chat_type = ? AND user_id = ?", 1, uid).
+		Pluck("to_id", &ids)
+
+	return ids
 }

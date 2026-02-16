@@ -5,6 +5,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/magomedcoder/legion/pkg/encrypt"
+	"github.com/magomedcoder/legion/pkg/strutil"
+	"github.com/redis/go-redis/v9"
 	"gopkg.in/yaml.v3"
 )
 
@@ -60,11 +63,29 @@ type JWTConfig struct {
 type Config struct {
 	Server         ServerConfig      `yaml:"server"`
 	Database       DatabaseConfig    `yaml:"database"`
+	Redis          *Redis            `yaml:"redis"`
 	JWT            JWTConfig         `yaml:"jwt"`
 	Runners        RunnersConfig     `yaml:"runners"`
 	Attachments    AttachmentsConfig `yaml:"attachments"`
 	Log            LogConfig         `yaml:"log"`
 	MinClientBuild int32
+	sid            string
+}
+
+type Redis struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Auth     string `yaml:"auth"`
+	Database int    `yaml:"database"`
+}
+
+func (r *Redis) Options() *redis.Options {
+	return &redis.Options{
+		Addr:        fmt.Sprintf("%s:%d", r.Host, r.Port),
+		Password:    r.Auth,
+		DB:          r.Database,
+		ReadTimeout: -1,
+	}
 }
 
 func Load() (*Config, error) {
@@ -88,5 +109,11 @@ func Load() (*Config, error) {
 		}
 	}
 
+	config.sid = encrypt.Md5(fmt.Sprintf("%d%s", time.Now().UnixNano(), strutil.Random(6)))
+
 	return config, nil
+}
+
+func (c *Config) ServerId() string {
+	return c.sid
 }

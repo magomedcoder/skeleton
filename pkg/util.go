@@ -1,7 +1,10 @@
 package pkg
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"runtime"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -45,4 +48,18 @@ func HandleNotFound(err error, message string) error {
 
 func GenerateUUID() string {
 	return uuid.New().String()
+}
+
+func PanicTrace(err interface{}) string {
+	buf := new(bytes.Buffer)
+	fmt.Fprintf(buf, "%v\n", err)
+	for i := 2; ; i++ {
+		pc, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+	}
+
+	return buf.String()
 }

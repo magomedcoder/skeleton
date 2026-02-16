@@ -78,6 +78,8 @@ type ChatRepository interface {
 	GetOrCreatePrivateChat(ctx context.Context, uid, userId int) (*Chat, error)
 
 	ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*Chat, int32, error)
+
+	GetAllUserIds(ctx context.Context, uid int) []int64
 }
 
 type ChatMessageRepository interface {

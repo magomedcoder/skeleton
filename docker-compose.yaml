@@ -9,6 +9,7 @@ services:
       - 50051:50051
     depends_on:
       - postgres
+      - redis
 
   legion-runner:
     container_name: legion-runner
@@ -32,3 +33,12 @@ services:
       - .docker-volumes/postgres/:/var/lib/postgresql/data
     ports:
       - 5432:5432
+
+  redis:
+    container_name: redis
+    image: redis:7.4
+    restart: always
+    volumes:
+      - .docker-volumes/volumes/redis:/data
+    ports:
+      - 6379:6379

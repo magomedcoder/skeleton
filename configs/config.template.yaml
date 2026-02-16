@@ -7,6 +7,12 @@ server:
 database:
   dsn: "postgres://postgres:postgres@127.0.0.1:5432/legion"
 
+redis:
+  host: "redis"
+  port: 6379
+  auth:
+  database: 0
+
 jwt:
   access_secret: "legion"
   refresh_secret: "legion"

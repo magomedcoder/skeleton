@@ -23,8 +23,8 @@ func NewChatUseCase(
 	}
 }
 
-func (uc *ChatUseCase) verifyChatOwnership(ctx context.Context, userId, chatId int) (*domain.Chat, error) {
-	chat, err := uc.chatRepo.GetById(ctx, chatId)
+func (c *ChatUseCase) verifyChatOwnership(ctx context.Context, userId, chatId int) (*domain.Chat, error) {
+	chat, err := c.chatRepo.GetById(ctx, chatId)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +36,8 @@ func (uc *ChatUseCase) verifyChatOwnership(ctx context.Context, userId, chatId i
 	return chat, nil
 }
 
-func (uc *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*domain.Chat, *domain.User, error) {
-	chat, err := uc.chatRepo.GetOrCreatePrivateChat(ctx, uid, userId)
+func (c *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*domain.Chat, *domain.User, error) {
+	chat, err := c.chatRepo.GetOrCreatePrivateChat(ctx, uid, userId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -49,7 +49,7 @@ func (uc *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*do
 		chatUserId = chat.UserId
 	}
 
-	user, err := uc.userRepository.GetById(ctx, chatUserId)
+	user, err := c.userRepository.GetById(ctx, chatUserId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -57,8 +57,8 @@ func (uc *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*do
 	return chat, user, nil
 }
 
-func (uc *ChatUseCase) GetChats(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, map[int]*domain.User, int32, error) {
-	chats, total, err := uc.chatRepo.ListByUser(ctx, uid, page, pageSize)
+func (c *ChatUseCase) GetChats(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, map[int]*domain.User, int32, error) {
+	chats, total, err := c.chatRepo.ListByUser(ctx, uid, page, pageSize)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -76,7 +76,7 @@ func (uc *ChatUseCase) GetChats(ctx context.Context, uid int, page, pageSize int
 			continue
 		}
 
-		u, err := uc.userRepository.GetById(ctx, userId)
+		u, err := c.userRepository.GetById(ctx, userId)
 		if err != nil {
 			continue
 		}
@@ -86,8 +86,8 @@ func (uc *ChatUseCase) GetChats(ctx context.Context, uid int, page, pageSize int
 	return chats, usersMap, total, nil
 }
 
-func (uc *ChatUseCase) SendMessage(ctx context.Context, uid int, chatId int, content string) (*domain.Message, error) {
-	chat, err := uc.verifyChatOwnership(ctx, uid, chatId)
+func (c *ChatUseCase) SendMessage(ctx context.Context, uid int, chatId int, content string) (*domain.Message, error) {
+	chat, err := c.verifyChatOwnership(ctx, uid, chatId)
 	if err != nil {
 		return nil, err
 	}
@@ -105,17 +105,21 @@ func (uc *ChatUseCase) SendMessage(ctx context.Context, uid int, chatId int, con
 		Content:    content,
 	}
 
-	if err := uc.messageRepo.Create(ctx, msg); err != nil {
+	if err := c.messageRepo.Create(ctx, msg); err != nil {
 		return nil, err
 	}
 
 	return msg, nil
 }
 
-func (uc *ChatUseCase) GetMessages(ctx context.Context, uid int, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {
-	if _, err := uc.verifyChatOwnership(ctx, uid, chatId); err != nil {
+func (c *ChatUseCase) GetMessages(ctx context.Context, uid int, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {
+	if _, err := c.verifyChatOwnership(ctx, uid, chatId); err != nil {
 		return nil, 0, err
 	}
 
-	return uc.messageRepo.ListByChatId(ctx, chatId, page, pageSize)
+	return c.messageRepo.ListByChatId(ctx, chatId, page, pageSize)
+}
+
+func (c *ChatUseCase) GetAllUserIds(ctx context.Context, uid int) []int64 {
+	return c.chatRepo.GetAllUserIds(ctx, uid)
 }

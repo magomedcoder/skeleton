@@ -4,24 +4,37 @@ import (
 	"context"
 	"github.com/magomedcoder/legion/api/pb/accountpb"
 	"github.com/magomedcoder/legion/internal/config"
+	"github.com/magomedcoder/legion/internal/delivery/event"
 	"github.com/magomedcoder/legion/internal/delivery/middleware"
+	"github.com/magomedcoder/legion/internal/pkg/socket"
+	redisRepo "github.com/magomedcoder/legion/internal/repository/redis_repository"
 	"github.com/magomedcoder/legion/internal/usecase"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 	"github.com/magomedcoder/legion/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 )
 
 type AccountHandler struct {
 	accountpb.UnimplementedAccountServiceServer
-	authUseCase *usecase.AuthUseCase
-	cfg         *config.Config
+	cfg             *config.Config
+	authUseCase     *usecase.AuthUseCase
+	ClientCacheRepo *redisRepo.ClientCacheRepository
+	Event           *event.ChatEvent
 }
 
-func NewAccountHandler(cfg *config.Config, authUseCase *usecase.AuthUseCase) *AccountHandler {
+func NewAccountHandler(
+	cfg *config.Config,
+	authUseCase *usecase.AuthUseCase,
+	clientCacheRepo *redisRepo.ClientCacheRepository,
+	Event *event.ChatEvent,
+) *AccountHandler {
 	return &AccountHandler{
-		cfg:         cfg,
-		authUseCase: authUseCase,
+		cfg:             cfg,
+		authUseCase:     authUseCase,
+		ClientCacheRepo: clientCacheRepo,
+		Event:           Event,
 	}
 }
 
@@ -91,4 +104,44 @@ func (a *AccountHandler) RevokeDevice(ctx context.Context, req *accountpb.Revoke
 	return &accountpb.RevokeDeviceResponse{
 		Success: true,
 	}, nil
+}
+
+func (a *AccountHandler) GetUpdates(stream accountpb.AccountService_GetUpdatesServer) error {
+	ctx := stream.Context()
+
+	select {
+	case <-ctx.Done():
+		log.Println("Запрос был отменен или истекло время")
+		return ctx.Err()
+	default:
+	}
+
+	session, err := a.getSession(ctx)
+	if err != nil {
+		return status.Errorf(codes.Unauthenticated, "unauthorized")
+	}
+
+	conn, err := socket.NewGRPCStreamAdapter(stream)
+	if err != nil {
+		log.Printf("Account - NewGrpcStreamAdapter: %s", err)
+		return err
+	}
+
+	err = socket.NewClient(conn, &socket.ClientOption{
+		Uid:     session.Uid,
+		Channel: socket.Session.Chat,
+		Storage: a.ClientCacheRepo,
+		Buffer:  10,
+	}, socket.NewEvent(
+		socket.WithOpenEvent(a.Event.OnOpen),
+		socket.WithMessageEvent(a.Event.OnMessage),
+		socket.WithCloseEvent(a.Event.OnClose),
+	))
+	if err != nil {
+		log.Printf("Account - NewClient: %s", err)
+		return err
+	}
+
+	<-ctx.Done()
+	return ctx.Err()
 }
