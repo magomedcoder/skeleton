@@ -4,6 +4,7 @@ import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/connection_status.dart';
 import 'package:legion/core/server_config.dart';
+import 'package:legion/data/services/user_online_status_service.dart';
 import 'package:legion/data/data_sources/local/session_model_local_data_source.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/account_remote_datasource.dart';
@@ -23,6 +24,7 @@ import 'package:legion/data/repositories/project_repository_impl.dart';
 import 'package:legion/data/repositories/runners_repository_impl.dart';
 import 'package:legion/data/repositories/user_chat_repository_impl.dart';
 import 'package:legion/data/repositories/user_repository_impl.dart';
+import 'package:legion/data/services/pts_sync_service.dart';
 import 'package:legion/domain/repositories/ai_chat_repository.dart';
 import 'package:legion/domain/repositories/account_repository.dart';
 import 'package:legion/domain/repositories/auth_repository.dart';
@@ -127,6 +129,20 @@ Future<void> init() async {
     () => ConnectionStatusService(),
   );
 
+  sl.registerLazySingleton<UserOnlineStatusService>(
+    () => UserOnlineStatusService(),
+  );
+
+  sl.registerLazySingleton<PtsSyncService>(
+    () => PtsSyncService(
+      sl<IAccountRemoteDataSource>(),
+      sl<UserLocalDataSourceImpl>(),
+      sl<GetChatsUseCase>(),
+      sl<ConnectionStatusService>(),
+      userOnlineStatusService: sl<UserOnlineStatusService>(),
+    ),
+  );
+
   sl.registerLazySingleton<IAIChatRemoteDataSource>(
     () => AIChatRemoteDataSource(sl<GrpcChannelManager>(), sl<AuthGuard>()),
   );
@@ -149,6 +165,7 @@ Future<void> init() async {
     () => AccountRemoteDataSource(
       sl<GrpcChannelManager>(),
       sl<UserLocalDataSourceImpl>(),
+      sl<ConnectionStatusService>(),
     ),
   );
 
@@ -289,6 +306,7 @@ Future<void> init() async {
       tokenStorage: sl<UserLocalDataSourceImpl>(),
       channelManager: sl(),
       authGuard: sl<AuthGuard>(),
+      ptsSyncService: sl<PtsSyncService>(),
     ),
   );
 

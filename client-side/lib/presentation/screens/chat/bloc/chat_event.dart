@@ -52,3 +52,7 @@ class ChatSendMessage extends ChatEvent {
 class ChatClearError extends ChatEvent {
   const ChatClearError();
 }
+
+class ChatBackToList extends ChatEvent {
+  const ChatBackToList();
+}

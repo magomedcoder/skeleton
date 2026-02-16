@@ -19,6 +19,14 @@ abstract class UserLocalDataSource {
   Future<void> setAccentColorId(int id);
 
   Future<void> init();
+
+  Future<void> setSyncState(int pts, int date);
+
+  Future<Map<String, dynamic>> getSyncState();
+
+  Future<void> clearSyncState();
+
+  Future<void> clearAuthData();
 }
 
 class UserLocalDataSourceImpl implements UserLocalDataSource {
@@ -31,6 +39,8 @@ class UserLocalDataSourceImpl implements UserLocalDataSource {
   static const _keyUserRole = 'legion_user_role';
   static const _keyThemeMode = 'legion_theme_mode';
   static const _keyAccentColorId = 'legion_accent_color_id';
+  static const _syncPtsKey = 'legion_pts_key';
+  static const _syncDateKey = 'legion_date_key';
 
   SharedPreferences? _prefs;
   String? _accessToken;
@@ -134,5 +144,37 @@ class UserLocalDataSourceImpl implements UserLocalDataSource {
   @override
   Future<void> setAccentColorId(int id) async {
     await _prefs?.setInt(_keyAccentColorId, id);
+  }
+
+  @override
+  Future<void> setSyncState(int pts, int date) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt(_syncPtsKey, pts);
+    await _prefs!.setInt(_syncDateKey, date);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSyncState() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    final pts = _prefs!.getInt(_syncPtsKey);
+    final date = _prefs!.getInt(_syncDateKey);
+    return {
+      'pts': pts ?? 0,
+      'date': date ?? 0,
+    };
+  }
+
+  @override
+  Future<void> clearSyncState() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.remove(_syncPtsKey);
+    await _prefs!.remove(_syncDateKey);
+  }
+
+  @override
+  Future<void> clearAuthData() async {
+    clearTokens();
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.clear();
   }
 }

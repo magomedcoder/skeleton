@@ -26,6 +26,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatSelectChat>(_onSelectChat);
     on<ChatSendMessage>(_onSendMessage);
     on<ChatClearError>(_onClearError);
+    on<ChatBackToList>(_onBackToList);
+  }
+
+  void _onBackToList(ChatBackToList event, Emitter<ChatState> emit) {
+    emit(state.copyWith(clearSelectedChat: true));
   }
 
   Future<void> _onStarted(ChatStarted event, Emitter<ChatState> emit) async {

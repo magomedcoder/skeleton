@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-
 	"github.com/magomedcoder/legion/internal/domain"
 	"gorm.io/gorm"
 )
@@ -86,7 +85,7 @@ func (c *chatRepository) GetAllUserIds(ctx context.Context, uid int) []int64 {
 	c.db.WithContext(ctx).
 		Model(&chatModel{}).
 		Where("chat_type = ? AND user_id = ?", 1, uid).
-		Pluck("to_id", &ids)
+		Pluck("receiver_id", &ids)
 
 	return ids
 }

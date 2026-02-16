@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
 import 'package:legion/core/connection_status.dart';
+import 'package:legion/data/services/user_online_status_service.dart';
 import 'package:legion/presentation/screens/ai_chat/bloc/ai_chat_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_event.dart';
@@ -23,6 +24,7 @@ class AppProviders {
 
   static List<SingleChildWidget> get allProviders => [
     Provider<ConnectionStatusService>.value(value: di.sl<ConnectionStatusService>()),
+    Provider<UserOnlineStatusService>.value(value: di.sl<UserOnlineStatusService>()),
     ...blocProviders,
   ];
 }

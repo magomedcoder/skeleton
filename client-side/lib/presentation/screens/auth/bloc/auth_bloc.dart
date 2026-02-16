@@ -8,6 +8,7 @@ import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/jwt_util.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
+import 'package:legion/data/services/pts_sync_service.dart';
 import 'package:legion/domain/usecases/auth/login_usecase.dart';
 import 'package:legion/domain/usecases/auth/logout_usecase.dart';
 import 'package:legion/domain/usecases/auth/refresh_token_usecase.dart';
@@ -22,6 +23,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserLocalDataSourceImpl tokenStorage;
   final GrpcChannelManager channelManager;
   final AuthGuard authGuard;
+  final PtsSyncService? ptsSyncService;
 
   Timer? _backgroundRefreshTimer;
 
@@ -32,6 +34,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.tokenStorage,
     required this.channelManager,
     required this.authGuard,
+    this.ptsSyncService,
   }) : super(const AuthState()) {
     authGuard.setOnSessionExpired(() => add(const AuthLogoutRequested()));
     on<AuthLoginRequested>(_onLoginRequested);
@@ -48,8 +51,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     super.onTransition(transition);
     if (transition.nextState.isAuthenticated) {
       _startBackgroundRefreshTimer();
+      ptsSyncService?.startSync();
     } else {
       _cancelBackgroundRefreshTimer();
+      ptsSyncService?.stopSync();
     }
   }
 
@@ -319,6 +324,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       Logs().w('AuthBloc: ошибка при выходе на сервере (токены очищены)', e);
     } finally {
       tokenStorage.clearTokens();
+      await ptsSyncService?.stopSync();
       emit(
         state.copyWith(
           isLoading: false,

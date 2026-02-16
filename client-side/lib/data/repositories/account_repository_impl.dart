@@ -1,6 +1,8 @@
 import 'package:legion/core/failures.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/data_sources/remote/account_remote_datasource.dart';
+import 'package:legion/data/mappers/account_update_mapper.dart';
+import 'package:legion/domain/entities/account_update.dart';
 import 'package:legion/domain/entities/device.dart';
 import 'package:legion/domain/repositories/account_repository.dart';
 
@@ -8,6 +10,22 @@ class AccountRepositoryImpl implements AccountRepository {
   final IAccountRemoteDataSource dataSource;
 
   AccountRepositoryImpl(this.dataSource);
+
+  @override
+  Future<Stream<AccountUpdate>> getUpdates() async {
+    Logs().i('AccountRepositoryImpl - getUpdates');
+
+    return dataSource.getUpdates().asyncExpand((response) async* {
+      Logs().i('ChatRepositoryImpl - getUpdates ${response.updates}');
+
+      for (final update in response.updates) {
+        final domainUpdate = AccountUpdateMapper.fromGrpc(update);
+        if (domainUpdate != null) {
+          yield domainUpdate;
+        }
+      }
+    });
+  }
 
   @override
   Future<void> changePassword(

@@ -95,3 +95,36 @@ class DateFormatter {
 
   static String _twoDigits(int n) => n.toString().padLeft(2, '0');
 }
+
+class ChatMessageTime {
+  ChatMessageTime._();
+
+  static String format(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final msgDay = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    final diff = today.difference(msgDay).inDays;
+
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+
+    if (diff == 0) {
+      return '$hour:$minute';
+    }
+
+    if (diff == 1) {
+      return 'Вчера $hour:$minute';
+    }
+
+    if (diff < 7) {
+      return '${_weekday(dateTime)} $hour:$minute';
+    }
+
+    return '${dateTime.day}.${dateTime.month}.${dateTime.year} $hour:$minute';
+  }
+
+  static String _weekday(DateTime d) {
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    return days[d.weekday - 1];
+  }
+}

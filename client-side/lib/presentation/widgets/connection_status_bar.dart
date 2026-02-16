@@ -35,29 +35,34 @@ class _ConnectionStatusBarState extends State<ConnectionStatusBar> {
     final colors = Theme.of(context).colorScheme;
 
     Color backgroundColor;
+    Color foregroundColor;
     IconData icon;
     String text;
 
     switch (status) {
       case ConnectionStatus.connecting:
         backgroundColor = colors.primaryContainer;
+        foregroundColor = colors.onPrimaryContainer;
         icon = Icons.sync;
         text = "Подключение...";
         break;
       case ConnectionStatus.syncing:
         backgroundColor = colors.primaryContainer;
+        foregroundColor = colors.onPrimaryContainer;
         icon = Icons.sync;
         text = "Синхронизация...";
         break;
       case ConnectionStatus.waitingForNetwork:
         backgroundColor = colors.errorContainer;
+        foregroundColor = colors.onErrorContainer;
         icon = Icons.signal_wifi_off;
         text = "Ожидание сети...";
         break;
       case ConnectionStatus.disconnected:
         backgroundColor = colors.errorContainer;
-        icon = Icons.signal_wifi_off;
-        text = "Подключение...";
+        foregroundColor = colors.onErrorContainer;
+        icon = Icons.cloud_off;
+        text = "Нет соединения";
         break;
       default:
         return const SizedBox.shrink();
@@ -65,29 +70,30 @@ class _ConnectionStatusBarState extends State<ConnectionStatusBar> {
 
     final content = Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       color: backgroundColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16, color: colors.onPrimaryContainer),
-          const SizedBox(width: 8),
+          Icon(icon, size: 18, color: foregroundColor),
+          const SizedBox(width: 10),
           Text(
             text,
             style: TextStyle(
               fontSize: 14,
-              color: colors.onPrimaryContainer,
+              fontWeight: FontWeight.w500,
+              color: foregroundColor,
             ),
           ),
           if (status == ConnectionStatus.connecting || status == ConnectionStatus.syncing)
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
           if (status == ConnectionStatus.connecting || status == ConnectionStatus.syncing)
             SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(colors.onPrimaryContainer),
+                valueColor: AlwaysStoppedAnimation(foregroundColor),
               ),
             ),
         ],

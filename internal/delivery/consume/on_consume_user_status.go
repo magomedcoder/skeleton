@@ -18,8 +18,8 @@ func (h *Handler) handleUserStatus(ctx context.Context, payload []byte) {
 		return
 	}
 
-	contactIDs := h.ChatUseCase.GetAllUserIds(ctx, in.UserId)
-	uniqueIDs := sliceutil.Unique(contactIDs)
+	chatUserIds := h.ChatUseCase.GetAllUserIds(ctx, in.UserId)
+	uniqueIDs := sliceutil.Unique(chatUserIds)
 
 	var clientIDs []int64
 	for _, uid := range uniqueIDs {
