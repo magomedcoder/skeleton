@@ -14,6 +14,7 @@ jwt:
   refresh_ttl: 168h
 
 runners:
+  registration_token: ""
   addresses:
     - "127.0.0.1:50052"
 

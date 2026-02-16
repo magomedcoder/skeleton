@@ -14,9 +14,17 @@ service RunnerService {
 
   rpc Generate(GenerateRequest) returns (stream GenerateResponse);
 
-  rpc Register(RegisterRunnerRequest) returns (legion.Empty);
+  rpc Register(RegisterRunnerRequest) returns (legion.Empty) {
+    option (legion.method_conf) = {
+      skip_auth: true
+    };
+  }
 
-  rpc Unregister(UnregisterRunnerRequest) returns (legion.Empty);
+  rpc Unregister(UnregisterRunnerRequest) returns (legion.Empty) {
+    option (legion.method_conf) = {
+      skip_auth: true
+    };
+  }
 
   rpc GetGpuInfo(legion.Empty) returns (GetGpuInfoResponse);
 

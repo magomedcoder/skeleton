@@ -37,7 +37,8 @@ type AttachmentsConfig struct {
 }
 
 type RunnersConfig struct {
-	Addresses []string `yaml:"addresses"`
+	Addresses         []string `yaml:"addresses"`
+	RegistrationToken string   `yaml:"registration_token"`
 }
 
 type ServerConfig struct {

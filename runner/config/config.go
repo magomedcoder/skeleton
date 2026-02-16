@@ -25,12 +25,13 @@ type LogConfig struct {
 }
 
 type Config struct {
-	CoreAddr   string    `yaml:"core_addr"`
-	ListenAddr string    `yaml:"listen_addr"`
-	Log        LogConfig `yaml:"log"`
-	Engine     string    `yaml:"engine"`
-	Ollama     Ollama    `yaml:"ollama"`
-	Llama      Llama     `yaml:"llama"`
+	CoreAddr           string    `yaml:"core_addr"`
+	ListenAddr         string    `yaml:"listen_addr"`
+	RegistrationToken  string    `yaml:"registration_token"`
+	Log                LogConfig `yaml:"log"`
+	Engine             string    `yaml:"engine"`
+	Ollama             Ollama    `yaml:"ollama"`
+	Llama              Llama     `yaml:"llama"`
 }
 
 func Load() (*Config, error) {

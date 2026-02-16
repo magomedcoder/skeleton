@@ -42,53 +42,62 @@
 
 Установка зависимостей клиента: `cd client-side && flutter pub get`.
 
-Сервисы:
+---
 
-- **legion** - основной сервер (порт `50051`)
-- **legion-runner** - раннер (порт `50052`)
-- **postgres** - БД (порт `5432`)
+### Конфигурация
 
-### Сборка и тесты и запуск
+### Основной сервер (legion)
+
+Конфигурация загружается из файла, заданного переменной окружения **`LEGION_CONFIG`**.
+По умолчанию: `./configs/config.yaml`.
+
+**Параметры:**
+
+- `server` - хост и порт сервера (по умолчанию `0.0.0.0:50051`)
+- `database` - строка подключения к PostgreSQL
+- `jwt` - секреты и TTL для access/refresh токенов
+- `runners` - токен регистрации и адреса раннеров
+- `attachments` - директория для сохранения файлов
+- `log` - уровень логирования (debug, verbose, info, warn, error, off)
+
+### Раннер (legion-runner)
+
+Конфигурация загружается из файла, заданного переменной окружения **`LEGION_RUNNER_CONFIG`**.
+По умолчанию: `./configs/runner-config.yaml`.
+
+**Параметры:**
+
+- `core_addr` - адрес основного сервера для регистрации  (по умолчанию `0.0.0.0:50051`)
+- `listen_addr` - адрес для приёма gRPC-запросов  (по умолчанию `0.0.0.0:50053`)
+- `registration_token` - токен для регистрации на сервере
+- `log` - уровень логирования (debug, verbose, info, warn, error, off)
+- `engine` - движок: `"ollama"` или `"llama"`
+- `ollama` - настройки Ollama (URL API)
+- `llama` - настройки llama.cpp (путь к моделям)
+
+---
+
+### Сборка, тесты и запуск
 
 #### Сборка
 
 ```bash
 # Сборка сервера
 make build
-# Сборка раннера
+# Сборка раннера (Ollama / без GPU)
 make build-runner
-# Сборка раннера с поддержкой NVIDIA
+# Сборка раннера с поддержкой NVIDIA (llama.cpp + CUDA)
 make build-runner-nvidia
 ```
 
-#### Тесты
-
-```bash
-# Тесты Go
-make test
-# Тесты Flutter
-make client-test
-# Нагрузочные тесты
-make test-load
-```
-
-#### Запуск
-
-```bash
-./build/legion
-./build/legion-runner
-```
-
-### Или запуск без сборки
+#### Запуск без сборки
 
 ```bash
 # Запуск сервера
 make run
-# Запуск раннера
-go run ./cmd/runner
-# Запуск раннера
+# Запуск раннера (с тегом nvidia)
 make run-runner
-# Запуск раннера (llama.cpp)
+# Запуск раннера (с движком llama.cpp)
 make run-runner-llama
 ```
 
@@ -103,14 +112,14 @@ make gen
 
 ### Скачивание исходников llama.cpp и Ollama
 
-Клонирование репозиториев в `third_party/`, сборка библиотеки llama.cpp и раннера:
+Клонирование репозиториев в `third_party/`, сборка библиотеки llama.cpp:
 
 ```bash
 # Клонирование llama.cpp и ollama в third_party/
 make deps
 # Сборка libllama.a (без CUDA)
 make build-llama
-# Сборка libllama.a с поддержкой NVIDIA
+# Сборка libllama.a с поддержкой NVIDIA (CUDA)
 make build-llama-cublas
 # Сборка legion-runner с тегом nvidia
 make build-runner-nvidia
@@ -118,33 +127,16 @@ make build-runner-nvidia
 
 ---
 
-## Конфигурация
+#### Тесты
 
-### Основной сервер (legion)
-
-Конфигурация загружается из файла, указанного в переменной окружения `LEGION_CONFIG`
-
-**Параметры:**
-
-- `server` - настройки сервера (хост и порт)
-- `database` - строка подключения к PostgreSQL
-- `jwt` - секреты и время жизни токенов доступа/обновления
-- `runners` - адреса раннеров для обработки запросов
-- `attachments` - директория для сохранения файлов
-- `log` - уровень логирования
-
-### Раннер (legion-runner)
-
-Конфигурация загружается из файла, указанного в переменной окружения `LEGION_RUNNER_CONFIG`
-
-**Параметры:**
-
-- `core_addr` - адрес основного сервера для регистрации
-- `listen_addr` - адрес для прослушивания gRPC-запросов
-- `log` - уровень логирования
-- `engine` - движок обработки текста: `"ollama"` или `"llama"`
-- `ollama` - настройки для Ollama (URL API)
-- `llama` - настройки для llama.cpp (путь к моделям)
+```bash
+# Тесты Go
+make test
+# Тесты Flutter
+make client-test
+# Нагрузочные тесты
+make test-load
+```
 
 ---
 
@@ -157,10 +149,10 @@ make build-runner-nvidia
 | `cmd/legion/`  | Точка входа основного сервера                                                             |
 | `cmd/runner/`  | Точка входа сервиса-раннера                                                               |
 | `client-side/` | Flutter-клиент                                                                            |
-| `configs/`     | YAML-конфигурационные файлы-шаблоны                                                       |
+| `configs/`     | YAML-шаблоны конфигурации (config.template.yaml, runner-config.template.yaml)             |
 | `internal/`    | domain, delivery (handlers, mappers, middleware), repository, usecase, service, bootstrap |
 | `migrations/`  | SQL-миграции PostgreSQL                                                                   |
 | `pkg/`         | Общие пакеты                                                                              |
 | `runner/`      | Сервис-раннер (llama.cpp, Ollama)                                                         |
-| `scripts/`     | Скрипты сборки (deb, Windows installer)                                                   |
+| `scripts/`     | Скрипты сборки (deb, установщик Windows)                                                  |
 | `tests/`       | Нагрузочные тесты                                                                         |

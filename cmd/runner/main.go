@@ -3,6 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/magomedcoder/legion/api/pb/runnerpb"
 	"github.com/magomedcoder/legion/pkg/logger"
 	"github.com/magomedcoder/legion/runner"
@@ -11,11 +17,7 @@ import (
 	"github.com/magomedcoder/legion/runner/provider"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"google.golang.org/grpc/metadata"
 )
 
 func main() {
@@ -58,11 +60,11 @@ func main() {
 	}()
 
 	if cfg.CoreAddr != "" && cfg.ListenAddr != "" {
-		if err := registerWithCore(cfg.CoreAddr, cfg.ListenAddr); err != nil {
+		if err := registerWithCore(cfg.CoreAddr, cfg.ListenAddr, cfg.RegistrationToken); err != nil {
 			logger.W("Регистрация в ядре не удалась: %v", err)
 		} else {
 			logger.I("Зарегистрирован в ядре %s как %s", cfg.CoreAddr, cfg.ListenAddr)
-			defer unregisterFromCore(cfg.CoreAddr, cfg.ListenAddr)
+			defer unregisterFromCore(cfg.CoreAddr, cfg.ListenAddr, cfg.RegistrationToken)
 		}
 	}
 
@@ -74,7 +76,7 @@ func main() {
 	logger.I("Раннер остановлен")
 }
 
-func registerWithCore(coreAddr, registerAddress string) error {
+func registerWithCore(coreAddr, registerAddress, registrationToken string) error {
 	conn, err := grpc.NewClient(coreAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("подключение к ядру: %w", err)
@@ -83,6 +85,7 @@ func registerWithCore(coreAddr, registerAddress string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	ctx = outgoingContextWithRunnerToken(ctx, registrationToken)
 
 	client := runnerpb.NewRunnerServiceClient(conn)
 	_, err = client.Register(ctx, &runnerpb.RegisterRunnerRequest{
@@ -91,7 +94,7 @@ func registerWithCore(coreAddr, registerAddress string) error {
 	return err
 }
 
-func unregisterFromCore(coreAddr, registerAddress string) {
+func unregisterFromCore(coreAddr, registerAddress, registrationToken string) {
 	conn, err := grpc.NewClient(coreAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.W("Unregister: подключение к ядру: %v", err)
@@ -101,9 +104,17 @@ func unregisterFromCore(coreAddr, registerAddress string) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	ctx = outgoingContextWithRunnerToken(ctx, registrationToken)
 
 	client := runnerpb.NewRunnerServiceClient(conn)
 	_, _ = client.Unregister(ctx, &runnerpb.UnregisterRunnerRequest{
 		Address: registerAddress,
 	})
+}
+
+func outgoingContextWithRunnerToken(ctx context.Context, token string) context.Context {
+	if token == "" {
+		return ctx
+	}
+	return metadata.AppendToOutgoingContext(ctx, runner.MetadataRunnerToken, token)
 }

@@ -124,7 +124,7 @@ func main() {
 	searchpb.RegisterSearchServiceServer(grpcServer, searchHandler)
 	projectpb.RegisterProjectServiceServer(grpcServer, projectHandler)
 	runnerpb.RegisterRunnerAdminServiceServer(grpcServer, handler.NewRunnerHandler(runnerPool, authUseCase))
-	runnerpb.RegisterRunnerServiceServer(grpcServer, runner.NewRegistry(runnerPool))
+	runnerpb.RegisterRunnerServiceServer(grpcServer, runner.NewRegistry(runnerPool, cfg.Runners.RegistrationToken))
 
 	reflection.Register(grpcServer)
 
