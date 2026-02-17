@@ -7,4 +7,7 @@ const (
 
 const (
 	SubEventUserStatus = "sub.user.status"
+	SubEventNewMessage = "sub.message.new"
 )
+
+const ChatChannelName = "chat"

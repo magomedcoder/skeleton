@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package legion;
+package user;
 
 option go_package = "github.com/magomedcoder/legion/api/pb/userpb;userpb";
 
@@ -8,19 +8,19 @@ import "common.proto";
 
 service UserService {
   rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {
-    option (method_conf) = {
+    option (common.method_conf) = {
       role: ROLE_ADMIN
     };
   }
 
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
-    option (method_conf) = {
+    option (common.method_conf) = {
       role: ROLE_ADMIN
     };
   }
 
   rpc EditUser(EditUserRequest) returns (EditUserResponse) {
-    option (method_conf) = {
+    option (common.method_conf) = {
       role: ROLE_ADMIN
     };
   }
@@ -32,7 +32,7 @@ message GetUsersRequest {
 }
 
 message GetUsersResponse {
-  repeated legion.User users = 1;
+  repeated common.User users = 1;
   int32 total = 2;
 }
 
@@ -45,7 +45,7 @@ message CreateUserRequest {
 }
 
 message CreateUserResponse {
-  legion.User user = 1;
+  common.User user = 1;
 }
 
 message EditUserRequest {
@@ -58,5 +58,5 @@ message EditUserRequest {
 }
 
 message EditUserResponse {
-  legion.User user = 1;
+  common.User user = 1;
 }

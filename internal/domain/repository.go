@@ -85,6 +85,8 @@ type ChatRepository interface {
 type ChatMessageRepository interface {
 	Create(ctx context.Context, msg *Message) error
 
+	GetById(ctx context.Context, id int64) (*Message, error)
+
 	ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*Message, int32, error)
 }
 

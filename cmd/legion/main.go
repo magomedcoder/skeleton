@@ -110,7 +110,14 @@ func main() {
 
 	runnerPool := runner.NewPool(conf.Runners.Addresses)
 	authUseCase := usecase.NewAuthUseCase(userRepo, userSessionRepo, jwtService)
-	chatUseCase := usecase.NewChatUseCase(chatRepo, chatMessageRepo, userRepo)
+	chatUseCase := usecase.NewChatUseCase(
+		chatRepo,
+		chatMessageRepo,
+		userRepo,
+		usecase.WithChatRedis(redisClient),
+		usecase.WithChatServerCache(serverCache),
+		usecase.WithChatClientCache(clientCache),
+	)
 	aiChatUseCase := usecase.NewAIChatUseCase(aiChatSessionRepo, messageRepo, fileRepo, runnerPool, conf.Attachments.SaveDir)
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)

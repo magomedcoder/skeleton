@@ -17,7 +17,7 @@ message SearchUsersRequest {
 }
 
 message SearchUsersResponse {
-  repeated legion.User users = 1;
+  repeated common.User users = 1;
   int32 total = 2;
   int32 page = 3;
   int32 page_size = 4;

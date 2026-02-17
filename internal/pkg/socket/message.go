@@ -36,6 +36,14 @@ func (s *SenderContent) SetUpdateUserStatus(update *accountpb.Update_UserStatus)
 	return s
 }
 
+func (s *SenderContent) SetUpdateNewMessage(update *accountpb.Update_NewMessage) *SenderContent {
+	s.update = &accountpb.UpdateResponse{
+		Updates: []*accountpb.Update{{UpdateType: update}},
+	}
+
+	return s
+}
+
 func (s *SenderContent) SetReceive(cid ...int64) *SenderContent {
 	s.recipientIDs = append(s.recipientIDs, cid...)
 	return s

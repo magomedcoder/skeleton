@@ -8,43 +8,43 @@ import "aichat.proto";
 option go_package = "github.com/magomedcoder/legion/api/pb/runnerpb;runnerpb";
 
 service RunnerService {
-  rpc Ping(legion.Empty) returns (PingResponse);
+  rpc Ping(common.Empty) returns (PingResponse);
 
-  rpc GetModels(legion.Empty) returns (GetModelsResponse);
+  rpc GetModels(common.Empty) returns (GetModelsResponse);
 
   rpc Generate(GenerateRequest) returns (stream GenerateResponse);
 
-  rpc Register(RegisterRunnerRequest) returns (legion.Empty) {
-    option (legion.method_conf) = {
+  rpc Register(RegisterRunnerRequest) returns (common.Empty) {
+    option (common.method_conf) = {
       skip_auth: true
     };
   }
 
-  rpc Unregister(UnregisterRunnerRequest) returns (legion.Empty) {
-    option (legion.method_conf) = {
+  rpc Unregister(UnregisterRunnerRequest) returns (common.Empty) {
+    option (common.method_conf) = {
       skip_auth: true
     };
   }
 
-  rpc GetGpuInfo(legion.Empty) returns (GetGpuInfoResponse);
+  rpc GetGpuInfo(common.Empty) returns (GetGpuInfoResponse);
 
-  rpc GetServerInfo(legion.Empty) returns (ServerInfo);
+  rpc GetServerInfo(common.Empty) returns (ServerInfo);
 }
 
 service RunnerAdminService {
-  rpc GetRunners(legion.Empty) returns (GetRunnersResponse) {
-    option (legion.method_conf) = {
+  rpc GetRunners(common.Empty) returns (GetRunnersResponse) {
+    option (common.method_conf) = {
       role: ROLE_ADMIN
     };
   }
 
-  rpc SetRunnerEnabled(SetRunnerEnabledRequest) returns (legion.Empty) {
-    option (legion.method_conf) = {
+  rpc SetRunnerEnabled(SetRunnerEnabledRequest) returns (common.Empty) {
+    option (common.method_conf) = {
       role: ROLE_ADMIN
     };
   }
 
-  rpc GetRunnersStatus(legion.Empty) returns (GetRunnersStatusResponse);
+  rpc GetRunnersStatus(common.Empty) returns (GetRunnersStatusResponse);
 }
 
 message PingResponse {
@@ -57,7 +57,7 @@ message GetModelsResponse {
 
 message GenerateRequest {
   string session_id = 1;
-  repeated chat.ChatMessage messages = 2;
+  repeated aichat.ChatMessage messages = 2;
   string model = 3;
 }
 

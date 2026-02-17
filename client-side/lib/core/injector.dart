@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import 'package:legion/core/auth_guard.dart';
+import 'package:legion/domain/entities/message.dart';
 import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/connection_status.dart';
@@ -133,6 +136,10 @@ Future<void> init() async {
     () => UserOnlineStatusService(),
   );
 
+  sl.registerLazySingleton<StreamController<Message>>(
+    () => StreamController<Message>.broadcast(),
+  );
+
   sl.registerLazySingleton<PtsSyncService>(
     () => PtsSyncService(
       sl<IAccountRemoteDataSource>(),
@@ -140,6 +147,7 @@ Future<void> init() async {
       sl<GetChatsUseCase>(),
       sl<ConnectionStatusService>(),
       userOnlineStatusService: sl<UserOnlineStatusService>(),
+      newMessageSink: sl<StreamController<Message>>().sink,
     ),
   );
 
@@ -287,6 +295,7 @@ Future<void> init() async {
       createChatUseCase: sl(),
       getChatMessagesUseCase: sl(),
       sendChatMessageUseCase: sl(),
+      newMessageStream: sl<StreamController<Message>>().stream,
     ),
   );
 

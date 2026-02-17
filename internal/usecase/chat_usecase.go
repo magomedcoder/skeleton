@@ -2,25 +2,55 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+
 	"github.com/magomedcoder/legion/internal/domain"
+	redisRepo "github.com/magomedcoder/legion/internal/repository/redis_repository"
+	"github.com/magomedcoder/legion/pkg/jsonutil"
+	"github.com/redis/go-redis/v9"
 )
 
 type ChatUseCase struct {
 	chatRepo       domain.ChatRepository
 	messageRepo    domain.ChatMessageRepository
 	userRepository domain.UserRepository
+	redis          *redis.Client
+	serverCache    *redisRepo.ServerCacheRepository
+	clientCache    *redisRepo.ClientCacheRepository
 }
 
 func NewChatUseCase(
 	chatRepo domain.ChatRepository,
 	messageRepo domain.ChatMessageRepository,
 	userRepo domain.UserRepository,
+	opts ...ChatUseCaseOption,
 ) *ChatUseCase {
-	return &ChatUseCase{
+	c := &ChatUseCase{
 		chatRepo:       chatRepo,
 		messageRepo:    messageRepo,
 		userRepository: userRepo,
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
+}
+
+type ChatUseCaseOption func(*ChatUseCase)
+
+func WithChatRedis(rds *redis.Client) ChatUseCaseOption {
+	return func(c *ChatUseCase) { c.redis = rds }
+}
+
+func WithChatServerCache(s *redisRepo.ServerCacheRepository) ChatUseCaseOption {
+	return func(c *ChatUseCase) { c.serverCache = s }
+}
+
+func WithChatClientCache(cl *redisRepo.ClientCacheRepository) ChatUseCaseOption {
+	return func(c *ChatUseCase) { c.clientCache = cl }
 }
 
 func (c *ChatUseCase) verifyChatOwnership(ctx context.Context, userId, chatId int) (*domain.Chat, error) {
@@ -109,7 +139,48 @@ func (c *ChatUseCase) SendMessage(ctx context.Context, uid int, chatId int, cont
 		return nil, err
 	}
 
+	_ = c.PublishNewMessage(ctx, msg)
+
 	return msg, nil
+}
+
+func (c *ChatUseCase) PublishNewMessage(ctx context.Context, msg *domain.Message) error {
+	if c.redis == nil || c.serverCache == nil || c.clientCache == nil {
+		return nil
+	}
+
+	dataStr := jsonutil.Encode(map[string]any{
+		"senderId":  msg.UserId,
+		"toId":      msg.ReceiverId,
+		"chatType":  msg.ChatType,
+		"messageId": msg.Id,
+	})
+	content := jsonutil.Encode(map[string]any{
+		"event": domain.SubEventNewMessage,
+		"data":  dataStr,
+	})
+
+	sids := c.serverCache.All(ctx, 1)
+	if len(sids) == 0 {
+		return nil
+	}
+
+	pipe := c.redis.Pipeline()
+	for _, sid := range sids {
+		senderOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(msg.UserId))
+		receiverOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(msg.ReceiverId))
+		if senderOnline || receiverOnline {
+			pipe.Publish(ctx, fmt.Sprintf(domain.LegionTopicByServer, sid), content)
+		}
+	}
+
+	_, err := pipe.Exec(ctx)
+
+	return err
+}
+
+func (c *ChatUseCase) GetMessageById(ctx context.Context, messageId int64) (*domain.Message, error) {
+	return c.messageRepo.GetById(ctx, messageId)
 }
 
 func (c *ChatUseCase) GetMessages(ctx context.Context, uid int, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {

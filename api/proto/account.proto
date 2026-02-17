@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-package legion;
+package account;
+
+import "chat.proto";
 
 option go_package = "github.com/magomedcoder/legion/api/pb/accountpb;accountpb";
 
@@ -54,9 +56,14 @@ message UpdateUserStatus {
   bool  status  = 2;
 }
 
+message UpdateNewMessage {
+  chat.Message message = 1;
+}
+
 message Update {
   oneof update_type {
     UpdateUserStatus user_status = 1;
+    UpdateNewMessage new_message = 2;
   }
 }
 

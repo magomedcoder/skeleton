@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:legion/domain/entities/chat.dart';
+import 'package:legion/domain/entities/message.dart';
 
 abstract class ChatEvent extends Equatable {
   const ChatEvent();
@@ -55,4 +56,13 @@ class ChatClearError extends ChatEvent {
 
 class ChatBackToList extends ChatEvent {
   const ChatBackToList();
+}
+
+class ChatNewMessageReceived extends ChatEvent {
+  final Message message;
+
+  const ChatNewMessageReceived(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

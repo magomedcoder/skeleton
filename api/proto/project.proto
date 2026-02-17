@@ -102,7 +102,7 @@ message GetProjectMembersRequest {
 }
 
 message GetProjectMembersResponse {
-  repeated legion.User items = 1;
+  repeated common.User items = 1;
 }
 
 message CreateTaskRequest {

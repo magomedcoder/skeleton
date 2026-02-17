@@ -1,3 +1,4 @@
+import 'package:legion/data/mappers/message_mapper.dart';
 import 'package:legion/domain/entities/account_update.dart';
 import 'package:legion/generated/grpc_pb/account.pb.dart' as grpc;
 
@@ -12,6 +13,14 @@ abstract class AccountUpdateMapper {
         status: us.status,
       );
     }
+
+    if (proto.hasNewMessage() && proto.newMessage.hasMessage()) {
+      final msg = proto.newMessage.message;
+      return NewMessageAccountUpdate(
+        message: MessageMapper.fromProto(msg),
+      );
+    }
+
     return null;
   }
 }

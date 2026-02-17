@@ -25,6 +25,15 @@ func (r *chatMessageRepository) Create(ctx context.Context, msg *domain.Message)
 	return nil
 }
 
+func (r *chatMessageRepository) GetById(ctx context.Context, id int64) (*domain.Message, error) {
+	var m chatMessageModel
+	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&m).Error; err != nil {
+		return nil, err
+	}
+
+	return chatMessageModelToDomain(&m), nil
+}
+
 func (r *chatMessageRepository) ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {
 	page, pageSize, offset := normalizePagination(page, pageSize)
 

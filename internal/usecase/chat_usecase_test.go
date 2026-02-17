@@ -41,6 +41,7 @@ func (m *mockChatRepo) ListByUser(ctx context.Context, uid int, page, pageSize i
 
 type mockChatMessageRepo struct {
 	create       func(context.Context, *domain.Message) error
+	getById      func(context.Context, int64) (*domain.Message, error)
 	listByChatId func(context.Context, int, int32, int32) ([]*domain.Message, int32, error)
 }
 
@@ -50,6 +51,14 @@ func (m *mockChatMessageRepo) Create(ctx context.Context, msg *domain.Message) e
 	}
 
 	return nil
+}
+
+func (m *mockChatMessageRepo) GetById(ctx context.Context, id int64) (*domain.Message, error) {
+	if m.getById != nil {
+		return m.getById(ctx, id)
+	}
+
+	return nil, errors.New("не найдено")
 }
 
 func (m *mockChatMessageRepo) ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package userchat;
+package chat;
 
 import "common.proto";
 
@@ -18,7 +18,7 @@ service ChatService {
 
 message Chat {
   string id = 1;
-  legion.User user = 2;
+  common.User user = 2;
   int64 created_at = 3;
 }
 

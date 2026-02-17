@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/domain/entities/chat.dart';
+import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/usecases/chat/create_chat_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chat_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
@@ -13,12 +16,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final CreateChatUseCase createChatUseCase;
   final GetChatMessagesUseCase getChatMessagesUseCase;
   final SendChatMessageUseCase sendChatMessageUseCase;
+  StreamSubscription<Message>? _newMessageSubscription;
 
   ChatBloc({
     required this.getChatsUseCase,
     required this.createChatUseCase,
     required this.getChatMessagesUseCase,
     required this.sendChatMessageUseCase,
+    Stream<Message>? newMessageStream,
   }) : super(const ChatState()) {
     on<ChatStarted>(_onStarted);
     on<ChatLoadChats>(_onLoadChats);
@@ -27,6 +32,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatSendMessage>(_onSendMessage);
     on<ChatClearError>(_onClearError);
     on<ChatBackToList>(_onBackToList);
+    on<ChatNewMessageReceived>(_onNewMessageReceived);
+
+    if (newMessageStream != null) {
+      _newMessageSubscription = newMessageStream.listen((message) {
+        add(ChatNewMessageReceived(message));
+      });
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _newMessageSubscription?.cancel();
+    return super.close();
   }
 
   void _onBackToList(ChatBackToList event, Emitter<ChatState> emit) {
@@ -136,5 +154,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   void _onClearError(ChatClearError event, Emitter<ChatState> emit) {
     emit(state.copyWith(error: null));
+  }
+
+  void _onNewMessageReceived(
+    ChatNewMessageReceived event,
+    Emitter<ChatState> emit,
+  ) {
+    final message = event.message;
+    final selectedChat = state.selectedChat;
+    if (selectedChat != null && selectedChat.id == message.chatId) {
+      if (state.messages.any((m) => m.id == message.id)) {
+        return;
+      }
+
+      emit(state.copyWith(messages: [...state.messages, message]));
+      Logs().d('ChatBloc: добавлено новое сообщение в чат ${message.chatId}');
+    }
   }
 }

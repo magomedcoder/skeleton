@@ -5,7 +5,9 @@ import 'package:legion/core/log/logs.dart';
 import 'package:legion/core/reconnect_policy.dart';
 import 'package:legion/data/data_sources/local/user_local_data_source.dart';
 import 'package:legion/data/data_sources/remote/account_remote_datasource.dart';
+import 'package:legion/data/mappers/message_mapper.dart';
 import 'package:legion/data/services/user_online_status_service.dart';
+import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
 import 'package:legion/generated/grpc_pb/account.pb.dart';
 import 'package:legion/generated/grpc_pb/account.pbgrpc.dart' as account_pb;
@@ -29,6 +31,8 @@ class PtsSyncService {
 
   bool _initialStateRetrieved = false;
 
+  final StreamSink<Message>? _newMessageSink;
+
   PtsSyncService(
     this._accountRemoteDataSource,
     this._userLocalDataSource,
@@ -36,8 +40,10 @@ class PtsSyncService {
     this._connectionStatusService, {
     UserOnlineStatusService? userOnlineStatusService,
     ReconnectPolicy? reconnectPolicy,
+    StreamSink<Message>? newMessageSink,
   })  : _userOnlineStatusService = userOnlineStatusService,
-        _reconnectPolicy = reconnectPolicy ?? const ReconnectPolicy.hybrid();
+        _reconnectPolicy = reconnectPolicy ?? const ReconnectPolicy.hybrid(),
+        _newMessageSink = newMessageSink;
 
   Future<void> startSync() async {
     if (_running) {
@@ -203,8 +209,26 @@ class PtsSyncService {
       if (update.hasUserStatus()) {
         await _processUserStatus(update.userStatus);
       }
+
+      if (update.hasNewMessage()) {
+        await _processNewMessage(update.newMessage);
+      }
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки обновления', e, stackTrace);
+    }
+  }
+
+  Future<void> _processNewMessage(account_pb.UpdateNewMessage update) async {
+    try {
+      if (!update.hasMessage()) {
+        return;
+      }
+
+      final message = MessageMapper.fromProto(update.message);
+      _newMessageSink?.add(message);
+      Logs().d('PtsSyncService: новое сообщение chatId=${message.chatId} id=${message.id}');
+    } catch (e, stackTrace) {
+      Logs().e('Ошибка обработки нового сообщения', e, stackTrace);
     }
   }
 
