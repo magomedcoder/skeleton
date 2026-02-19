@@ -128,12 +128,19 @@ func main() {
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
 	searchUseCase := usecase.NewSearchUseCase(userRepo)
-	projectUseCase := usecase.NewProjectUseCase(projectRepo, projectMemberRepo, projectTaskRepo, projectTaskCommentRepo, projectColumnRepo, projectActivityRepo, userRepo)
+	projectUseCase := usecase.NewProjectUseCase(
+		projectRepo, projectMemberRepo, projectTaskRepo, projectTaskCommentRepo, projectColumnRepo, projectActivityRepo, userRepo,
+		usecase.WithProjectRedis(redisClient),
+		usecase.WithProjectServerCache(serverCache),
+		usecase.WithProjectClientCache(clientCache),
+		usecase.WithProjectConf(conf),
+	)
 
 	consumeHandler := &consume.Handler{
-		Conf:        conf,
-		ClientCache: clientCache,
-		ChatUseCase: chatUseCase,
+		Conf:           conf,
+		ClientCache:    clientCache,
+		ChatUseCase:    chatUseCase,
+		ProjectUseCase: projectUseCase,
 	}
 	chatSubscribe := consume.NewChatSubscribe(consumeHandler)
 
@@ -211,12 +218,12 @@ func main() {
 	group.Go(func() error {
 		select {
 		case <-groupCtx.Done():
-			grpcServer.GracefulStop()
+			grpcServer.Stop()
 			return groupCtx.Err()
 		case sig := <-sigCh:
 			logger.I("Получен сигнал %v, остановка сервера...", sig)
 			cancel()
-			grpcServer.GracefulStop()
+			grpcServer.Stop()
 			return nil
 		}
 	})

@@ -44,6 +44,22 @@ func (s *SenderContent) SetUpdateNewMessage(update *accountpb.Update_NewMessage)
 	return s
 }
 
+func (s *SenderContent) SetUpdateNewTask(update *accountpb.Update_NewTask) *SenderContent {
+	s.update = &accountpb.UpdateResponse{
+		Updates: []*accountpb.Update{{UpdateType: update}},
+	}
+
+	return s
+}
+
+func (s *SenderContent) SetUpdateTaskChanged(update *accountpb.Update_TaskChanged) *SenderContent {
+	s.update = &accountpb.UpdateResponse{
+		Updates: []*accountpb.Update{{UpdateType: update}},
+	}
+	
+	return s
+}
+
 func (s *SenderContent) SetReceive(cid ...int64) *SenderContent {
 	s.recipientIDs = append(s.recipientIDs, cid...)
 	return s

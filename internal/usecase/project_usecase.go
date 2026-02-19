@@ -3,10 +3,15 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/magomedcoder/legion/internal/config"
 	"github.com/magomedcoder/legion/internal/domain"
+	redisRepo "github.com/magomedcoder/legion/internal/repository/redis_repository"
+	"github.com/magomedcoder/legion/pkg/jsonutil"
+	"github.com/redis/go-redis/v9"
 )
 
 type ProjectUseCase struct {
@@ -17,6 +22,10 @@ type ProjectUseCase struct {
 	ProjectColumnRepo      domain.ProjectColumnRepository
 	ProjectActivityRepo    domain.ProjectActivityRepository
 	UserRepo               domain.UserRepository
+	redis                  *redis.Client
+	serverCache            *redisRepo.ServerCacheRepository
+	clientCache            *redisRepo.ClientCacheRepository
+	conf                   *config.Config
 }
 
 func NewProjectUseCase(
@@ -27,8 +36,9 @@ func NewProjectUseCase(
 	projectColumnRepo domain.ProjectColumnRepository,
 	projectActivityRepo domain.ProjectActivityRepository,
 	userRepo domain.UserRepository,
+	opts ...ProjectUseCaseOption,
 ) *ProjectUseCase {
-	return &ProjectUseCase{
+	p := &ProjectUseCase{
 		ProjectRepo:            projectRepo,
 		ProjectMemberRepo:      projectMemberRepo,
 		ProjectTaskRepo:        projectTaskRepo,
@@ -36,6 +46,36 @@ func NewProjectUseCase(
 		ProjectColumnRepo:      projectColumnRepo,
 		ProjectActivityRepo:    projectActivityRepo,
 		UserRepo:               userRepo,
+	}
+	for _, opt := range opts {
+		opt(p)
+	}
+	return p
+}
+
+type ProjectUseCaseOption func(*ProjectUseCase)
+
+func WithProjectRedis(rds *redis.Client) ProjectUseCaseOption {
+	return func(p *ProjectUseCase) {
+		p.redis = rds
+	}
+}
+
+func WithProjectServerCache(s *redisRepo.ServerCacheRepository) ProjectUseCaseOption {
+	return func(p *ProjectUseCase) {
+		p.serverCache = s
+	}
+}
+
+func WithProjectClientCache(cl *redisRepo.ClientCacheRepository) ProjectUseCaseOption {
+	return func(p *ProjectUseCase) {
+		p.clientCache = cl
+	}
+}
+
+func WithProjectConf(c *config.Config) ProjectUseCaseOption {
+	return func(p *ProjectUseCase) {
+		p.conf = c
 	}
 }
 
@@ -232,6 +272,7 @@ func (p *ProjectUseCase) CreateTask(ctx context.Context, projectId string, name 
 		return nil, err
 	}
 	_ = p.recordActivity(ctx, projectId, task.Id, createdBy, "created_task", "")
+	_ = p.PublishNewTask(ctx, projectId, task.Id)
 
 	return task, nil
 }
@@ -270,6 +311,63 @@ func (p *ProjectUseCase) GetTask(ctx context.Context, taskId string, userId int)
 	return task, nil
 }
 
+func (p *ProjectUseCase) GetTaskById(ctx context.Context, taskId string) (*domain.Task, error) {
+	return p.ProjectTaskRepo.GetById(ctx, taskId)
+}
+
+func (p *ProjectUseCase) GetProjectMemberIds(ctx context.Context, projectId string) ([]int, error) {
+	return p.ProjectMemberRepo.GetByProjectId(ctx, projectId)
+}
+
+func (p *ProjectUseCase) publishTaskEvent(ctx context.Context, eventName, projectId, taskId string) error {
+	if p.redis == nil || p.serverCache == nil || p.clientCache == nil || p.conf == nil {
+		return nil
+	}
+
+	dataStr := jsonutil.Encode(map[string]any{
+		"projectId": projectId,
+		"taskId":    taskId,
+	})
+
+	content := jsonutil.Encode(map[string]any{
+		"event": eventName,
+		"data":  dataStr,
+	})
+
+	sids := p.serverCache.All(ctx, 1)
+	if len(sids) == 0 {
+		return nil
+	}
+
+	pipe := p.redis.Pipeline()
+	for _, sid := range sids {
+		memberIds, _ := p.ProjectMemberRepo.GetByProjectId(ctx, projectId)
+		anyOnline := false
+		for _, uid := range memberIds {
+			if p.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, fmt.Sprint(uid)) {
+				anyOnline = true
+				break
+			}
+		}
+		
+		if anyOnline {
+			pipe.Publish(ctx, fmt.Sprintf(domain.LegionTopicByServer, sid), content)
+		}
+	}
+
+	_, err := pipe.Exec(ctx)
+
+	return err
+}
+
+func (p *ProjectUseCase) PublishNewTask(ctx context.Context, projectId, taskId string) error {
+	return p.publishTaskEvent(ctx, domain.SubEventNewTask, projectId, taskId)
+}
+
+func (p *ProjectUseCase) PublishTaskChanged(ctx context.Context, projectId, taskId string) error {
+	return p.publishTaskEvent(ctx, domain.SubEventTaskChanged, projectId, taskId)
+}
+
 func (p *ProjectUseCase) EditTaskColumnId(ctx context.Context, taskId string, columnId string, userId int) error {
 	task, err := p.ProjectTaskRepo.GetById(ctx, taskId)
 	if err != nil {
@@ -298,6 +396,7 @@ func (p *ProjectUseCase) EditTaskColumnId(ctx context.Context, taskId string, co
 		return err
 	}
 	_ = p.recordActivity(ctx, task.ProjectId, taskId, userId, "moved_task", columnId)
+	_ = p.PublishTaskChanged(ctx, task.ProjectId, taskId)
 
 	return nil
 }
@@ -345,6 +444,7 @@ func (p *ProjectUseCase) EditTask(ctx context.Context, taskId string, name strin
 		return nil, err
 	}
 	_ = p.recordActivity(ctx, task.ProjectId, task.Id, userId, "edited_task", "")
+	_ = p.PublishTaskChanged(ctx, task.ProjectId, task.Id)
 
 	return task, nil
 }

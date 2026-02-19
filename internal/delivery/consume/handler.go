@@ -19,15 +19,18 @@ var (
 )
 
 type Handler struct {
-	Conf        *config.Config
-	ClientCache *redisRepo.ClientCacheRepository
-	ChatUseCase *usecase.ChatUseCase
+	Conf          *config.Config
+	ClientCache   *redisRepo.ClientCacheRepository
+	ChatUseCase   *usecase.ChatUseCase
+	ProjectUseCase *usecase.ProjectUseCase
 }
 
 func (h *Handler) registerHandlers() {
 	eventHandlers = map[string]EventHandler{
-		domain.SubEventUserStatus: h.handleUserStatus,
-		domain.SubEventNewMessage: h.onConsumeMessage,
+		domain.SubEventUserStatus:  h.handleUserStatus,
+		domain.SubEventNewMessage:  h.onConsumeMessage,
+		domain.SubEventNewTask:     h.onConsumeNewTask,
+		domain.SubEventTaskChanged: h.onConsumeTaskChanged,
 	}
 }
 

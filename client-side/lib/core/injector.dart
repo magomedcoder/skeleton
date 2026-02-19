@@ -140,6 +140,10 @@ Future<void> init() async {
     () => StreamController<Message>.broadcast(),
   );
 
+  sl.registerLazySingleton<StreamController<String>>(
+    () => StreamController<String>.broadcast(),
+  );
+
   sl.registerLazySingleton<PtsSyncService>(
     () => PtsSyncService(
       sl<IAccountRemoteDataSource>(),
@@ -148,6 +152,7 @@ Future<void> init() async {
       sl<ConnectionStatusService>(),
       userOnlineStatusService: sl<UserOnlineStatusService>(),
       newMessageSink: sl<StreamController<Message>>().sink,
+      taskUpdateSink: sl<StreamController<String>>().sink,
     ),
   );
 

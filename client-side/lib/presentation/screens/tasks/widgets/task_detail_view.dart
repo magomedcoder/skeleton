@@ -352,27 +352,27 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final bool alignRight;
 
   const _InfoRow({
     required this.label,
     required this.value,
     required this.icon,
-    this.alignRight = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final crossAlign = alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final textAlign = alignRight ? TextAlign.right : TextAlign.left;
+    final crossAlign = CrossAxisAlignment.start;
+    final textAlign = TextAlign.left;
     return Row(
-      mainAxisAlignment: alignRight ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment:  MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!alignRight) ...[
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-        ],
+        Icon(
+          icon,
+          size: 20,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: crossAlign,
@@ -392,11 +392,7 @@ class _InfoRow extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        if (alignRight) ...[
-          const SizedBox(width: 12),
-          Icon(icon, size: 20, color: Colors.grey[600]),
-        ],
+        )
       ],
     );
   }

@@ -32,6 +32,7 @@ class PtsSyncService {
   bool _initialStateRetrieved = false;
 
   final StreamSink<Message>? _newMessageSink;
+  final StreamSink<String>? _taskUpdateSink;
 
   PtsSyncService(
     this._accountRemoteDataSource,
@@ -41,9 +42,11 @@ class PtsSyncService {
     UserOnlineStatusService? userOnlineStatusService,
     ReconnectPolicy? reconnectPolicy,
     StreamSink<Message>? newMessageSink,
+    StreamSink<String>? taskUpdateSink,
   })  : _userOnlineStatusService = userOnlineStatusService,
         _reconnectPolicy = reconnectPolicy ?? const ReconnectPolicy.hybrid(),
-        _newMessageSink = newMessageSink;
+        _newMessageSink = newMessageSink,
+        _taskUpdateSink = taskUpdateSink;
 
   Future<void> startSync() async {
     if (_running) {
@@ -213,8 +216,36 @@ class PtsSyncService {
       if (update.hasNewMessage()) {
         await _processNewMessage(update.newMessage);
       }
+
+      if (update.hasNewTask()) {
+        await _processNewTask(update.newTask);
+      }
+
+      if (update.hasTaskChanged()) {
+        await _processTaskChanged(update.taskChanged);
+      }
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки обновления', e, stackTrace);
+    }
+  }
+
+  Future<void> _processNewTask(account_pb.UpdateNewTask update) async {
+    try {
+      if (update.projectId.isEmpty) return;
+      _taskUpdateSink?.add(update.projectId);
+      Logs().d('PtsSyncService: новая задача в проекте ${update.projectId}');
+    } catch (e, stackTrace) {
+      Logs().e('Ошибка обработки новой задачи', e, stackTrace);
+    }
+  }
+
+  Future<void> _processTaskChanged(account_pb.UpdateTaskChanged update) async {
+    try {
+      if (update.projectId.isEmpty) return;
+      _taskUpdateSink?.add(update.projectId);
+      Logs().d('PtsSyncService: изменение задачи в проекте ${update.projectId}');
+    } catch (e, stackTrace) {
+      Logs().e('Ошибка обработки изменения задачи', e, stackTrace);
     }
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legion/core/injector.dart' as di;
@@ -29,6 +31,7 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> {
   List<BoardColumn>? _columns;
   bool _columnsLoading = true;
+  StreamSubscription<String>? _taskUpdateSubscription;
 
   @override
   void initState() {
@@ -36,7 +39,18 @@ class _TasksScreenState extends State<TasksScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TaskBloc>().add(TasksLoadRequested(widget.project.id));
       _loadColumns();
+      _taskUpdateSubscription = di.sl<StreamController<String>>().stream.listen((projectId) {
+        if (projectId == widget.project.id && mounted) {
+          context.read<TaskBloc>().add(TasksLoadRequested(projectId));
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _taskUpdateSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadColumns() async {
