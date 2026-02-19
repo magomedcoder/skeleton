@@ -24,6 +24,7 @@
 
 - **Хост:** Linux (Debian, Ubuntu) или Docker
 - **БД:** PostgreSQL 16
+- **Кэш и очереди:** Redis 7+
 - **Раннеры:** видеокарты **NVIDIA** (экспериментально llama.cpp) или **Ollama** по API
 
 ---
@@ -34,6 +35,7 @@
 
 - **Go** 1.25+
 - **PostgreSQL** 16+
+- **Redis** 7+
 - **Клиент (Flutter/Dart):**
     - Flutter 3.24+
     - Dart SDK ^3.10.7
@@ -53,12 +55,13 @@
 
 **Параметры:**
 
-- `server` - хост и порт сервера (по умолчанию `0.0.0.0:50051`)
-- `database` - строка подключения к PostgreSQL
-- `jwt` - секреты и TTL для access/refresh токенов
-- `runners` - токен регистрации и адреса раннеров
-- `attachments` - директория для сохранения файлов
-- `log` - уровень логирования (debug, verbose, info, warn, error, off)
+- `server` - `host`, `port` (адрес и порт сервера, по умолчанию `0.0.0.0:50051`)
+- `database` - `dsn` (строка подключения к PostgreSQL)
+- `redis` - `host`, `port`, `auth`, `database` (подключение к Redis для кэша и pub/sub)
+- `jwt` - `access_secret`, `refresh_secret`, `access_ttl`, `refresh_ttl` (секреты и время жизни токенов)
+- `runners` - `registration_token`, `addresses` (токен регистрации и список адресов раннеров)
+- `attachments` - `save_dir` (каталог для сохранения файлов)
+- `log` - `level` (уровень логирования: `debug`, `verbose`, `info`, `warn`, `error`, `off`)
 
 ### Раннер (legion-runner)
 
@@ -67,13 +70,13 @@
 
 **Параметры:**
 
-- `core_addr` - адрес основного сервера для регистрации  (по умолчанию `0.0.0.0:50051`)
-- `listen_addr` - адрес для приёма gRPC-запросов  (по умолчанию `0.0.0.0:50053`)
+- `core_addr` - адрес основного сервера для регистрации (по умолчанию `127.0.0.1:50051`)
+- `listen_addr` - адрес для приёма gRPC-запросов (по умолчанию `127.0.0.1:50052`)
 - `registration_token` - токен для регистрации на сервере
-- `log` - уровень логирования (debug, verbose, info, warn, error, off)
+- `log` - `level` (уровень логирования: `debug`, `verbose`, `info`, `warn`, `error`, `off`)
 - `engine` - движок: `"ollama"` или `"llama"`
-- `ollama` - настройки Ollama (URL API)
-- `llama` - настройки llama.cpp (путь к моделям)
+- `ollama` - `base_url` (URL API Ollama, по умолчанию `http://127.0.0.1:11434`)
+- `llama` - `model_path` (каталог с моделями для llama.cpp)
 
 ---
 
@@ -156,3 +159,9 @@ make test-load
 | `runner/`      | Сервис-раннер (llama.cpp, Ollama)                                                         |
 | `scripts/`     | Скрипты сборки (deb, установщик Windows)                                                  |
 | `tests/`       | Нагрузочные тесты                                                                         |
+
+---
+
+## Участие в разработке
+
+Порядок внесения изменений и оформления Pull Request описан в [CONTRIBUTING.md](CONTRIBUTING.md).
