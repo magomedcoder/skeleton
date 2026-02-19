@@ -11,8 +11,8 @@ type ConsumeUserStatus struct {
 }
 
 type ConsumeMessage struct {
-	ChatType  int   `json:"chatType"`
-	SenderId  int64 `json:"senderId"`
-	ToId      int64 `json:"toId"`
-	MessageId int64 `json:"messageId"`
+	PeerType     int   `json:"peerType"`
+	PeerId       int64 `json:"peerId"`
+	FromPeerId   int64 `json:"fromPeerId"`
+	MessageId    int64 `json:"messageId"`
 }

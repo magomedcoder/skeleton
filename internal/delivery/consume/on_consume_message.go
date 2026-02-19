@@ -8,6 +8,7 @@ import (
 
 	"github.com/magomedcoder/legion/api/pb/accountpb"
 	"github.com/magomedcoder/legion/api/pb/chatpb"
+	"github.com/magomedcoder/legion/api/pb/commonpb"
 	"github.com/magomedcoder/legion/internal/domain/event"
 	"github.com/magomedcoder/legion/internal/pkg/socket"
 )
@@ -20,7 +21,7 @@ func (h *Handler) onConsumeMessage(ctx context.Context, body []byte) {
 	}
 
 	var clientIds []int64
-	for _, val := range [2]int64{in.SenderId, in.ToId} {
+	for _, val := range [2]int64{in.PeerId, in.FromPeerId} {
 		ids := h.ClientCache.GetUidFromClientIds(ctx,
 			h.Conf.ServerId(),
 			socket.Session.Chat.Name(),
@@ -40,10 +41,10 @@ func (h *Handler) onConsumeMessage(ctx context.Context, body []byte) {
 	}
 
 	protoMsg := &chatpb.Message{
-		Id:        strconv.FormatInt(msg.Id, 10),
-		ChatId:    strconv.Itoa(msg.ChatId),
-		SenderId:  int32(msg.UserId),
-		Content:   msg.Content,
+		Id:       strconv.FormatInt(msg.Id, 10),
+		Peer:     &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(msg.PeerId)}},
+		FromPeer: &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(msg.FromPeerId)}},
+		Content:  msg.Content,
 		CreatedAt: msg.CreatedAt.Unix(),
 	}
 

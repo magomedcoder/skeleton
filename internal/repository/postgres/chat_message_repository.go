@@ -34,31 +34,29 @@ func (r *chatMessageRepository) GetById(ctx context.Context, id int64) (*domain.
 	return chatMessageModelToDomain(&m), nil
 }
 
-func (r *chatMessageRepository) ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {
-	page, pageSize, offset := normalizePagination(page, pageSize)
-
-	var total int64
-	if err := r.db.WithContext(ctx).
-		Model(&chatMessageModel{}).
-		Where("chat_id = ?", chatId).
-		Count(&total).Error; err != nil {
-		return nil, 0, err
+func (r *chatMessageRepository) GetHistory(ctx context.Context, peerId1, peerId2 int, messageId int64, limit int) ([]*domain.Message, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
 	}
 
+	q := r.db.WithContext(ctx).Where("((peer_id = ? AND from_peer_id = ?) OR (peer_id = ? AND from_peer_id = ?))", peerId1, peerId2, peerId2, peerId1)
+	if messageId > 0 {
+		q = q.Where("id < ?", messageId)
+	}
 	var list []chatMessageModel
-	if err := r.db.WithContext(ctx).
-		Where("chat_id = ?", chatId).
-		Order("created_at ASC").
-		Limit(int(pageSize)).
-		Offset(int(offset)).
+	if err := q.Order("id DESC").
+		Limit(limit).
 		Find(&list).Error; err != nil {
-		return nil, 0, err
+		return nil, err
+	}
+
+	for i, j := 0, len(list)-1; i < j; i, j = i+1, j-1 {
+		list[i], list[j] = list[j], list[i]
 	}
 
 	msgs := make([]*domain.Message, 0, len(list))
 	for i := range list {
 		msgs = append(msgs, chatMessageModelToDomain(&list[i]))
 	}
-
-	return msgs, int32(total), nil
+	return msgs, nil
 }

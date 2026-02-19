@@ -7,13 +7,13 @@ import (
 )
 
 type chatMessageModel struct {
-	Id         int64     `gorm:"column:id;primaryKey;autoIncrement"`
-	ChatId     int       `gorm:"column:chat_id;not null;index"`
-	ChatType   int       `gorm:"column:chat_type;not null;default:1"`
-	UserId     int       `gorm:"column:user_id;not null;index"`
-	ReceiverId int       `gorm:"column:receiver_id;not null;index"`
-	Content    string    `gorm:"column:content;type:text"`
-	CreatedAt  time.Time `gorm:"column:created_at;not null"`
+	Id           int64     `gorm:"column:id;primaryKey;autoIncrement"`
+	PeerType     int       `gorm:"column:peer_type;not null;default:1"`
+	PeerId       int       `gorm:"column:peer_id;not null"`
+	FromPeerType int       `gorm:"column:from_peer_type;not null;default:1"`
+	FromPeerId   int       `gorm:"column:from_peer_id;not null"`
+	Content      string    `gorm:"column:content;type:text"`
+	CreatedAt    time.Time `gorm:"column:created_at;not null"`
 }
 
 func (chatMessageModel) TableName() string {
@@ -26,13 +26,13 @@ func chatMessageModelToDomain(m *chatMessageModel) *domain.Message {
 	}
 
 	return &domain.Message{
-		Id:         m.Id,
-		ChatId:     m.ChatId,
-		ChatType:   m.ChatType,
-		UserId:     m.UserId,
-		ReceiverId: m.ReceiverId,
-		Content:    m.Content,
-		CreatedAt:  m.CreatedAt,
+		Id:           m.Id,
+		PeerType:     m.PeerType,
+		PeerId:       m.PeerId,
+		FromPeerType: m.FromPeerType,
+		FromPeerId:   m.FromPeerId,
+		Content:      m.Content,
+		CreatedAt:    m.CreatedAt,
 	}
 }
 
@@ -42,12 +42,12 @@ func chatMessageDomainToModel(msg *domain.Message) *chatMessageModel {
 	}
 
 	return &chatMessageModel{
-		Id:         msg.Id,
-		ChatId:     msg.ChatId,
-		ChatType:   msg.ChatType,
-		UserId:     msg.UserId,
-		ReceiverId: msg.ReceiverId,
-		Content:    msg.Content,
-		CreatedAt:  msg.CreatedAt,
+		Id:           msg.Id,
+		PeerType:     msg.PeerType,
+		PeerId:       msg.PeerId,
+		FromPeerType: msg.FromPeerType,
+		FromPeerId:   msg.FromPeerId,
+		Content:      msg.Content,
+		CreatedAt:    msg.CreatedAt,
 	}
 }

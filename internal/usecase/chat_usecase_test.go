@@ -11,8 +11,9 @@ import (
 
 type mockChatRepo struct {
 	getById            func(context.Context, int) (*domain.Chat, error)
+	getPrivateChat     func(context.Context, int, int) (*domain.Chat, error)
 	getOrCreatePrivate func(context.Context, int, int) (*domain.Chat, error)
-	listByUser         func(context.Context, int, int32, int32) ([]*domain.Chat, int32, error)
+	listByUser         func(context.Context, int) ([]*domain.Chat, error)
 }
 
 func (m *mockChatRepo) GetById(ctx context.Context, id int) (*domain.Chat, error) {
@@ -20,6 +21,14 @@ func (m *mockChatRepo) GetById(ctx context.Context, id int) (*domain.Chat, error
 		return m.getById(ctx, id)
 	}
 
+	return nil, errors.New("не найдено")
+}
+
+func (m *mockChatRepo) GetPrivateChat(ctx context.Context, uid, userId int) (*domain.Chat, error) {
+	if m.getPrivateChat != nil {
+		return m.getPrivateChat(ctx, uid, userId)
+	}
+	
 	return nil, errors.New("не найдено")
 }
 
@@ -31,18 +40,22 @@ func (m *mockChatRepo) GetOrCreatePrivateChat(ctx context.Context, uid, userId i
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockChatRepo) ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, int32, error) {
+func (m *mockChatRepo) ListByUser(ctx context.Context, uid int) ([]*domain.Chat, error) {
 	if m.listByUser != nil {
-		return m.listByUser(ctx, uid, page, pageSize)
+		return m.listByUser(ctx, uid)
 	}
 
-	return nil, 0, nil
+	return nil, nil
+}
+
+func (m *mockChatRepo) EnsurePeerChat(ctx context.Context, uid, peerUserId int) error {
+	return nil
 }
 
 type mockChatMessageRepo struct {
-	create       func(context.Context, *domain.Message) error
-	getById      func(context.Context, int64) (*domain.Message, error)
-	listByChatId func(context.Context, int, int32, int32) ([]*domain.Message, int32, error)
+	create     func(context.Context, *domain.Message) error
+	getById    func(context.Context, int64) (*domain.Message, error)
+	getHistory func(context.Context, int, int, int64, int) ([]*domain.Message, error)
 }
 
 func (m *mockChatMessageRepo) Create(ctx context.Context, msg *domain.Message) error {
@@ -61,12 +74,11 @@ func (m *mockChatMessageRepo) GetById(ctx context.Context, id int64) (*domain.Me
 	return nil, errors.New("не найдено")
 }
 
-func (m *mockChatMessageRepo) ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {
-	if m.listByChatId != nil {
-		return m.listByChatId(ctx, chatId, page, pageSize)
+func (m *mockChatMessageRepo) GetHistory(ctx context.Context, peerId1, peerId2 int, messageId int64, limit int) ([]*domain.Message, error) {
+	if m.getHistory != nil {
+		return m.getHistory(ctx, peerId1, peerId2, messageId, limit)
 	}
-
-	return nil, 0, nil
+	return nil, nil
 }
 
 func (m *mockChatRepo) GetAllUserIds(ctx context.Context, uid int) []int64 {
@@ -111,10 +123,11 @@ func (m *mockUserRepoForChat) UpdateLastVisitedAt(context.Context, int) error {
 
 func TestChatUseCase_CreateChat_success(t *testing.T) {
 	chat := &domain.Chat{
-		Id:         1,
-		UserId:     1,
-		ReceiverId: 2,
-		CreatedAt:  time.Now(),
+		Id:        1,
+		UserId:    1,
+		PeerId:    2,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	user := &domain.User{
 		Id:       2,
@@ -167,9 +180,9 @@ func TestChatUseCase_CreateChat_getOrCreateError(t *testing.T) {
 func TestChatUseCase_GetChats_success(t *testing.T) {
 	chats := []*domain.Chat{
 		{
-			Id:         1,
-			UserId:     1,
-			ReceiverId: 2,
+			Id:        1,
+			UserId:    1,
+			PeerId:    2,
 		},
 	}
 	user := &domain.User{
@@ -178,8 +191,8 @@ func TestChatUseCase_GetChats_success(t *testing.T) {
 		Role:     domain.UserRoleUser,
 	}
 	chatRepo := &mockChatRepo{
-		listByUser: func(context.Context, int, int32, int32) ([]*domain.Chat, int32, error) {
-			return chats, 1, nil
+		listByUser: func(context.Context, int) ([]*domain.Chat, error) {
+			return chats, nil
 		},
 	}
 	userRepo := &mockUserRepoForChat{
@@ -190,29 +203,29 @@ func TestChatUseCase_GetChats_success(t *testing.T) {
 	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, userRepo)
 	ctx := context.Background()
 
-	gotChats, usersMap, total, err := uc.GetChats(ctx, 1, 0, 10)
+	gotChats, users, err := uc.GetChats(ctx, 1)
 	if err != nil {
 		t.Fatalf("GetChats: %v", err)
 	}
 
-	if total != 1 || len(gotChats) != 1 || gotChats[0].Id != 1 {
-		t.Errorf("ожидался 1 чат, получено total=%d len=%d", total, len(gotChats))
+	if len(gotChats) != 1 || gotChats[0].Id != 1 {
+		t.Errorf("ожидался 1 чат, получено len=%d", len(gotChats))
 	}
 
-	if usersMap[2] == nil || usersMap[2].Username != "u2" {
-		t.Errorf("ожидался user 2 в usersMap, получено %v", usersMap)
+	if len(users) != 1 || users[0].Username != "u2" {
+		t.Errorf("ожидался user 2 в users, получено %v", users)
 	}
 }
 
 func TestChatUseCase_SendMessage_success(t *testing.T) {
 	chat := &domain.Chat{
-		Id:         1,
-		UserId:     1,
-		ReceiverId: 2,
+		Id:     1,
+		UserId: 1,
+		PeerId: 2,
 	}
 	var createdMsg *domain.Message
 	chatRepo := &mockChatRepo{
-		getById: func(context.Context, int) (*domain.Chat, error) {
+		getPrivateChat: func(context.Context, int, int) (*domain.Chat, error) {
 			return chat, nil
 		},
 	}
@@ -226,13 +239,13 @@ func TestChatUseCase_SendMessage_success(t *testing.T) {
 	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserRepoForChat{})
 	ctx := context.Background()
 
-	msg, err := uc.SendMessage(ctx, 1, 1, "hello")
+	msg, err := uc.SendMessage(ctx, 1, 2, "hello")
 	if err != nil {
 		t.Fatalf("SendMessage: %v", err)
 	}
 
-	if createdMsg == nil || createdMsg.Content != "hello" || createdMsg.ChatId != 1 || createdMsg.UserId != 1 || createdMsg.ReceiverId != 2 {
-		t.Errorf("ожидалось сообщение hello в чат 1 от 1 к 2, получено %v", createdMsg)
+	if createdMsg == nil || createdMsg.Content != "hello" || createdMsg.PeerId != 2 || createdMsg.FromPeerId != 1 {
+		t.Errorf("ожидалось сообщение hello от 1 к 2, получено %v", createdMsg)
 	}
 
 	if msg.Id != 100 {
@@ -240,82 +253,83 @@ func TestChatUseCase_SendMessage_success(t *testing.T) {
 	}
 }
 
-func TestChatUseCase_SendMessage_unauthorized(t *testing.T) {
-	chat := &domain.Chat{
-		Id:         1,
-		UserId:     10,
-		ReceiverId: 20,
-	}
+func TestChatUseCase_SendMessage_noChat_returnsError(t *testing.T) {
 	chatRepo := &mockChatRepo{
-		getById: func(context.Context, int) (*domain.Chat, error) {
-			return chat, nil
+		getPrivateChat: func(context.Context, int, int) (*domain.Chat, error) {
+			return nil, errors.New("чат не найден")
 		},
 	}
 	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
-	_, err := uc.SendMessage(ctx, 1, 1, "hello")
+	_, err := uc.SendMessage(ctx, 1, 5, "hello")
 	if err == nil {
-		t.Fatal("ожидалась ошибка ErrUnauthorized")
-	}
-	if err != domain.ErrUnauthorized {
-		t.Errorf("ожидался domain.ErrUnauthorized, получено %v", err)
+		t.Fatal("ожидалась ошибка")
 	}
 }
 
-func TestChatUseCase_GetMessages_unauthorized(t *testing.T) {
+func TestChatUseCase_GetHistory_unauthorized(t *testing.T) {
 	chat := &domain.Chat{
-		Id:         1,
-		UserId:     10,
-		ReceiverId: 20,
+		Id:     1,
+		UserId: 10,
+		PeerId: 20,
 	}
 	chatRepo := &mockChatRepo{
-		getById: func(context.Context, int) (*domain.Chat, error) {
+		getPrivateChat: func(context.Context, int, int) (*domain.Chat, error) {
 			return chat, nil
 		},
 	}
 	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
-	_, _, err := uc.GetMessages(ctx, 1, 1, 0, 10)
+	_, _, err := uc.GetHistory(ctx, 1, 2, 0, 10)
 	if err != domain.ErrUnauthorized {
 		t.Errorf("ожидался ErrUnauthorized, получено %v", err)
 	}
 }
 
-func TestChatUseCase_GetMessages_success(t *testing.T) {
+func TestChatUseCase_GetHistory_success(t *testing.T) {
 	chat := &domain.Chat{
-		Id:         1,
-		UserId:     1,
-		ReceiverId: 2,
+		Id:     1,
+		UserId: 1,
+		PeerId: 2,
 	}
 	msgs := []*domain.Message{
 		{
-			Id:      1,
-			ChatId:  1,
-			UserId:  1,
-			Content: "hi",
+			Id:           1,
+			PeerId:       2,
+			FromPeerId:   1,
+			Content:      "hi",
 		},
 	}
+	user := &domain.User{Id: 1, Username: "u1"}
 	chatRepo := &mockChatRepo{
-		getById: func(context.Context, int) (*domain.Chat, error) {
+		getPrivateChat: func(context.Context, int, int) (*domain.Chat, error) {
 			return chat, nil
 		},
 	}
 	msgRepo := &mockChatMessageRepo{
-		listByChatId: func(context.Context, int, int32, int32) ([]*domain.Message, int32, error) {
-			return msgs, 1, nil
+		getHistory: func(context.Context, int, int, int64, int) ([]*domain.Message, error) {
+			return msgs, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserRepoForChat{})
+	userRepo := &mockUserRepoForChat{
+		getById: func(context.Context, int) (*domain.User, error) {
+			return user, nil
+		},
+	}
+	uc := NewChatUseCase(chatRepo, msgRepo, userRepo)
 	ctx := context.Background()
 
-	got, total, err := uc.GetMessages(ctx, 1, 1, 0, 10)
+	gotMsgs, gotUsers, err := uc.GetHistory(ctx, 1, 2, 0, 10)
 	if err != nil {
-		t.Fatalf("GetMessages: %v", err)
+		t.Fatalf("GetHistory: %v", err)
 	}
 
-	if total != 1 || len(got) != 1 || got[0].Content != "hi" {
-		t.Errorf("ожидался 1 сообщение hi, получено total=%d len=%d", total, len(got))
+	if len(gotMsgs) != 1 || gotMsgs[0].Content != "hi" {
+		t.Errorf("ожидалось 1 сообщение hi, получено len=%d", len(gotMsgs))
+	}
+	if len(gotUsers) == 0 {
+		t.Error("ожидались пользователи в ответе")
 	}
 }

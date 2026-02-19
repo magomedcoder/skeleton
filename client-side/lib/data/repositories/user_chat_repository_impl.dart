@@ -22,12 +22,9 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<List<Chat>> getChats({
-    required int page,
-    required int pageSize,
-  }) async {
+  Future<List<Chat>> getChats() async {
     try {
-      return await _remote.getChats(page: page, pageSize: pageSize);
+      return await _remote.getChats();
     } catch (e) {
       if (e is Failure) rethrow;
       Logs().e('ChatRepository: неожиданная ошибка в getChats', e);
@@ -37,11 +34,11 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<Message> sendMessage({
-    required String chatId,
+    required int peerUserId,
     required String content,
   }) async {
     try {
-      return await _remote.sendMessage(chatId: chatId, content: content);
+      return await _remote.sendMessage(peerUserId: peerUserId, content: content);
     } catch (e) {
       if (e is Failure) rethrow;
       Logs().e('ChatRepository: неожиданная ошибка в sendMessage', e);
@@ -50,20 +47,20 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<List<Message>> getMessages({
-    required String chatId,
-    required int page,
-    required int pageSize,
+  Future<List<Message>> getHistory({
+    required int peerUserId,
+    required int messageId,
+    required int limit,
   }) async {
     try {
-      return await _remote.getMessages(
-        chatId: chatId,
-        page: page,
-        pageSize: pageSize,
+      return await _remote.getHistory(
+        peerUserId: peerUserId,
+        messageId: messageId,
+        limit: limit,
       );
     } catch (e) {
       if (e is Failure) rethrow;
-      Logs().e('ChatRepository: неожиданная ошибка в getMessages', e);
+      Logs().e('ChatRepository: неожиданная ошибка в getHistory', e);
       throw ApiFailure('Ошибка получения сообщений');
     }
   }

@@ -4,16 +4,16 @@ import 'package:legion/domain/entities/message.dart';
 abstract class ChatRepository {
   Future<Chat> createChat(String userId);
 
-  Future<List<Chat>> getChats({required int page, required int pageSize});
+  Future<List<Chat>> getChats();
 
   Future<Message> sendMessage({
-    required String chatId,
+    required int peerUserId,
     required String content,
   });
 
-  Future<List<Message>> getMessages({
-    required String chatId,
-    required int page,
-    required int pageSize,
+  Future<List<Message>> getHistory({
+    required int peerUserId,
+    required int messageId,
+    required int limit,
   });
 }

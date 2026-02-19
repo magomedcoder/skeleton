@@ -2,13 +2,13 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"strconv"
 
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
+	"github.com/magomedcoder/legion/internal/domain"
+	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"github.com/magomedcoder/legion/internal/usecase"
-	"github.com/magomedcoder/legion/pkg"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,6 +24,16 @@ func NewChatHandler(chatUseCase *usecase.ChatUseCase, authUseCase usecase.TokenV
 	return &ChatHandler{
 		chatUseCase: chatUseCase,
 		authUseCase: authUseCase,
+	}
+}
+
+func messageToProto(m *domain.Message) *chatpb.Message {
+	return &chatpb.Message{
+		Id:        strconv.FormatInt(m.Id, 10),
+		Peer:      &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(m.PeerId)}},
+		FromPeer:  &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(m.FromPeerId)}},
+		Content:   m.Content,
+		CreatedAt: m.CreatedAt.Unix(),
 	}
 }
 
@@ -46,22 +56,19 @@ func (h *ChatHandler) CreateChat(ctx context.Context, req *chatpb.CreateChatRequ
 		return nil, error2.ToStatusError(codes.InvalidArgument, err)
 	}
 
-	chat, user, err := h.chatUseCase.CreateChat(ctx, uid, userId)
+	chat, _, err := h.chatUseCase.CreateChat(ctx, uid, userId)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
+	return chatToProto(chat), nil
+}
+
+func chatToProto(ch *domain.Chat) *chatpb.Chat {
 	return &chatpb.Chat{
-		Id: strconv.Itoa(chat.Id),
-		User: &commonpb.User{
-			Id:       strconv.Itoa(user.Id),
-			Username: user.Username,
-			Name:     user.Name,
-			Surname:  user.Surname,
-			Role:     int32(user.Role),
-		},
-		CreatedAt: chat.CreatedAt.Unix(),
-	}, nil
+		Peer:      &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(ch.PeerId)}},
+		UpdatedAt: ch.UpdatedAt.Unix(),
+	}
 }
 
 func (h *ChatHandler) GetChats(ctx context.Context, req *chatpb.GetChatsRequest) (*chatpb.GetChatsResponse, error) {
@@ -70,45 +77,29 @@ func (h *ChatHandler) GetChats(ctx context.Context, req *chatpb.GetChatsRequest)
 		return nil, err
 	}
 
-	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 20)
-
-	chats, usersMap, total, err := h.chatUseCase.GetChats(ctx, uid, page, pageSize)
+	chats, users, err := h.chatUseCase.GetChats(ctx, uid)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	protoChats := make([]*chatpb.Chat, 0, len(chats))
 	for _, ch := range chats {
-		var userId int
-		if ch.UserId == uid {
-			userId = ch.ReceiverId
-		} else {
-			userId = ch.UserId
-		}
-		u := usersMap[userId]
-		var protoUser *commonpb.User
-		if u != nil {
-			protoUser = &commonpb.User{
-				Id:       strconv.Itoa(u.Id),
-				Username: u.Username,
-				Name:     u.Name,
-				Surname:  u.Surname,
-				Role:     int32(u.Role),
-			}
-		}
-
-		protoChats = append(protoChats, &chatpb.Chat{
-			Id:        strconv.Itoa(ch.Id),
-			User:      protoUser,
-			CreatedAt: ch.CreatedAt.Unix(),
+		protoChats = append(protoChats, chatToProto(ch))
+	}
+	protoUsers := make([]*commonpb.User, 0, len(users))
+	for _, u := range users {
+		protoUsers = append(protoUsers, &commonpb.User{
+			Id:       strconv.Itoa(u.Id),
+			Username: u.Username,
+			Name:     u.Name,
+			Surname:  u.Surname,
+			Role:     int32(u.Role),
 		})
 	}
 
 	return &chatpb.GetChatsResponse{
-		Chats:    protoChats,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
+		Chats: protoChats,
+		Users: protoUsers,
 	}, nil
 }
 
@@ -118,62 +109,60 @@ func (h *ChatHandler) SendMessage(ctx context.Context, req *chatpb.SendMessageRe
 		return nil, err
 	}
 
-	if req.ChatId == "" {
-		return nil, error2.ToStatusError(codes.InvalidArgument, nil)
+	if req.Peer == nil || req.Peer.GetUserId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "peer user_id обязателен")
 	}
+	peerUserId := int(req.Peer.GetUserId())
 
-	chatID, err := strconv.Atoi(req.ChatId)
-	if err != nil {
-		return nil, error2.ToStatusError(codes.InvalidArgument, err)
-	}
-
-	msg, err := h.chatUseCase.SendMessage(ctx, uid, chatID, req.Content)
+	msg, err := h.chatUseCase.SendMessage(ctx, uid, peerUserId, req.Content)
 	if err != nil {
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
-	return &chatpb.Message{
-		Id:        strconv.FormatInt(msg.Id, 10),
-		ChatId:    strconv.Itoa(msg.ChatId),
-		SenderId:  int32(msg.UserId),
-		Content:   msg.Content,
-		CreatedAt: msg.CreatedAt.Unix(),
-	}, nil
+	return messageToProto(msg), nil
 }
 
-func (h *ChatHandler) GetMessages(ctx context.Context, req *chatpb.GetMessagesRequest) (*chatpb.GetMessagesResponse, error) {
+func (h *ChatHandler) GetHistory(ctx context.Context, req *chatpb.GetHistoryRequest) (*chatpb.GetHistoryResponse, error) {
 	uid, err := h.getUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	page, pageSize := pkg.NormalizePagination(req.Page, req.PageSize, 50)
-
-	chatID, err := strconv.Atoi(req.ChatId)
-	if err != nil {
-		return nil, error2.ToStatusError(codes.InvalidArgument, err)
+	if req.Peer == nil || req.Peer.GetUserId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "peer user_id обязателен")
+	}
+	peerUserId := req.Peer.GetUserId()
+	messageId := req.MessageId
+	limit := req.Limit
+	if limit <= 0 || limit > 100 {
+		limit = 50
 	}
 
-	msgs, total, err := h.chatUseCase.GetMessages(ctx, uid, chatID, page, pageSize)
+	msgs, users, err := h.chatUseCase.GetHistory(ctx, uid, peerUserId, messageId, limit)
 	if err != nil {
+		if err == domain.ErrUnauthorized {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
 		return nil, error2.ToStatusError(codes.Internal, err)
 	}
 
 	protoMsgs := make([]*chatpb.Message, 0, len(msgs))
 	for _, m := range msgs {
-		protoMsgs = append(protoMsgs, &chatpb.Message{
-			Id:        strconv.FormatInt(m.Id, 10),
-			ChatId:    strconv.Itoa(m.ChatId),
-			SenderId:  int32(m.UserId),
-			Content:   m.Content,
-			CreatedAt: m.CreatedAt.Unix(),
+		protoMsgs = append(protoMsgs, messageToProto(m))
+	}
+	protoUsers := make([]*commonpb.User, 0, len(users))
+	for _, u := range users {
+		protoUsers = append(protoUsers, &commonpb.User{
+			Id:       strconv.Itoa(u.Id),
+			Username: u.Username,
+			Name:     u.Name,
+			Surname:  u.Surname,
+			Role:     int32(u.Role),
 		})
 	}
 
-	return &chatpb.GetMessagesResponse{
+	return &chatpb.GetHistoryResponse{
 		Messages: protoMsgs,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
+		Users:    protoUsers,
 	}, nil
 }

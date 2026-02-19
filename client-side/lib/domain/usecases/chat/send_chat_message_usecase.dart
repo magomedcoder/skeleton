@@ -7,7 +7,7 @@ class SendChatMessageUseCase {
   SendChatMessageUseCase(this.repo);
 
   Future<Message> call({
-    required String chatId,
-    required String content
-  }) => repo.sendMessage(chatId: chatId, content: content);
+    required int peerUserId,
+    required String content,
+  }) => repo.sendMessage(peerUserId: peerUserId, content: content);
 }

@@ -2,10 +2,11 @@ package handler
 
 import (
 	"context"
-	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"testing"
 
 	"github.com/magomedcoder/legion/api/pb/chatpb"
+	"github.com/magomedcoder/legion/api/pb/commonpb"
+	"github.com/magomedcoder/legion/internal/delivery/middleware"
 	"github.com/magomedcoder/legion/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,7 +57,7 @@ func TestChatHandler_SendMessage_noSession_returnsUnauthenticated(t *testing.T) 
 	ctx := context.Background()
 
 	_, err := h.SendMessage(ctx, &chatpb.SendMessageRequest{
-		ChatId:  "1",
+		Peer:    &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: 2}},
 		Content: "hi",
 	})
 	if code := status.Code(err); code != codes.Unauthenticated {
@@ -64,52 +65,36 @@ func TestChatHandler_SendMessage_noSession_returnsUnauthenticated(t *testing.T) 
 	}
 }
 
-func TestChatHandler_SendMessage_emptyChatId_returnsInvalidArgument(t *testing.T) {
+func TestChatHandler_SendMessage_noPeer_returnsInvalidArgument(t *testing.T) {
 	h := NewChatHandler(&usecase.ChatUseCase{}, nil)
 	ctx := ctxWithSession(1)
 
 	_, err := h.SendMessage(ctx, &chatpb.SendMessageRequest{
-		ChatId:  "",
 		Content: "hi",
 	})
 	if code := status.Code(err); code != codes.InvalidArgument {
-		t.Errorf("SendMessage(пустой chatId): код %v, ожидался InvalidArgument", code)
+		t.Errorf("SendMessage(без peer): код %v, ожидался InvalidArgument", code)
 	}
 }
 
-func TestChatHandler_SendMessage_invalidChatId_returnsInvalidArgument(t *testing.T) {
-	h := NewChatHandler(&usecase.ChatUseCase{}, nil)
-	ctx := ctxWithSession(1)
-
-	_, err := h.SendMessage(ctx, &chatpb.SendMessageRequest{
-		ChatId:  "abc",
-		Content: "hi",
-	})
-	if code := status.Code(err); code != codes.InvalidArgument {
-		t.Errorf("SendMessage(неверный chatId): код %v, ожидался InvalidArgument", code)
-	}
-}
-
-func TestChatHandler_GetMessages_noSession_returnsUnauthenticated(t *testing.T) {
+func TestChatHandler_GetHistory_noSession_returnsUnauthenticated(t *testing.T) {
 	h := NewChatHandler(&usecase.ChatUseCase{}, nil)
 	ctx := context.Background()
 
-	_, err := h.GetMessages(ctx, &chatpb.GetMessagesRequest{
-		ChatId: "1",
+	_, err := h.GetHistory(ctx, &chatpb.GetHistoryRequest{
+		Peer: &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: 2}},
 	})
 	if code := status.Code(err); code != codes.Unauthenticated {
-		t.Errorf("GetMessages(без сессии): код %v, ожидался Unauthenticated", code)
+		t.Errorf("GetHistory(без сессии): код %v, ожидался Unauthenticated", code)
 	}
 }
 
-func TestChatHandler_GetMessages_invalidChatId_returnsInvalidArgument(t *testing.T) {
+func TestChatHandler_GetHistory_noPeer_returnsInvalidArgument(t *testing.T) {
 	h := NewChatHandler(&usecase.ChatUseCase{}, nil)
 	ctx := ctxWithSession(1)
 
-	_, err := h.GetMessages(ctx, &chatpb.GetMessagesRequest{
-		ChatId: "x",
-	})
+	_, err := h.GetHistory(ctx, &chatpb.GetHistoryRequest{})
 	if code := status.Code(err); code != codes.InvalidArgument {
-		t.Errorf("GetMessages(неверный chatId): код %v, ожидался InvalidArgument", code)
+		t.Errorf("GetHistory(без peer): код %v, ожидался InvalidArgument", code)
 	}
 }

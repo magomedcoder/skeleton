@@ -8,6 +8,7 @@ import 'package:legion/domain/usecases/chat/create_chat_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chat_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
 import 'package:legion/domain/usecases/chat/send_chat_message_usecase.dart';
+import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_state.dart';
 
@@ -16,6 +17,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final CreateChatUseCase createChatUseCase;
   final GetChatMessagesUseCase getChatMessagesUseCase;
   final SendChatMessageUseCase sendChatMessageUseCase;
+  final AuthBloc authBloc;
   StreamSubscription<Message>? _newMessageSubscription;
 
   ChatBloc({
@@ -23,6 +25,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     required this.createChatUseCase,
     required this.getChatMessagesUseCase,
     required this.sendChatMessageUseCase,
+    required this.authBloc,
     Stream<Message>? newMessageStream,
   }) : super(const ChatState()) {
     on<ChatStarted>(_onStarted);
@@ -52,24 +55,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onStarted(ChatStarted event, Emitter<ChatState> emit) async {
-    await _loadChatsInternal(emit, page: 1, pageSize: 50);
+    await _loadChatsInternal(emit);
   }
 
   Future<void> _onLoadChats(
     ChatLoadChats event,
     Emitter<ChatState> emit,
   ) async {
-    await _loadChatsInternal(emit, page: event.page, pageSize: event.pageSize);
+    await _loadChatsInternal(emit);
   }
 
-  Future<void> _loadChatsInternal(
-    Emitter<ChatState> emit, {
-    required int page,
-    required int pageSize,
-  }) async {
+  Future<void> _loadChatsInternal(Emitter<ChatState> emit) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final chats = await getChatsUseCase(page: page, pageSize: pageSize);
+      final chats = await getChatsUseCase();
       emit(state.copyWith(isLoading: false, chats: chats, error: null));
     } catch (e) {
       Logs().e('ChatBloc: ошибка загрузки чатов', e);
@@ -84,7 +83,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final chat = await createChatUseCase(event.userId);
-      final chats = await getChatsUseCase(page: 1, pageSize: 50);
+      final chats = await getChatsUseCase();
       emit(state.copyWith(isLoading: false, chats: chats, selectedChat: chat));
       await _loadMessagesForChat(chat, emit);
     } catch (e) {
@@ -110,10 +109,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _loadMessagesForChat(Chat chat, Emitter<ChatState> emit) async {
     try {
+      final peerUserId = int.parse(chat.userId);
       final messages = await getChatMessagesUseCase(
-        chatId: chat.id,
-        page: 1,
-        pageSize: 100,
+        peerUserId: peerUserId,
+        messageId: 0,
+        limit: 100,
       );
       emit(state.copyWith(messages: messages, isLoading: false));
     } catch (e) {
@@ -139,7 +139,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(state.copyWith(isSending: true, error: null));
     try {
       final message = await sendChatMessageUseCase(
-        chatId: chat.id,
+        peerUserId: int.parse(chat.userId),
         content: text,
       );
       final updatedMessages = [...state.messages, message];
@@ -162,13 +162,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) {
     final message = event.message;
     final selectedChat = state.selectedChat;
-    if (selectedChat != null && selectedChat.id == message.chatId) {
+    final currentUserId = int.tryParse(authBloc.state.user?.id ?? '');
+    if (selectedChat != null &&
+        currentUserId != null &&
+        message.isInDialog(currentUserId, int.parse(selectedChat.userId))) {
       if (state.messages.any((m) => m.id == message.id)) {
         return;
       }
 
       emit(state.copyWith(messages: [...state.messages, message]));
-      Logs().d('ChatBloc: добавлено новое сообщение в чат ${message.chatId}');
+      Logs().d('ChatBloc: добавлено новое сообщение в диалог');
     }
   }
 }

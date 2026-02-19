@@ -1,12 +1,12 @@
 import 'package:legion/domain/entities/message.dart';
-import 'package:legion/generated/grpc_pb/chat.pb.dart' as chatpb;
+import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as chatpb;
 
 class MessageMapper {
   static Message fromProto(chatpb.Message msg) {
     return Message(
       id: msg.id,
-      chatId: msg.chatId,
-      senderId: msg.senderId,
+      peerUserId: msg.peer.userId.toInt(),
+      fromPeerUserId: msg.fromPeer.userId.toInt(),
       content: msg.content,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         msg.createdAt.toInt() * 1000,

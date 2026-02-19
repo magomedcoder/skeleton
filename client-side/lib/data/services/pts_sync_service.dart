@@ -121,7 +121,7 @@ class PtsSyncService {
 
   Future<void> _performFullResync() async {
     try {
-      final chats = await _getChatsUseCase(page: 1, pageSize: 100);
+      final chats = await _getChatsUseCase();
       Logs().i('Загружено ${chats.length} чатов при полной пересинхронизации');
     } catch (e, stackTrace) {
       Logs().e('Ошибка при полной пересинхронизации', e, stackTrace);
@@ -226,7 +226,7 @@ class PtsSyncService {
 
       final message = MessageMapper.fromProto(update.message);
       _newMessageSink?.add(message);
-      Logs().d('PtsSyncService: новое сообщение chatId=${message.chatId} id=${message.id}');
+      Logs().d('PtsSyncService: новое сообщение peer=${message.peerUserId} from=${message.fromPeerUserId} id=${message.id}');
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки нового сообщения', e, stackTrace);
     }

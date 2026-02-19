@@ -1,3 +1,4 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
 import 'package:legion/core/auth_guard.dart';
 import 'package:legion/core/failures.dart';
@@ -6,24 +7,26 @@ import 'package:legion/core/grpc_error_handler.dart';
 import 'package:legion/core/log/logs.dart';
 import 'package:legion/data/mappers/chat_mapper.dart';
 import 'package:legion/data/mappers/message_mapper.dart';
+import 'package:legion/data/mappers/user_mapper.dart';
 import 'package:legion/domain/entities/chat.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as chatpb;
+import 'package:legion/generated/grpc_pb/common.pb.dart' as commonpb;
 
 abstract class IChatRemoteDataSource {
   Future<Chat> createChat(String userId);
 
-  Future<List<Chat>> getChats({required int page, required int pageSize});
+  Future<List<Chat>> getChats();
 
   Future<Message> sendMessage({
-    required String chatId,
+    required int peerUserId,
     required String content,
   });
 
-  Future<List<Message>> getMessages({
-    required String chatId,
-    required int page,
-    required int pageSize,
+  Future<List<Message>> getHistory({
+    required int peerUserId,
+    required int messageId,
+    required int limit,
   });
 }
 
@@ -42,7 +45,7 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
       final req = chatpb.CreateChatRequest(userId: userId);
       final resp = await _authGuard.execute(() => _client.createChat(req));
 
-      return ChatMapper.fromProto(resp);
+      return ChatMapper.fromProto(resp, null);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка gRPC в createChat', e);
       throwGrpcError(e, 'Ошибка открытия чата');
@@ -53,16 +56,15 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
   }
 
   @override
-  Future<List<Chat>> getChats({
-    required int page,
-    required int pageSize,
-  }) async {
-    Logs().d('ChatRemoteDataSource: getChats page=$page');
+  Future<List<Chat>> getChats() async {
+    Logs().d('ChatRemoteDataSource: getChats');
     try {
-      final req = chatpb.GetChatsRequest(page: page, pageSize: pageSize);
+      final req = chatpb.GetChatsRequest();
       final resp = await _authGuard.execute(() => _client.getChats(req));
 
-      return ChatMapper.listFromProto(resp.chats);
+      final users = UserMapper.listFromProto(resp.users);
+      final userById = {for (final u in users) int.parse(u.id): u};
+      return ChatMapper.listFromProto(resp.chats, userById);
     } on GrpcError catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка gRPC в getChats', e);
       throwGrpcError(e, 'Ошибка получения чатов');
@@ -74,12 +76,15 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
 
   @override
   Future<Message> sendMessage({
-    required String chatId,
+    required int peerUserId,
     required String content,
   }) async {
-    Logs().d('ChatRemoteDataSource: sendMessage chatId=$chatId');
+    Logs().d('ChatRemoteDataSource: sendMessage peerUserId=$peerUserId');
     try {
-      final req = chatpb.SendMessageRequest(chatId: chatId, content: content);
+      final req = chatpb.SendMessageRequest(
+        peer: commonpb.Peer(userId: Int64(peerUserId)),
+        content: content,
+      );
       final resp = await _authGuard.execute(() => _client.sendMessage(req));
 
       return MessageMapper.fromProto(resp);
@@ -93,26 +98,26 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
   }
 
   @override
-  Future<List<Message>> getMessages({
-    required String chatId,
-    required int page,
-    required int pageSize,
+  Future<List<Message>> getHistory({
+    required int peerUserId,
+    required int messageId,
+    required int limit,
   }) async {
-    Logs().d('ChatRemoteDataSource: getMessages chatId=$chatId');
+    Logs().d('ChatRemoteDataSource: getHistory peerUserId=$peerUserId');
     try {
-      final req = chatpb.GetMessagesRequest(
-        chatId: chatId,
-        page: page,
-        pageSize: pageSize,
+      final req = chatpb.GetHistoryRequest(
+        peer: commonpb.Peer(userId: Int64(peerUserId)),
+        messageId: Int64(messageId),
+        limit: Int64(limit),
       );
-      final resp = await _authGuard.execute(() => _client.getMessages(req));
+      final resp = await _authGuard.execute(() => _client.getHistory(req));
 
       return MessageMapper.listFromProto(resp.messages);
     } on GrpcError catch (e) {
-      Logs().e('ChatRemoteDataSource: ошибка gRPC в getMessages', e);
+      Logs().e('ChatRemoteDataSource: ошибка gRPC в getHistory', e);
       throwGrpcError(e, 'Ошибка получения сообщений');
     } catch (e) {
-      Logs().e('ChatRemoteDataSource: ошибка в getMessages', e);
+      Logs().e('ChatRemoteDataSource: ошибка в getHistory', e);
       throw ApiFailure('Ошибка получения сообщений');
     }
   }

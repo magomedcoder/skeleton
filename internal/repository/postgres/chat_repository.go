@@ -22,11 +22,23 @@ func (c *chatRepository) GetById(ctx context.Context, id int) (*domain.Chat, err
 	return chatModelToDomain(&m), nil
 }
 
+func (c *chatRepository) GetPrivateChat(ctx context.Context, uid, userId int) (*domain.Chat, error) {
+	var m chatModel
+	err := c.db.WithContext(ctx).
+		Where("user_id = ? AND peer_type = ? AND peer_id = ?", uid, 1, userId).
+		First(&m).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return chatModelToDomain(&m), nil
+}
+
 func (c *chatRepository) GetOrCreatePrivateChat(ctx context.Context, uid, userId int) (*domain.Chat, error) {
 	var m chatModel
 
 	err := c.db.WithContext(ctx).
-		Where("(user_id = ? AND receiver_id = ?) OR (user_id = ? AND receiver_id = ?)", uid, userId, userId, uid).
+		Where("user_id = ? AND peer_type = ? AND peer_id = ?", uid, 1, userId).
 		First(&m).Error
 
 	if err == nil {
@@ -38,9 +50,9 @@ func (c *chatRepository) GetOrCreatePrivateChat(ctx context.Context, uid, userId
 	}
 
 	newChat := &domain.Chat{
-		ChatType:   1,
-		UserId:     uid,
-		ReceiverId: userId,
+		PeerType: 1,
+		PeerId:   userId,
+		UserId:   uid,
 	}
 	mNew := chatDomainToModel(newChat)
 
@@ -51,25 +63,36 @@ func (c *chatRepository) GetOrCreatePrivateChat(ctx context.Context, uid, userId
 	return chatModelToDomain(mNew), nil
 }
 
-func (c *chatRepository) ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, int32, error) {
-	page, pageSize, offset := normalizePagination(page, pageSize)
-
-	var total int64
-	if err := c.db.WithContext(ctx).
-		Model(&chatModel{}).
-		Where("user_id = ? OR receiver_id = ?", uid, uid).
-		Count(&total).Error; err != nil {
-		return nil, 0, err
+func (c *chatRepository) EnsurePeerChat(ctx context.Context, uid, peerUserId int) error {
+	var m chatModel
+	err := c.db.WithContext(ctx).
+		Where("user_id = ? AND peer_type = ? AND peer_id = ?", peerUserId, 1, uid).
+		First(&m).Error
+	if err == nil {
+		return nil
 	}
 
+	if err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	peerChat := &domain.Chat{
+		PeerType: 1,
+		PeerId:   uid,
+		UserId:   peerUserId,
+	}
+	
+	return c.db.WithContext(ctx).Create(chatDomainToModel(peerChat)).Error
+}
+
+func (c *chatRepository) ListByUser(ctx context.Context, uid int) ([]*domain.Chat, error) {
 	var list []chatModel
 	if err := c.db.WithContext(ctx).
-		Where("user_id = ? OR receiver_id = ?", uid, uid).
-		Order("created_at DESC").
-		Limit(int(pageSize)).
-		Offset(int(offset)).
+		Where("user_id = ?", uid).
+		Order("updated_at DESC").
+		Limit(200).
 		Find(&list).Error; err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	chats := make([]*domain.Chat, 0, len(list))
@@ -77,15 +100,15 @@ func (c *chatRepository) ListByUser(ctx context.Context, uid int, page, pageSize
 		chats = append(chats, chatModelToDomain(&list[i]))
 	}
 
-	return chats, int32(total), nil
+	return chats, nil
 }
 
 func (c *chatRepository) GetAllUserIds(ctx context.Context, uid int) []int64 {
 	var ids []int64
 	c.db.WithContext(ctx).
 		Model(&chatModel{}).
-		Where("chat_type = ? AND user_id = ?", 1, uid).
-		Pluck("receiver_id", &ids)
+		Where("peer_type = ? AND user_id = ?", 1, uid).
+		Pluck("peer_id", &ids)
 
 	return ids
 }

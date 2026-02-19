@@ -6,8 +6,5 @@ class GetChatsUseCase {
 
   GetChatsUseCase(this.repo);
 
-  Future<List<Chat>> call({
-    required int page,
-    required int pageSize,
-  }) => repo.getChats(page: page, pageSize: pageSize);
+  Future<List<Chat>> call() => repo.getChats();
 }

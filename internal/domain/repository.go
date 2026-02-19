@@ -75,9 +75,13 @@ type LLMProvider interface {
 type ChatRepository interface {
 	GetById(ctx context.Context, id int) (*Chat, error)
 
+	GetPrivateChat(ctx context.Context, uid, userId int) (*Chat, error)
+
 	GetOrCreatePrivateChat(ctx context.Context, uid, userId int) (*Chat, error)
 
-	ListByUser(ctx context.Context, uid int, page, pageSize int32) ([]*Chat, int32, error)
+	EnsurePeerChat(ctx context.Context, uid, peerUserId int) error
+
+	ListByUser(ctx context.Context, uid int) ([]*Chat, error)
 
 	GetAllUserIds(ctx context.Context, uid int) []int64
 }
@@ -87,7 +91,7 @@ type ChatMessageRepository interface {
 
 	GetById(ctx context.Context, id int64) (*Message, error)
 
-	ListByChatId(ctx context.Context, chatId int, page, pageSize int32) ([]*Message, int32, error)
+	GetHistory(ctx context.Context, peerId1, peerId2 int, messageId int64, limit int) ([]*Message, error)
 }
 
 type ProjectRepository interface {

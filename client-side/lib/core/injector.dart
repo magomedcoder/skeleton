@@ -295,6 +295,7 @@ Future<void> init() async {
       createChatUseCase: sl(),
       getChatMessagesUseCase: sl(),
       sendChatMessageUseCase: sl(),
+      authBloc: sl<AuthBloc>(),
       newMessageStream: sl<StreamController<Message>>().stream,
     ),
   );

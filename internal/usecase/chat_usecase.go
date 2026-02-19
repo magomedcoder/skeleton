@@ -59,7 +59,7 @@ func (c *ChatUseCase) verifyChatOwnership(ctx context.Context, userId, chatId in
 		return nil, err
 	}
 
-	if chat.UserId != userId && chat.ReceiverId != userId {
+	if chat.UserId != userId && chat.PeerId != userId {
 		return nil, domain.ErrUnauthorized
 	}
 
@@ -72,14 +72,7 @@ func (c *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*dom
 		return nil, nil, err
 	}
 
-	chatUserId := userId
-	if chat.UserId == uid {
-		chatUserId = chat.ReceiverId
-	} else {
-		chatUserId = chat.UserId
-	}
-
-	user, err := c.userRepository.GetById(ctx, chatUserId)
+	user, err := c.userRepository.GetById(ctx, chat.PeerId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -87,52 +80,47 @@ func (c *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*dom
 	return chat, user, nil
 }
 
-func (c *ChatUseCase) GetChats(ctx context.Context, uid int, page, pageSize int32) ([]*domain.Chat, map[int]*domain.User, int32, error) {
-	chats, total, err := c.chatRepo.ListByUser(ctx, uid, page, pageSize)
+func (c *ChatUseCase) GetChats(ctx context.Context, uid int) ([]*domain.Chat, []*domain.User, error) {
+	chats, err := c.chatRepo.ListByUser(ctx, uid)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, err
 	}
 
-	usersMap := make(map[int]*domain.User)
+	seen := make(map[int]struct{})
+	users := make([]*domain.User, 0)
 	for _, ch := range chats {
-		var userId int
-		if ch.UserId == uid {
-			userId = ch.ReceiverId
-		} else {
-			userId = ch.UserId
-		}
-
-		if _, ok := usersMap[userId]; ok {
+		if _, ok := seen[ch.PeerId]; ok {
 			continue
 		}
-
-		u, err := c.userRepository.GetById(ctx, userId)
+		seen[ch.PeerId] = struct{}{}
+		u, err := c.userRepository.GetById(ctx, ch.PeerId)
 		if err != nil {
 			continue
 		}
-		usersMap[userId] = u
+		users = append(users, u)
 	}
 
-	return chats, usersMap, total, nil
+	return chats, users, nil
 }
 
-func (c *ChatUseCase) SendMessage(ctx context.Context, uid int, chatId int, content string) (*domain.Message, error) {
-	chat, err := c.verifyChatOwnership(ctx, uid, chatId)
+const PeerTypeUser = 1
+
+func (c *ChatUseCase) SendMessage(ctx context.Context, uid int, peerUserId int, content string) (*domain.Message, error) {
+	_, err := c.chatRepo.GetPrivateChat(ctx, uid, peerUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	receiverId := chat.UserId
-	if chat.UserId == uid {
-		receiverId = chat.ReceiverId
+	if err := c.chatRepo.EnsurePeerChat(ctx, uid, peerUserId); err != nil {
+		return nil, err
 	}
 
 	msg := &domain.Message{
-		ChatId:     chatId,
-		ChatType:   1,
-		UserId:     uid,
-		ReceiverId: receiverId,
-		Content:    content,
+		PeerType:     PeerTypeUser,
+		PeerId:       peerUserId,
+		FromPeerType: PeerTypeUser,
+		FromPeerId:   uid,
+		Content:      content,
 	}
 
 	if err := c.messageRepo.Create(ctx, msg); err != nil {
@@ -150,10 +138,10 @@ func (c *ChatUseCase) PublishNewMessage(ctx context.Context, msg *domain.Message
 	}
 
 	dataStr := jsonutil.Encode(map[string]any{
-		"senderId":  msg.UserId,
-		"toId":      msg.ReceiverId,
-		"chatType":  msg.ChatType,
-		"messageId": msg.Id,
+		"peerType":   PeerTypeUser,
+		"peerId":     msg.PeerId,
+		"fromPeerId": msg.FromPeerId,
+		"messageId":  msg.Id,
 	})
 	content := jsonutil.Encode(map[string]any{
 		"event": domain.SubEventNewMessage,
@@ -167,8 +155,8 @@ func (c *ChatUseCase) PublishNewMessage(ctx context.Context, msg *domain.Message
 
 	pipe := c.redis.Pipeline()
 	for _, sid := range sids {
-		senderOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(msg.UserId))
-		receiverOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(msg.ReceiverId))
+		senderOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(msg.FromPeerId))
+		receiverOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(msg.PeerId))
 		if senderOnline || receiverOnline {
 			pipe.Publish(ctx, fmt.Sprintf(domain.LegionTopicByServer, sid), content)
 		}
@@ -183,12 +171,43 @@ func (c *ChatUseCase) GetMessageById(ctx context.Context, messageId int64) (*dom
 	return c.messageRepo.GetById(ctx, messageId)
 }
 
-func (c *ChatUseCase) GetMessages(ctx context.Context, uid int, chatId int, page, pageSize int32) ([]*domain.Message, int32, error) {
-	if _, err := c.verifyChatOwnership(ctx, uid, chatId); err != nil {
-		return nil, 0, err
+func (c *ChatUseCase) GetHistory(ctx context.Context, uid int, peerUserId int64, messageId int64, limit int64) ([]*domain.Message, []*domain.User, error) {
+	peerId := int(peerUserId)
+	chat, err := c.chatRepo.GetPrivateChat(ctx, uid, peerId)
+	if err != nil {
+		return nil, nil, nil
 	}
 
-	return c.messageRepo.ListByChatId(ctx, chatId, page, pageSize)
+	if chat.UserId != uid {
+		return nil, nil, domain.ErrUnauthorized
+	}
+
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+
+	msgs, err := c.messageRepo.GetHistory(ctx, uid, peerId, messageId, int(limit))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	userIds := make(map[int]struct{})
+	userIds[peerId] = struct{}{}
+	for _, m := range msgs {
+		userIds[m.PeerId] = struct{}{}
+		userIds[m.FromPeerId] = struct{}{}
+	}
+
+	users := make([]*domain.User, 0, len(userIds))
+	for id := range userIds {
+		u, err := c.userRepository.GetById(ctx, id)
+		if err != nil {
+			continue
+		}
+		users = append(users, u)
+	}
+
+	return msgs, users, nil
 }
 
 func (c *ChatUseCase) GetAllUserIds(ctx context.Context, uid int) []int64 {

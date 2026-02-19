@@ -29,3 +29,9 @@ message User {
   string surname = 4;
   int32 role = 5;
 }
+
+message Peer {
+  oneof peer {
+    int64 user_id = 1;
+  }
+}
