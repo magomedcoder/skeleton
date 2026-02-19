@@ -31,6 +31,18 @@ func TestCheckDatabase_invalidURL(t *testing.T) {
 	}
 }
 
+func TestCheckDatabase_libpqNoDbname(t *testing.T) {
+	ctx := context.Background()
+	err := CheckDatabase(ctx, "host=127.0.0.1 port=5432 user=postgres password=postgres")
+	if err == nil {
+		t.Fatal("ожидалась ошибка при отсутствии dbname в libpq DSN")
+	}
+
+	if !strings.Contains(err.Error(), "имя базы данных не указано") {
+		t.Errorf("сообщение ошибки: %v", err)
+	}
+}
+
 type mockUserRepoBootstrap struct {
 	list   func(context.Context, int32, int32) ([]*domain.User, int32, error)
 	create func(context.Context, *domain.User) error

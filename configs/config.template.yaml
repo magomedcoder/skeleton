@@ -4,14 +4,26 @@ server:
   host: "0.0.0.0"
   port: "50051"
 
-database:
-  dsn: "postgres://postgres:postgres@127.0.0.1:5432/legion"
+postgres:
+  host: "127.0.0.1"
+  port: 5432
+  username: "postgres"
+  password: "postgres"
+  database: "legion"
 
 redis:
-  host: "redis"
+  host: "127.0.0.1"
   port: 6379
   auth:
   database: 0
+
+minio:
+  host: "127.0.0.1"
+  port: 9001
+  ssl: false
+  secret_id: "minio_user"
+  secret_key: "minio_password"
+  bucket: "legion"
 
 jwt:
   access_secret: "legion"
@@ -23,9 +35,6 @@ runners:
   registration_token: ""
   addresses:
     - "127.0.0.1:50052"
-
-attachments:
-  save_dir: "./uploads"
 
 log:
   # debug, verbose, info, warn, error, off

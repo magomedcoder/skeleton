@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 )
 
@@ -61,11 +60,6 @@ func TestHandleNotFound(t *testing.T) {
 		check   func(t *testing.T, err error)
 	}{
 		{"nil", nil, msg, true, nil},
-		{"pgx ErrNoRows", pgx.ErrNoRows, msg, false, func(t *testing.T, err error) {
-			if err == nil || err.Error() != msg {
-				t.Errorf("ожидалось сообщение %q, получено %v", msg, err)
-			}
-		}},
 		{"gorm ErrRecordNotFound", gorm.ErrRecordNotFound, msg, false, func(t *testing.T, err error) {
 			if err == nil || err.Error() != msg {
 				t.Errorf("ожидалось сообщение %q, получено %v", msg, err)

@@ -18,9 +18,9 @@ func CreateFirstUser(ctx context.Context, userRepo domain.UserRepository, jwtSer
 		return fmt.Errorf("ошибка проверки существующих пользователей: %w", err)
 	}
 	if total > 0 {
-		logger.D("Bootstrap: пользователи уже есть, первый пользователь не создаётся")
 		return nil
 	}
+
 	logger.I("Bootstrap: создание первого пользователя %s", username)
 
 	hashed, err := jwtService.HashPassword(password)

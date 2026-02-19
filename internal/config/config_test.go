@@ -30,8 +30,8 @@ func TestLoad(t *testing.T) {
 		t.Error("конфиг сервера должен быть задан")
 	}
 
-	if cfg.Database.DSN == "" {
-		t.Error("DSN базы данных должен быть задан")
+	if cfg.Postgres.Host == "" || cfg.Postgres.Database == "" {
+		t.Error("postgres: host и database должны быть заданы")
 	}
 
 	if cfg.JWT.AccessSecret == "" || cfg.JWT.RefreshSecret == "" {
@@ -40,5 +40,23 @@ func TestLoad(t *testing.T) {
 
 	if cfg.MinClientBuild < 0 {
 		t.Error("MinClientBuild должен быть неотрицательным")
+	}
+
+	if cfg.Minio != nil && cfg.Minio.Bucket == "" {
+		t.Error("при включённом minio bucket должен быть задан")
+	}
+}
+
+func TestNewMinioClient_nilMinio(t *testing.T) {
+	got := NewMinioClient(&Config{Minio: nil})
+	if got != nil {
+		t.Errorf("NewMinioClient при Minio == nil должен возвращать nil, получено %v", got)
+	}
+}
+
+func TestNewMinioClient_emptyMinio(t *testing.T) {
+	got := NewMinioClient(&Config{})
+	if got != nil {
+		t.Errorf("NewMinioClient при пустом Config должен возвращать nil, получено %v", got)
 	}
 }

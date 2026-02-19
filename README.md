@@ -25,6 +25,7 @@
 - **Хост:** Linux (Debian, Ubuntu) или Docker
 - **БД:** PostgreSQL 16
 - **Кэш и очереди:** Redis 7+
+- **MinIO** - S3-совместимое хранилище медиа
 - **Раннеры:** видеокарты **NVIDIA** (экспериментально llama.cpp) или **Ollama** по API
 
 ---
@@ -36,6 +37,7 @@
 - **Go** 1.25+
 - **PostgreSQL** 16+
 - **Redis** 7+
+- **MinIO**
 - **Клиент (Flutter/Dart):**
     - Flutter 3.24+
     - Dart SDK ^3.10.7
@@ -56,11 +58,11 @@
 **Параметры:**
 
 - `server` - `host`, `port` (адрес и порт сервера, по умолчанию `0.0.0.0:50051`)
-- `database` - `dsn` (строка подключения к PostgreSQL)
+- `postgres` - `host`, `port`, `username`, `password`, `database` (подключение к PostgreSQL)
 - `redis` - `host`, `port`, `auth`, `database` (подключение к Redis для кэша и pub/sub)
 - `jwt` - `access_secret`, `refresh_secret`, `access_ttl`, `refresh_ttl` (секреты и время жизни токенов)
 - `runners` - `registration_token`, `addresses` (токен регистрации и список адресов раннеров)
-- `attachments` - `save_dir` (каталог для сохранения файлов)
+- `minio` - `host`, `port`, `ssl`, `secret_id`, `secret_key`, `bucket` (S3-совместимое хранилище медиа)
 - `log` - `level` (уровень логирования: `debug`, `verbose`, `info`, `warn`, `error`, `off`)
 
 ### Раннер (legion-runner)

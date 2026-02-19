@@ -2,67 +2,95 @@ package bootstrap
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"net/url"
 	"strings"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func CheckDatabase(ctx context.Context, dsn string) error {
-	targetDB, baseDSN, err := parseDSN(dsn)
+	targetDB, postgresDSN, err := parseDSN(dsn)
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга DSN: %w", err)
 	}
 
-	postgresDSN := baseDSN + "/postgres"
-	pool, err := pgxpool.New(ctx, postgresDSN)
+	db, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("ошибка подключения к postgres: %w", err)
 	}
-	defer pool.Close()
 
-	if err := pool.Ping(ctx); err != nil {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("получение *sql.DB: %w", err)
+	}
+	defer sqlDB.Close()
+
+	if err := sqlDB.PingContext(ctx); err != nil {
 		return fmt.Errorf("ошибка проверки соединения с postgres: %w", err)
 	}
 
 	var exists int
-	if err = pool.QueryRow(ctx, "SELECT 1 FROM pg_database WHERE datname = $1", targetDB).Scan(&exists); err == nil {
+	if err := db.Raw("SELECT 1 FROM pg_database WHERE datname = ?", targetDB).Scan(&exists).Error; err != nil {
+		return fmt.Errorf("ошибка проверки существования БД: %w", err)
+	}
+	if exists == 1 {
 		return nil
 	}
 
-	if !errors.Is(err, pgx.ErrNoRows) {
-		return fmt.Errorf("ошибка проверки существования БД: %w", err)
-	}
-
-	_, err = pool.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", quoteIdentifier(targetDB)))
-	if err != nil {
+	if err := db.Exec(fmt.Sprintf("CREATE DATABASE %s", quoteIdentifier(targetDB))).Error; err != nil {
 		return fmt.Errorf("ошибка создания базы данных %s: %w", targetDB, err)
 	}
 
 	return nil
 }
 
-func parseDSN(dsn string) (string, string, error) {
+func parseDSN(dsn string) (targetDB string, postgresDSN string, err error) {
+	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
+		return parseDSNURL(dsn)
+	}
+	
+	return parseDSNLibpq(dsn)
+}
+
+func parseDSNLibpq(dsn string) (targetDB string, postgresDSN string, err error) {
+	params := make(map[string]string)
+	for _, part := range strings.Fields(dsn) {
+		if i := strings.Index(part, "="); i > 0 {
+			k := strings.TrimSpace(part[:i])
+			v := strings.TrimSpace(part[i+1:])
+			params[k] = v
+		}
+	}
+
+	dbname, ok := params["dbname"]
+	if !ok || dbname == "" {
+		return "", "", fmt.Errorf("имя базы данных не указано в DSN")
+	}
+
+	params["dbname"] = "postgres"
+	parts := make([]string, 0, len(params))
+	for k, v := range params {
+		parts = append(parts, k+"="+v)
+	}
+
+	return dbname, strings.Join(parts, " "), nil
+}
+
+func parseDSNURL(dsn string) (targetDB string, postgresDSN string, err error) {
 	u, err := url.Parse(dsn)
 	if err != nil {
 		return "", "", err
 	}
 
-	dbName := strings.TrimPrefix(u.Path, "/")
-	if dbName == "" {
+	targetDB = strings.TrimPrefix(u.Path, "/")
+	if targetDB == "" {
 		return "", "", fmt.Errorf("имя базы данных не указано в DSN")
 	}
 
-	u.Path = ""
-	baseDSN := u.String()
-	if !strings.HasSuffix(baseDSN, "//") {
-		baseDSN = strings.TrimSuffix(baseDSN, "/")
-	}
-	baseDSN += "/"
-
-	return dbName, baseDSN, nil
+	u.Path = "/postgres"
+	return targetDB, u.String(), nil
 }
 
 func quoteIdentifier(name string) string {

@@ -53,13 +53,19 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := bootstrap.CheckDatabase(ctx, conf.Database.DSN); err != nil {
+	if err := bootstrap.CheckDatabase(ctx, conf.Postgres.GetDsn()); err != nil {
 		logger.E("Ошибка инициализации базы данных: %v", err)
 		os.Exit(1)
 	}
-	logger.D("База данных доступна")
 
-	db, err := postgres.NewDB(ctx, conf.Database.DSN)
+	minioClient := config.NewMinioClient(conf)
+
+	if err := bootstrap.EnsureMinioBucket(ctx, conf, minioClient); err != nil {
+		logger.E("Ошибка инициализации MinIO: %v", err)
+		os.Exit(1)
+	}
+
+	db, err := postgres.NewDB(ctx, conf.Postgres.GetDsn())
 	if err != nil {
 		logger.E("Ошибка подключения к базе данных: %v", err)
 		os.Exit(1)
@@ -70,13 +76,11 @@ func main() {
 		os.Exit(1)
 	}
 	defer sqlDB.Close()
-	logger.I("Подключение к базе данных установлено")
 
 	if err := bootstrap.RunMigrations(ctx, db, legion.Postgres); err != nil {
 		logger.E("Ошибка применения миграций: %v", err)
 		os.Exit(1)
 	}
-	logger.D("Миграции применены")
 
 	userRepo := postgres.NewUserRepository(db)
 	userSessionRepo := postgres.NewUserSessionRepository(db)
@@ -101,6 +105,8 @@ func main() {
 	serverCache := redis_repository.NewServerCacheRepository(redisClient)
 	clientCache := redis_repository.NewClientCacheRepository(conf, redisClient, serverCache)
 
+	storageUseCase := usecase.NewStorageUseCase(conf, minioClient)
+
 	jwtService := service.NewJWTService(conf)
 
 	if err := bootstrap.CreateFirstUser(ctx, userRepo, jwtService); err != nil {
@@ -118,7 +124,7 @@ func main() {
 		usecase.WithChatServerCache(serverCache),
 		usecase.WithChatClientCache(clientCache),
 	)
-	aiChatUseCase := usecase.NewAIChatUseCase(aiChatSessionRepo, messageRepo, fileRepo, runnerPool, conf.Attachments.SaveDir)
+	aiChatUseCase := usecase.NewAIChatUseCase(aiChatSessionRepo, messageRepo, fileRepo, runnerPool, storageUseCase)
 	editorUseCase := usecase.NewEditorUseCase(runnerPool)
 	userUseCase := usecase.NewUserUseCase(userRepo, userSessionRepo, jwtService)
 	searchUseCase := usecase.NewSearchUseCase(userRepo)

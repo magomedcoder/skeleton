@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 )
 
@@ -39,7 +38,7 @@ func NormalizePagination(page, pageSize, defaultPageSize int32) (int32, int32) {
 }
 
 func HandleNotFound(err error, message string) error {
-	if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New(message)
 	}
 

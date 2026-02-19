@@ -36,7 +36,7 @@ func TestAIChatUseCase_GetModels(t *testing.T) {
 		getModels: func(context.Context) ([]string, error) { return want, nil },
 	}
 
-	uc := NewAIChatUseCase(nil, nil, nil, llm, "")
+	uc := NewAIChatUseCase(nil, nil, nil, llm, nil)
 	got, err := uc.GetModels(context.Background())
 	if err != nil {
 		t.Fatalf("GetModels: %v", err)

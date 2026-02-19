@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/magomedcoder/legion/pkg/encrypt"
+	"github.com/magomedcoder/legion/pkg/minio"
 	"github.com/magomedcoder/legion/pkg/strutil"
 	"github.com/redis/go-redis/v9"
 	"gopkg.in/yaml.v3"
@@ -35,10 +36,6 @@ type LogConfig struct {
 	Level string `yaml:"level"`
 }
 
-type AttachmentsConfig struct {
-	SaveDir string `yaml:"save_dir"`
-}
-
 type RunnersConfig struct {
 	Addresses         []string `yaml:"addresses"`
 	RegistrationToken string   `yaml:"registration_token"`
@@ -49,8 +46,28 @@ type ServerConfig struct {
 	Host string `yaml:"host"`
 }
 
-type DatabaseConfig struct {
-	DSN string `yaml:"dsn"`
+type Postgres struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+}
+
+type Redis struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Auth     string `yaml:"auth"`
+	Database int    `yaml:"database"`
+}
+
+type Minio struct {
+	Host      string `yaml:"host"`
+	Port      int    `yaml:"port"`
+	SSL       bool   `yaml:"ssl"`
+	SecretId  string `yaml:"secret_id"`
+	SecretKey string `yaml:"secret_key"`
+	Bucket    string `yaml:"bucket"`
 }
 
 type JWTConfig struct {
@@ -61,22 +78,26 @@ type JWTConfig struct {
 }
 
 type Config struct {
-	Server         ServerConfig      `yaml:"server"`
-	Database       DatabaseConfig    `yaml:"database"`
-	Redis          *Redis            `yaml:"redis"`
-	JWT            JWTConfig         `yaml:"jwt"`
-	Runners        RunnersConfig     `yaml:"runners"`
-	Attachments    AttachmentsConfig `yaml:"attachments"`
-	Log            LogConfig         `yaml:"log"`
+	Server         ServerConfig  `yaml:"server"`
+	Postgres       Postgres      `yaml:"postgres"`
+	Redis          *Redis        `yaml:"redis"`
+	Minio          *Minio        `yaml:"minio"`
+	JWT            JWTConfig     `yaml:"jwt"`
+	Runners        RunnersConfig `yaml:"runners"`
+	Log            LogConfig     `yaml:"log"`
 	MinClientBuild int32
 	sid            string
 }
 
-type Redis struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Auth     string `yaml:"auth"`
-	Database int    `yaml:"database"`
+func (p *Postgres) GetDsn() string {
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable TimeZone=Europe/Moscow",
+		p.Host,
+		p.Port,
+		p.Username,
+		p.Password,
+		p.Database,
+	)
 }
 
 func (r *Redis) Options() *redis.Options {
@@ -86,6 +107,19 @@ func (r *Redis) Options() *redis.Options {
 		DB:          r.Database,
 		ReadTimeout: -1,
 	}
+}
+
+func NewMinioClient(conf *Config) minio.IMinio {
+	if conf.Minio == nil {
+		return nil
+	}
+
+	return minio.NewMinio(minio.Config{
+		Endpoint:  fmt.Sprintf("%s:%d", conf.Minio.Host, conf.Minio.Port),
+		SSL:       conf.Minio.SSL,
+		SecretId:  conf.Minio.SecretId,
+		SecretKey: conf.Minio.SecretKey,
+	})
 }
 
 func Load() (*Config, error) {

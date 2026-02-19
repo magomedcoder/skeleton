@@ -3,8 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/magomedcoder/legion/internal/domain"
@@ -13,11 +11,11 @@ import (
 )
 
 type AIChatUseCase struct {
-	aiChatRepo         domain.AIChatRepository
-	aiChatMessageRepo  domain.AIChatMessageRepository
-	fileRepo           domain.FileRepository
-	llmProvider        domain.LLMProvider
-	attachmentsSaveDir string
+	aiChatRepo        domain.AIChatRepository
+	aiChatMessageRepo domain.AIChatMessageRepository
+	fileRepo          domain.FileRepository
+	llmProvider       domain.LLMProvider
+	storageUseCase    *StorageUseCase
 }
 
 func NewAIChatUseCase(
@@ -25,14 +23,14 @@ func NewAIChatUseCase(
 	aiChatMessageRepo domain.AIChatMessageRepository,
 	fileRepo domain.FileRepository,
 	llmProvider domain.LLMProvider,
-	attachmentsSaveDir string,
+	storageUseCase *StorageUseCase,
 ) *AIChatUseCase {
 	return &AIChatUseCase{
-		aiChatRepo:         aiChatRepo,
-		aiChatMessageRepo:  aiChatMessageRepo,
-		fileRepo:           fileRepo,
-		llmProvider:        llmProvider,
-		attachmentsSaveDir: attachmentsSaveDir,
+		aiChatRepo:        aiChatRepo,
+		aiChatMessageRepo: aiChatMessageRepo,
+		fileRepo:          fileRepo,
+		llmProvider:       llmProvider,
+		storageUseCase:    storageUseCase,
 	}
 }
 
@@ -66,8 +64,8 @@ func (ai *AIChatUseCase) SendMessage(ctx context.Context, userId int, sessionId 
 	}
 
 	var attachmentFileID string
-	if len(attachmentContent) > 0 && attachmentName != "" && ai.attachmentsSaveDir != "" {
-		file, _, err := ai.saveAttachmentAndCreateFile(ctx, sessionId, attachmentName, attachmentContent)
+	if len(attachmentContent) > 0 && attachmentName != "" && ai.storageUseCase != nil {
+		file, err := ai.storageUseCase.SaveAttachment(ctx, "ai_chat", sessionId, attachmentName, attachmentContent)
 		if err == nil {
 			attachmentFileID = file.Id
 			if err := ai.fileRepo.Create(ctx, file); err != nil {
@@ -194,32 +192,11 @@ func buildMessageWithFile(attachmentName string, attachmentContent []byte, userM
 		logger.W("ChatUseCase: извлечение текста из вложения %q: %v, используем сырое содержимое", attachmentName, err)
 		fileContent = string(attachmentContent)
 	}
+	
 	s := fmt.Sprintf("Файл «%s»:\n\n```\n%s\n```", attachmentName, fileContent)
 	if userMessage != "" {
 		s += "\n\n---\n\n" + userMessage
 	}
 
 	return s
-}
-
-func (ai *AIChatUseCase) saveAttachmentAndCreateFile(ctx context.Context, sessionId, attachmentName string, content []byte) (*domain.File, string, error) {
-	baseName := filepath.Base(attachmentName)
-	if baseName == "" || baseName == "." {
-		baseName = "attachment"
-	}
-
-	dir := filepath.Join(ai.attachmentsSaveDir, sessionId)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, "", err
-	}
-
-	file := domain.NewFile(baseName, "", int64(len(content)), "")
-	storageName := file.Id + "_" + baseName
-	storagePath := filepath.Join(dir, storageName)
-	file.StoragePath = storagePath
-	if err := os.WriteFile(storagePath, content, 0644); err != nil {
-		return nil, "", err
-	}
-
-	return file, storagePath, nil
 }
