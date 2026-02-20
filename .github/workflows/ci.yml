@@ -1,4 +1,4 @@
-# Сборка при push в main и обновление тега dev
+# Сборка при push в main и обновление тега dev-build
 name: CI
 
 on:
@@ -12,11 +12,11 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      version: ${{ github.event_name == 'push' && 'dev' || (github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number)) || 'dev' }}
+      version: ${{ github.event_name == 'push' && 'dev-build' || (github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number)) || 'dev-build' }}
     secrets: inherit
 
-  update-dev-tag:
-    name: Update dev tag
+  update-dev-build-tag:
+    name: Update dev-build tag
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -27,20 +27,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Delete and recreate dev tag
+      - name: Delete and recreate dev-build tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -d dev 2>/dev/null || true
-          git push origin :refs/tags/dev 2>/dev/null || true
-          git tag dev
-          git push origin dev
+          git tag -d dev-build 2>/dev/null || true
+          git push origin :refs/tags/dev-build 2>/dev/null || true
+          git tag dev-build
+          git push origin dev-build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   dev-release:
-    name: Upload Dev Release
-    needs: [build, update-dev-tag]
+    name: Upload Dev-Build Release
+    needs: [build, update-dev-build-tag]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -53,7 +53,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Prepare dev artifacts
+      - name: Prepare dev-build artifacts
         run: |
           cd artifacts
 
@@ -101,10 +101,10 @@ jobs:
             echo "macos-installer artifact not found!" && exit 1
           fi
 
-      - name: Upload Dev Release to GitHub
+      - name: Upload Dev-Build Release to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dev
+          tag_name: dev-build
           name: "Dev build"
           draft: false
           prerelease: true
