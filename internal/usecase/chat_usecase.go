@@ -12,13 +12,13 @@ import (
 )
 
 type ChatUseCase struct {
-	chatRepo              domain.ChatRepository
-	messageRepo           domain.ChatMessageRepository
+	chatRepo               domain.ChatRepository
+	messageRepo            domain.ChatMessageRepository
 	userDeletedMessageRepo domain.UserDeletedMessageRepository
-	userRepository        domain.UserRepository
-	redis                 *redis.Client
-	serverCache           *redisRepo.ServerCacheRepository
-	clientCache           *redisRepo.ClientCacheRepository
+	userRepository         domain.UserRepository
+	redis                  *redis.Client
+	serverCache            *redisRepo.ServerCacheRepository
+	clientCache            *redisRepo.ClientCacheRepository
 }
 
 func NewChatUseCase(
@@ -157,6 +157,41 @@ func (c *ChatUseCase) PublishNewMessage(ctx context.Context, msg *domain.Message
 	return err
 }
 
+func (c *ChatUseCase) PublishMessageDeleted(ctx context.Context, peerId, fromPeerId int, messageIds []int64) error {
+	if c.redis == nil || c.serverCache == nil || c.clientCache == nil {
+		return nil
+	}
+
+	dataStr := jsonutil.Encode(map[string]any{
+		"peerType":   PeerTypeUser,
+		"peerId":     peerId,
+		"fromPeerId": fromPeerId,
+		"messageIds": messageIds,
+	})
+	content := jsonutil.Encode(map[string]any{
+		"event": domain.SubEventMessageDeleted,
+		"data":  dataStr,
+	})
+
+	sids := c.serverCache.All(ctx, 1)
+	if len(sids) == 0 {
+		return nil
+	}
+
+	pipe := c.redis.Pipeline()
+	for _, sid := range sids {
+		senderOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(fromPeerId))
+		receiverOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(peerId))
+		if senderOnline || receiverOnline {
+			pipe.Publish(ctx, fmt.Sprintf(domain.LegionTopicByServer, sid), content)
+		}
+	}
+
+	_, err := pipe.Exec(ctx)
+
+	return err
+}
+
 func (c *ChatUseCase) GetMessageById(ctx context.Context, messageId int64) (*domain.Message, error) {
 	return c.messageRepo.GetById(ctx, messageId)
 }
@@ -176,10 +211,24 @@ func (c *ChatUseCase) DeleteMessage(ctx context.Context, uid int, messageId int6
 
 func (c *ChatUseCase) DeleteMessages(ctx context.Context, uid int, messageIds []int64, forEveryone bool) error {
 	if forEveryone {
+		var peerId, fromPeerId int
+		if len(messageIds) > 0 {
+			msg, err := c.messageRepo.GetById(ctx, messageIds[0])
+			if err != nil {
+				return err
+			}
+			peerId = msg.PeerId
+			fromPeerId = msg.FromPeerId
+		}
+
 		for _, id := range messageIds {
 			if err := c.DeleteMessage(ctx, uid, id); err != nil {
 				return err
 			}
+		}
+
+		if len(messageIds) > 0 {
+			_ = c.PublishMessageDeleted(ctx, peerId, fromPeerId, messageIds)
 		}
 
 		return nil
@@ -238,7 +287,7 @@ func (c *ChatUseCase) GetHistory(ctx context.Context, uid int, peerUserId int64,
 					filtered = append(filtered, m)
 				}
 			}
-			
+
 			msgs = filtered
 		}
 	}

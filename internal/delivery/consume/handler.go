@@ -27,10 +27,11 @@ type Handler struct {
 
 func (h *Handler) registerHandlers() {
 	eventHandlers = map[string]EventHandler{
-		domain.SubEventUserStatus:  h.handleUserStatus,
-		domain.SubEventNewMessage:  h.onConsumeMessage,
-		domain.SubEventNewTask:     h.onConsumeNewTask,
-		domain.SubEventTaskChanged: h.onConsumeTaskChanged,
+		domain.SubEventUserStatus:     h.handleUserStatus,
+		domain.SubEventNewMessage:     h.onConsumeMessage,
+		domain.SubEventMessageDeleted: h.onConsumeMessageDeleted,
+		domain.SubEventNewTask:        h.onConsumeNewTask,
+		domain.SubEventTaskChanged:    h.onConsumeTaskChanged,
 	}
 }
 

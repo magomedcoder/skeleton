@@ -102,3 +102,18 @@ class ChatClearSelection extends ChatEvent {
 class ChatSelectAllMyMessages extends ChatEvent {
   const ChatSelectAllMyMessages();
 }
+
+class ChatMessagesDeletedFromServer extends ChatEvent {
+  final int peerId;
+  final int fromPeerId;
+  final List<int> messageIds;
+
+  const ChatMessagesDeletedFromServer({
+    required this.peerId,
+    required this.fromPeerId,
+    required this.messageIds,
+  });
+
+  @override
+  List<Object?> get props => [peerId, fromPeerId, messageIds];
+}

@@ -8,6 +8,7 @@ import 'package:legion/data/data_sources/remote/account_remote_datasource.dart';
 import 'package:legion/data/mappers/message_mapper.dart';
 import 'package:legion/data/services/user_online_status_service.dart';
 import 'package:legion/domain/entities/message.dart';
+import 'package:legion/domain/entities/message_deleted_payload.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
 import 'package:legion/generated/grpc_pb/account.pb.dart';
 import 'package:legion/generated/grpc_pb/account.pbgrpc.dart' as account_pb;
@@ -32,6 +33,7 @@ class PtsSyncService {
   bool _initialStateRetrieved = false;
 
   final StreamSink<Message>? _newMessageSink;
+  final StreamSink<MessageDeletedPayload>? _messageDeletedSink;
   final StreamSink<String>? _taskUpdateSink;
 
   PtsSyncService(
@@ -42,10 +44,12 @@ class PtsSyncService {
     UserOnlineStatusService? userOnlineStatusService,
     ReconnectPolicy? reconnectPolicy,
     StreamSink<Message>? newMessageSink,
+    StreamSink<MessageDeletedPayload>? messageDeletedSink,
     StreamSink<String>? taskUpdateSink,
   })  : _userOnlineStatusService = userOnlineStatusService,
         _reconnectPolicy = reconnectPolicy ?? const ReconnectPolicy.hybrid(),
         _newMessageSink = newMessageSink,
+        _messageDeletedSink = messageDeletedSink,
         _taskUpdateSink = taskUpdateSink;
 
   Future<void> startSync() async {
@@ -224,6 +228,10 @@ class PtsSyncService {
       if (update.hasTaskChanged()) {
         await _processTaskChanged(update.taskChanged);
       }
+
+      if (update.hasMessageDeleted()) {
+        await _processMessageDeleted(update.messageDeleted);
+      }
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки обновления', e, stackTrace);
     }
@@ -260,6 +268,24 @@ class PtsSyncService {
       Logs().d('PtsSyncService: новое сообщение peer=${message.peerUserId} from=${message.fromPeerUserId} id=${message.id}');
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки нового сообщения', e, stackTrace);
+    }
+  }
+
+  Future<void> _processMessageDeleted(account_pb.UpdateMessageDeleted update) async {
+    try {
+      if (update.messageIds.isEmpty) {
+        return;
+      }
+
+      final payload = MessageDeletedPayload(
+        peerId: update.peer.userId.toInt(),
+        fromPeerId: update.fromPeer.userId.toInt(),
+        messageIds: update.messageIds.map((id) => id.toInt()).toList(),
+      );
+      _messageDeletedSink?.add(payload);
+      Logs().d('PtsSyncService: удаление сообщений peer=${payload.peerId} from=${payload.fromPeerId} ids=${payload.messageIds}');
+    } catch (e, stackTrace) {
+      Logs().e('Ошибка обработки удаления сообщений', e, stackTrace);
     }
   }
 

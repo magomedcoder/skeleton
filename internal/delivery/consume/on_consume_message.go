@@ -41,10 +41,18 @@ func (h *Handler) onConsumeMessage(ctx context.Context, body []byte) {
 	}
 
 	protoMsg := &chatpb.Message{
-		Id:       msg.Id,
-		Peer:     &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(msg.PeerId)}},
-		FromPeer: &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(msg.FromPeerId)}},
-		Content:  msg.Content,
+		Id: msg.Id,
+		Peer: &commonpb.Peer{
+			Peer: &commonpb.Peer_UserId{
+				UserId: int64(msg.PeerId),
+			},
+		},
+		FromPeer: &commonpb.Peer{
+			Peer: &commonpb.Peer_UserId{
+				UserId: int64(msg.FromPeerId),
+			},
+		},
+		Content:   msg.Content,
 		CreatedAt: msg.CreatedAt.Unix(),
 	}
 

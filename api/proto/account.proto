@@ -3,6 +3,7 @@ syntax = "proto3";
 package account;
 
 import "chat.proto";
+import "common.proto";
 import "project.proto";
 
 option go_package = "github.com/magomedcoder/legion/api/pb/accountpb;accountpb";
@@ -54,11 +55,17 @@ message UpdateSystem {
 
 message UpdateUserStatus {
   int64 user_id = 1;
-  bool  status  = 2;
+  bool status  = 2;
 }
 
 message UpdateNewMessage {
   chat.Message message = 1;
+}
+
+message UpdateMessageDeleted {
+  common.Peer peer = 1;
+  common.Peer from_peer = 2;
+  repeated int64 message_ids = 3;
 }
 
 message UpdateNewTask {
@@ -77,6 +84,7 @@ message Update {
     UpdateNewMessage new_message = 2;
     UpdateNewTask new_task = 3;
     UpdateTaskChanged task_changed = 4;
+    UpdateMessageDeleted message_deleted = 5;
   }
 }
 

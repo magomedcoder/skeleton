@@ -17,6 +17,12 @@ type ConsumeMessage struct {
 	MessageId  int64 `json:"messageId"`
 }
 
+type ConsumeMessageDeleted struct {
+	PeerId     int64   `json:"peerId"`
+	FromPeerId int64   `json:"fromPeerId"`
+	MessageIds []int64 `json:"messageIds"`
+}
+
 type ConsumeTask struct {
 	ProjectId string `json:"projectId"`
 	TaskId    string `json:"taskId"`
