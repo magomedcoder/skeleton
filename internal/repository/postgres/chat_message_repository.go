@@ -60,3 +60,7 @@ func (r *chatMessageRepository) GetHistory(ctx context.Context, peerId1, peerId2
 	}
 	return msgs, nil
 }
+
+func (r *chatMessageRepository) Delete(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&chatMessageModel{}).Error
+}

@@ -25,14 +25,18 @@ class ChatListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final titleStr = title(chat);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Material(
       color: isSelected
-        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
+        ? (isDark
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.25)
+          : theme.colorScheme.primaryContainer.withValues(alpha: 0.35)
+        )
         : Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
@@ -41,25 +45,25 @@ class ChatListItem extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       titleStr,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isOnline ? 'В сети' : 'Не в сети',
+                      isOnline ? 'в сети' : 'не в сети',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isOnline
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.8,
-                          ),
-                        fontSize: 12,
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                        fontSize: 13,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

@@ -74,6 +74,7 @@ import 'package:legion/domain/usecases/project/get_project_history_usecase.dart'
 import 'package:legion/domain/usecases/project/get_task_history_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
 import 'package:legion/domain/usecases/chat/create_chat_usecase.dart';
+import 'package:legion/domain/usecases/chat/delete_chat_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chat_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/send_chat_message_usecase.dart';
 import 'package:legion/domain/usecases/runners/get_runners_status_usecase.dart';
@@ -275,6 +276,7 @@ Future<void> init() async {
   sl.registerFactory(() => CreateChatUseCase(sl()));
   sl.registerFactory(() => GetChatMessagesUseCase(sl()));
   sl.registerFactory(() => SendChatMessageUseCase(sl()));
+  sl.registerFactory(() => DeleteChatMessagesUseCase(sl()));
 
   sl.registerFactory(
     () => AIChatBloc(
@@ -300,6 +302,7 @@ Future<void> init() async {
       createChatUseCase: sl(),
       getChatMessagesUseCase: sl(),
       sendChatMessageUseCase: sl(),
+      deleteChatMessagesUseCase: sl(),
       authBloc: sl<AuthBloc>(),
       newMessageStream: sl<StreamController<Message>>().stream,
     ),

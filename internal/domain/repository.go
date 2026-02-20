@@ -92,6 +92,14 @@ type ChatMessageRepository interface {
 	GetById(ctx context.Context, id int64) (*Message, error)
 
 	GetHistory(ctx context.Context, peerId1, peerId2 int, messageId int64, limit int) ([]*Message, error)
+
+	Delete(ctx context.Context, id int64) error
+}
+
+type UserDeletedMessageRepository interface {
+	Add(ctx context.Context, userID int, messageIDs []int64) error
+
+	GetDeletedMessageIds(ctx context.Context, userID int, messageIDs []int64) ([]int64, error)
 }
 
 type ProjectRepository interface {

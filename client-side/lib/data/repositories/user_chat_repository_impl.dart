@@ -64,4 +64,16 @@ class ChatRepositoryImpl implements ChatRepository {
       throw ApiFailure('Ошибка получения сообщений');
     }
   }
+
+  @override
+  Future<void> deleteMessages(List<int> messageIds, {bool forEveryone = true}) async {
+    if (messageIds.isEmpty) return;
+    try {
+      await _remote.deleteMessages(messageIds, forEveryone: forEveryone);
+    } catch (e) {
+      if (e is Failure) rethrow;
+      Logs().e('ChatRepository: неожиданная ошибка в deleteMessages', e);
+      throw ApiFailure('Ошибка удаления сообщений');
+    }
+  }
 }

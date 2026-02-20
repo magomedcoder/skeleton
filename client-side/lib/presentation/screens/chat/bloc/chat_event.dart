@@ -66,3 +66,39 @@ class ChatNewMessageReceived extends ChatEvent {
   @override
   List<Object?> get props => [message];
 }
+
+class ChatDeleteMessage extends ChatEvent {
+  final Message message;
+  final bool forEveryone;
+
+  const ChatDeleteMessage(this.message, {this.forEveryone = true});
+
+  @override
+  List<Object?> get props => [message, forEveryone];
+}
+
+class ChatToggleMessageSelection extends ChatEvent {
+  final Message message;
+
+  const ChatToggleMessageSelection(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class ChatDeleteSelectedMessages extends ChatEvent {
+  final bool forEveryone;
+
+  const ChatDeleteSelectedMessages({this.forEveryone = true});
+
+  @override
+  List<Object?> get props => [forEveryone];
+}
+
+class ChatClearSelection extends ChatEvent {
+  const ChatClearSelection();
+}
+
+class ChatSelectAllMyMessages extends ChatEvent {
+  const ChatSelectAllMyMessages();
+}

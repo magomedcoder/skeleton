@@ -4,16 +4,18 @@ import (
 	"time"
 
 	"github.com/magomedcoder/legion/internal/domain"
+	"gorm.io/gorm"
 )
 
 type chatMessageModel struct {
-	Id           int64     `gorm:"column:id;primaryKey;autoIncrement"`
-	PeerType     int       `gorm:"column:peer_type;not null;default:1"`
-	PeerId       int       `gorm:"column:peer_id;not null"`
-	FromPeerType int       `gorm:"column:from_peer_type;not null;default:1"`
-	FromPeerId   int       `gorm:"column:from_peer_id;not null"`
-	Content      string    `gorm:"column:content;type:text"`
-	CreatedAt    time.Time `gorm:"column:created_at;not null"`
+	Id           int64          `gorm:"column:id;primaryKey;autoIncrement"`
+	PeerType     int            `gorm:"column:peer_type;not null;default:1"`
+	PeerId       int            `gorm:"column:peer_id;not null"`
+	FromPeerType int            `gorm:"column:from_peer_type;not null;default:1"`
+	FromPeerId   int            `gorm:"column:from_peer_id;not null"`
+	Content      string         `gorm:"column:content;type:text"`
+	CreatedAt    time.Time      `gorm:"column:created_at;not null"`
+	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at;index"`
 }
 
 func (chatMessageModel) TableName() string {

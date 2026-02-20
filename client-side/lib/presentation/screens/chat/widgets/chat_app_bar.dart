@@ -21,16 +21,16 @@ class ChatAppBar extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 8,
-        bottom: 12,
-        left: 8,
+        top: MediaQuery.of(context).padding.top + 6,
+        bottom: 10,
+        left: 4,
         right: 8,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.12),
           ),
         ),
       ),
@@ -50,18 +50,21 @@ class ChatAppBar extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  isOnline ? 'В сети' : 'Не в сети',
-                  style: theme.textTheme.bodySmall?.copyWith(color: isOnline
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.8,
-                    ),
+                  isOnline ? 'в сети' : 'не в сети',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isOnline
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.8,
+                      ),
+                    fontSize: 13,
                   ),
                 ),
               ],

@@ -81,6 +81,31 @@ func (m *mockChatMessageRepo) GetHistory(ctx context.Context, peerId1, peerId2 i
 	return nil, nil
 }
 
+func (m *mockChatMessageRepo) Delete(ctx context.Context, id int64) error {
+	return nil
+}
+
+type mockUserDeletedMessageRepo struct {
+	add                 func(context.Context, int, []int64) error
+	getDeletedMessageIds func(context.Context, int, []int64) ([]int64, error)
+}
+
+func (m *mockUserDeletedMessageRepo) Add(ctx context.Context, userID int, messageIDs []int64) error {
+	if m.add != nil {
+		return m.add(ctx, userID, messageIDs)
+	}
+	
+	return nil
+}
+
+func (m *mockUserDeletedMessageRepo) GetDeletedMessageIds(ctx context.Context, userID int, messageIDs []int64) ([]int64, error) {
+	if m.getDeletedMessageIds != nil {
+		return m.getDeletedMessageIds(ctx, userID, messageIDs)
+	}
+
+	return nil, nil
+}
+
 func (m *mockChatRepo) GetAllUserIds(ctx context.Context, uid int) []int64 {
 	return nil
 }
@@ -146,7 +171,7 @@ func TestChatUseCase_CreateChat_success(t *testing.T) {
 			return user, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, userRepo)
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, userRepo)
 	ctx := context.Background()
 
 	gotChat, gotUser, err := uc.CreateChat(ctx, 1, 2)
@@ -164,7 +189,7 @@ func TestChatUseCase_CreateChat_getOrCreateError(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	_, _, err := uc.CreateChat(ctx, 1, 2)
@@ -200,7 +225,7 @@ func TestChatUseCase_GetChats_success(t *testing.T) {
 			return user, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, userRepo)
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, userRepo)
 	ctx := context.Background()
 
 	gotChats, users, err := uc.GetChats(ctx, 1)
@@ -236,7 +261,7 @@ func TestChatUseCase_SendMessage_success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	msg, err := uc.SendMessage(ctx, 1, 2, "hello")
@@ -259,7 +284,7 @@ func TestChatUseCase_SendMessage_noChat_returnsError(t *testing.T) {
 			return nil, errors.New("чат не найден")
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	_, err := uc.SendMessage(ctx, 1, 5, "hello")
@@ -279,7 +304,7 @@ func TestChatUseCase_GetHistory_unauthorized(t *testing.T) {
 			return chat, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	_, _, err := uc.GetHistory(ctx, 1, 2, 0, 10)
@@ -318,7 +343,7 @@ func TestChatUseCase_GetHistory_success(t *testing.T) {
 			return user, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, msgRepo, userRepo)
+	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserDeletedMessageRepo{}, userRepo)
 	ctx := context.Background()
 
 	gotMsgs, gotUsers, err := uc.GetHistory(ctx, 1, 2, 0, 10)

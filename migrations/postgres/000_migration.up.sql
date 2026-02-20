@@ -76,7 +76,15 @@ CREATE TABLE IF NOT EXISTS messages
     from_peer_type INTEGER   NOT NULL DEFAULT 1,
     from_peer_id   INTEGER   NOT NULL,
     content        TEXT,
-    created_at     TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at     TIMESTAMP NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_deleted_messages
+(
+    user_id    INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    message_id BIGINT  NOT NULL,
+    PRIMARY KEY (user_id, message_id)
 );
 
 CREATE TABLE IF NOT EXISTS projects
@@ -160,6 +168,8 @@ CREATE INDEX IF NOT EXISTS idx_files_created_at ON files (created_at);
 CREATE INDEX IF NOT EXISTS idx_chats_user_peer ON chats (user_id, peer_type, peer_id);
 CREATE INDEX IF NOT EXISTS idx_chats_updated_at ON chats (updated_at);
 CREATE INDEX IF NOT EXISTS idx_messages_peer_from_created_at ON messages (peer_type, peer_id, from_peer_type, from_peer_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_deleted_at ON messages (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_user_deleted_messages_user_id ON user_deleted_messages (user_id);
 CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects (created_by);
 CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects (created_at);
 CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members (project_id);

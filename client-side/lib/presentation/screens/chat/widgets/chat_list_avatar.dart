@@ -36,12 +36,12 @@ class ChatListAvatar extends StatelessWidget {
           right: 0,
           bottom: 0,
           child: Container(
-            width: 14,
-            height: 14,
+            width: 12,
+            height: 12,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isOnline
-                ? theme.primary
+                ? const Color(0xFF4CAF50)
                 : theme.outline.withValues(alpha: 0.5),
               border: Border.all(color: theme.surface, width: 2),
             ),

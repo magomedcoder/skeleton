@@ -17,18 +17,17 @@ class ChatInputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.15),
           ),
-        ],
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -39,10 +38,14 @@ class ChatInputBar extends StatelessWidget {
               child: Container(
                 constraints: const BoxConstraints(maxHeight: 120),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(24),
+                  color: isDark
+                    ? theme.colorScheme.surfaceContainerHigh
+                    : theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.8,
+                    ),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
                     width: 1,
                   ),
                 ),
@@ -52,36 +55,38 @@ class ChatInputBar extends StatelessWidget {
                   minLines: 1,
                   maxLines: 5,
                   textCapitalization: TextCapitalization.sentences,
+                  style: theme.textTheme.bodyLarge?.copyWith(fontSize: 15),
                   decoration: InputDecoration(
                     hintText: 'Сообщение',
                     hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+                      fontSize: 15,
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                      horizontal: 16,
+                      vertical: 10,
                     ),
                   ),
                   onSubmitted: (_) => onSend(),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Material(
               color: isEnabled
                 ? theme.colorScheme.primary
                 : theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(24),
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
               child: InkWell(
-                borderRadius: BorderRadius.circular(24),
                 onTap: isEnabled ? onSend : null,
                 child: SizedBox(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   child: isSending
                     ? Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(10),
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation(
@@ -92,10 +97,10 @@ class ChatInputBar extends StatelessWidget {
                     : Icon(
                       Icons.send_rounded,
                       color: isEnabled
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurfaceVariant.withValues(
-                              alpha: 0.6,
-                            ),
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       size: 22,
                     ),
                 ),

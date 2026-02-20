@@ -39,9 +39,9 @@ class ChatListWidget extends StatelessWidget {
       builder: (context, snapshot) {
         final statusMap = snapshot.data ?? {};
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           itemCount: state.chats.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 2),
+          separatorBuilder: (context, index) => const Divider(height: 1, indent: 60),
           itemBuilder: (context, index) {
             final chat = state.chats[index];
             return ChatListItem(

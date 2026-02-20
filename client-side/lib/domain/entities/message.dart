@@ -1,5 +1,5 @@
 class Message {
-  final String id;
+  final int id;
   final int peerUserId;
   final int fromPeerUserId;
   final String content;

@@ -28,6 +28,8 @@ abstract class IChatRemoteDataSource {
     required int messageId,
     required int limit,
   });
+
+  Future<void> deleteMessages(List<int> messageIds, {bool forEveryone = true});
 }
 
 class ChatRemoteDataSource implements IChatRemoteDataSource {
@@ -119,6 +121,25 @@ class ChatRemoteDataSource implements IChatRemoteDataSource {
     } catch (e) {
       Logs().e('ChatRemoteDataSource: ошибка в getHistory', e);
       throw ApiFailure('Ошибка получения сообщений');
+    }
+  }
+
+  @override
+  Future<void> deleteMessages(List<int> messageIds, {bool forEveryone = true}) async {
+    if (messageIds.isEmpty) return;
+    Logs().d('ChatRemoteDataSource: deleteMessages count=${messageIds.length} forEveryone=$forEveryone');
+    try {
+      final req = chatpb.DeleteMessagesRequest(
+        messageIds: messageIds.map((id) => Int64(id)).toList(),
+        revoke: forEveryone,
+      );
+      await _authGuard.execute(() => _client.deleteMessages(req));
+    } on GrpcError catch (e) {
+      Logs().e('ChatRemoteDataSource: ошибка gRPC в deleteMessages', e);
+      throwGrpcError(e, 'Ошибка удаления сообщений');
+    } catch (e) {
+      Logs().e('ChatRemoteDataSource: ошибка в deleteMessages', e);
+      throw ApiFailure('Ошибка удаления сообщений');
     }
   }
 }

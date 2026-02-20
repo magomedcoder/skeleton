@@ -4,7 +4,7 @@ import 'package:legion/generated/grpc_pb/chat.pbgrpc.dart' as chatpb;
 class MessageMapper {
   static Message fromProto(chatpb.Message msg) {
     return Message(
-      id: msg.id,
+      id: msg.id.toInt(),
       peerUserId: msg.peer.userId.toInt(),
       fromPeerUserId: msg.fromPeer.userId.toInt(),
       content: msg.content,

@@ -16,4 +16,6 @@ abstract class ChatRepository {
     required int messageId,
     required int limit,
   });
+
+  Future<void> deleteMessages(List<int> messageIds, {bool forEveryone = true});
 }

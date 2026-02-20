@@ -29,7 +29,7 @@ func NewChatHandler(chatUseCase *usecase.ChatUseCase, authUseCase usecase.TokenV
 
 func messageToProto(m *domain.Message) *chatpb.Message {
 	return &chatpb.Message{
-		Id:        strconv.FormatInt(m.Id, 10),
+		Id:        m.Id,
 		Peer:      &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(m.PeerId)}},
 		FromPeer:  &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(m.FromPeerId)}},
 		Content:   m.Content,
@@ -165,4 +165,26 @@ func (h *ChatHandler) GetHistory(ctx context.Context, req *chatpb.GetHistoryRequ
 		Messages: protoMsgs,
 		Users:    protoUsers,
 	}, nil
+}
+
+func (h *ChatHandler) DeleteMessages(ctx context.Context, req *chatpb.DeleteMessagesRequest) (*chatpb.DeleteMessagesResponse, error) {
+	uid, err := h.getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.MessageIds) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "message_ids обязателен")
+	}
+
+	revoke := req.Revoke
+	if err := h.chatUseCase.DeleteMessages(ctx, uid, req.MessageIds, revoke); err != nil {
+		if err == domain.ErrUnauthorized {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+
+		return nil, error2.ToStatusError(codes.Internal, err)
+	}
+
+	return &chatpb.DeleteMessagesResponse{}, nil
 }

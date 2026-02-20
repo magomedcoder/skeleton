@@ -7,6 +7,7 @@ import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/usecases/chat/create_chat_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chat_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
+import 'package:legion/domain/usecases/chat/delete_chat_messages_usecase.dart';
 import 'package:legion/domain/usecases/chat/send_chat_message_usecase.dart';
 import 'package:legion/presentation/screens/auth/bloc/auth_bloc.dart';
 import 'package:legion/presentation/screens/chat/bloc/chat_event.dart';
@@ -17,6 +18,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final CreateChatUseCase createChatUseCase;
   final GetChatMessagesUseCase getChatMessagesUseCase;
   final SendChatMessageUseCase sendChatMessageUseCase;
+  final DeleteChatMessagesUseCase deleteChatMessagesUseCase;
   final AuthBloc authBloc;
   StreamSubscription<Message>? _newMessageSubscription;
 
@@ -25,6 +27,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     required this.createChatUseCase,
     required this.getChatMessagesUseCase,
     required this.sendChatMessageUseCase,
+    required this.deleteChatMessagesUseCase,
     required this.authBloc,
     Stream<Message>? newMessageStream,
   }) : super(const ChatState()) {
@@ -36,6 +39,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatClearError>(_onClearError);
     on<ChatBackToList>(_onBackToList);
     on<ChatNewMessageReceived>(_onNewMessageReceived);
+    on<ChatDeleteMessage>(_onDeleteMessage);
+    on<ChatToggleMessageSelection>(_onToggleMessageSelection);
+    on<ChatDeleteSelectedMessages>(_onDeleteSelectedMessages);
+    on<ChatClearSelection>(_onClearSelection);
+    on<ChatSelectAllMyMessages>(_onSelectAllMyMessages);
 
     if (newMessageStream != null) {
       _newMessageSubscription = newMessageStream.listen((message) {
@@ -51,7 +59,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _onBackToList(ChatBackToList event, Emitter<ChatState> emit) {
-    emit(state.copyWith(clearSelectedChat: true));
+    emit(state.copyWith(clearSelectedChat: true, clearSelection: true));
   }
 
   Future<void> _onStarted(ChatStarted event, Emitter<ChatState> emit) async {
@@ -102,6 +110,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         messages: const [],
         isLoading: true,
         error: null,
+        clearSelection: true,
       ),
     );
     await _loadMessagesForChat(event.chat, emit);
@@ -173,5 +182,79 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(state.copyWith(messages: [...state.messages, message]));
       Logs().d('ChatBloc: добавлено новое сообщение в диалог');
     }
+  }
+
+  Future<void> _onDeleteMessage(
+    ChatDeleteMessage event,
+    Emitter<ChatState> emit,
+  ) async {
+    final message = event.message;
+    final chat = state.selectedChat;
+    if (chat == null) return;
+
+    emit(state.copyWith(error: null));
+    try {
+      await deleteChatMessagesUseCase(
+        [message.id], 
+        forEveryone: event.forEveryone,
+      );
+      final updated = state.messages.where((m) => m.id != message.id).toList();
+      emit(state.copyWith(messages: updated));
+    } catch (e) {
+      Logs().e('ChatBloc: ошибка удаления сообщения', e);
+      emit(state.copyWith(error: 'Ошибка удаления сообщения'));
+    }
+  }
+
+  void _onToggleMessageSelection(
+    ChatToggleMessageSelection event,
+    Emitter<ChatState> emit,
+  ) {
+    final id = event.message.id;
+    final next = Set<int>.from(state.selectedMessageIds);
+    if (next.contains(id)) {
+      next.remove(id);
+    } else {
+      next.add(id);
+    }
+    emit(state.copyWith(selectedMessageIds: next));
+  }
+
+  Future<void> _onDeleteSelectedMessages(
+    ChatDeleteSelectedMessages event,
+    Emitter<ChatState> emit,
+  ) async {
+    final ids = state.selectedMessageIds.toList();
+    if (ids.isEmpty) return;
+
+    emit(state.copyWith(error: null));
+    try {
+      await deleteChatMessagesUseCase(
+        ids,
+        forEveryone: event.forEveryone,
+      );
+      final idSet = state.selectedMessageIds;
+      final updated = state.messages.where((m) => !idSet.contains(m.id)).toList();
+      emit(state.copyWith(messages: updated, clearSelection: true));
+    } catch (e) {
+      Logs().e('ChatBloc: ошибка удаления сообщений', e);
+      emit(state.copyWith(error: 'Ошибка удаления сообщений'));
+    }
+  }
+
+  void _onClearSelection(ChatClearSelection event, Emitter<ChatState> emit) {
+    emit(state.copyWith(clearSelection: true));
+  }
+
+  void _onSelectAllMyMessages(
+    ChatSelectAllMyMessages event,
+    Emitter<ChatState> emit,
+  ) {
+    final currentUserId = int.tryParse(authBloc.state.user?.id ?? '');
+    if (currentUserId == null) return;
+    final myIds = state.messages.where((m) => m.senderId == currentUserId)
+      .map((m) => m.id)
+      .toSet();
+    emit(state.copyWith(selectedMessageIds: myIds));
   }
 }

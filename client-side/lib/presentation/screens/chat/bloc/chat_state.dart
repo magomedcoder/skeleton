@@ -8,6 +8,7 @@ class ChatState extends Equatable {
   final List<Chat> chats;
   final Chat? selectedChat;
   final List<Message> messages;
+  final Set<int> selectedMessageIds;
   final String? error;
 
   const ChatState({
@@ -16,8 +17,11 @@ class ChatState extends Equatable {
     this.chats = const [],
     this.selectedChat,
     this.messages = const [],
+    this.selectedMessageIds = const {},
     this.error,
   });
+
+  bool get isSelectionMode => selectedMessageIds.isNotEmpty;
 
   ChatState copyWith({
     bool? isLoading,
@@ -26,6 +30,8 @@ class ChatState extends Equatable {
     Chat? selectedChat,
     bool clearSelectedChat = false,
     List<Message>? messages,
+    Set<int>? selectedMessageIds,
+    bool clearSelection = false,
     String? error,
   }) {
     return ChatState(
@@ -36,6 +42,9 @@ class ChatState extends Equatable {
         ? null
         : (selectedChat ?? this.selectedChat),
       messages: messages ?? this.messages,
+      selectedMessageIds: clearSelection
+        ? const {}
+        : (selectedMessageIds ?? this.selectedMessageIds),
       error: error,
     );
   }
@@ -47,6 +56,7 @@ class ChatState extends Equatable {
     chats,
     selectedChat,
     messages,
+    selectedMessageIds,
     error,
   ];
 }

@@ -12,24 +12,27 @@ import (
 )
 
 type ChatUseCase struct {
-	chatRepo       domain.ChatRepository
-	messageRepo    domain.ChatMessageRepository
-	userRepository domain.UserRepository
-	redis          *redis.Client
-	serverCache    *redisRepo.ServerCacheRepository
-	clientCache    *redisRepo.ClientCacheRepository
+	chatRepo              domain.ChatRepository
+	messageRepo           domain.ChatMessageRepository
+	userDeletedMessageRepo domain.UserDeletedMessageRepository
+	userRepository        domain.UserRepository
+	redis                 *redis.Client
+	serverCache           *redisRepo.ServerCacheRepository
+	clientCache           *redisRepo.ClientCacheRepository
 }
 
 func NewChatUseCase(
 	chatRepo domain.ChatRepository,
 	messageRepo domain.ChatMessageRepository,
+	userDeletedMessageRepo domain.UserDeletedMessageRepository,
 	userRepo domain.UserRepository,
 	opts ...ChatUseCaseOption,
 ) *ChatUseCase {
 	c := &ChatUseCase{
-		chatRepo:       chatRepo,
-		messageRepo:    messageRepo,
-		userRepository: userRepo,
+		chatRepo:               chatRepo,
+		messageRepo:            messageRepo,
+		userDeletedMessageRepo: userDeletedMessageRepo,
+		userRepository:         userRepo,
 	}
 
 	for _, opt := range opts {
@@ -51,19 +54,6 @@ func WithChatServerCache(s *redisRepo.ServerCacheRepository) ChatUseCaseOption {
 
 func WithChatClientCache(cl *redisRepo.ClientCacheRepository) ChatUseCaseOption {
 	return func(c *ChatUseCase) { c.clientCache = cl }
-}
-
-func (c *ChatUseCase) verifyChatOwnership(ctx context.Context, userId, chatId int) (*domain.Chat, error) {
-	chat, err := c.chatRepo.GetById(ctx, chatId)
-	if err != nil {
-		return nil, err
-	}
-
-	if chat.UserId != userId && chat.PeerId != userId {
-		return nil, domain.ErrUnauthorized
-	}
-
-	return chat, nil
 }
 
 func (c *ChatUseCase) CreateChat(ctx context.Context, uid int, userId int) (*domain.Chat, *domain.User, error) {
@@ -171,6 +161,44 @@ func (c *ChatUseCase) GetMessageById(ctx context.Context, messageId int64) (*dom
 	return c.messageRepo.GetById(ctx, messageId)
 }
 
+func (c *ChatUseCase) DeleteMessage(ctx context.Context, uid int, messageId int64) error {
+	msg, err := c.messageRepo.GetById(ctx, messageId)
+	if err != nil {
+		return err
+	}
+
+	if msg.FromPeerId != uid {
+		return domain.ErrUnauthorized
+	}
+
+	return c.messageRepo.Delete(ctx, messageId)
+}
+
+func (c *ChatUseCase) DeleteMessages(ctx context.Context, uid int, messageIds []int64, forEveryone bool) error {
+	if forEveryone {
+		for _, id := range messageIds {
+			if err := c.DeleteMessage(ctx, uid, id); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	for _, id := range messageIds {
+		msg, err := c.messageRepo.GetById(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		if msg.FromPeerId != uid {
+			return domain.ErrUnauthorized
+		}
+	}
+
+	return c.userDeletedMessageRepo.Add(ctx, uid, messageIds)
+}
+
 func (c *ChatUseCase) GetHistory(ctx context.Context, uid int, peerUserId int64, messageId int64, limit int64) ([]*domain.Message, []*domain.User, error) {
 	peerId := int(peerUserId)
 	chat, err := c.chatRepo.GetPrivateChat(ctx, uid, peerId)
@@ -189,6 +217,30 @@ func (c *ChatUseCase) GetHistory(ctx context.Context, uid int, peerUserId int64,
 	msgs, err := c.messageRepo.GetHistory(ctx, uid, peerId, messageId, int(limit))
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if len(msgs) > 0 {
+		msgIds := make([]int64, 0, len(msgs))
+		for _, m := range msgs {
+			msgIds = append(msgIds, m.Id)
+		}
+
+		hiddenIds, errHide := c.userDeletedMessageRepo.GetDeletedMessageIds(ctx, uid, msgIds)
+		if errHide == nil && len(hiddenIds) > 0 {
+			hiddenSet := make(map[int64]struct{}, len(hiddenIds))
+			for _, id := range hiddenIds {
+				hiddenSet[id] = struct{}{}
+			}
+
+			filtered := msgs[:0]
+			for _, m := range msgs {
+				if _, ok := hiddenSet[m.Id]; !ok {
+					filtered = append(filtered, m)
+				}
+			}
+			
+			msgs = filtered
+		}
 	}
 
 	userIds := make(map[int]struct{})

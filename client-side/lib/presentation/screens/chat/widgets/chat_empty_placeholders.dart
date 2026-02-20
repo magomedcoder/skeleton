@@ -6,31 +6,36 @@ class ChatEmptyPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.chat_bubble_outline_rounded,
-            size: 80,
-            color: theme.colorScheme.outline.withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Выберите чат',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+
+    return Container(
+      color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.5),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: 72,
+              color: theme.colorScheme.outline.withValues(alpha: 0.35),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Выберите диалог слева или найдите пользователя',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+            const SizedBox(height: 20),
+            Text(
+              'Выберите чат',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Выберите диалог слева или найдите пользователя',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -42,18 +47,23 @@ class ChatEmptyMessagesPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark
+      ? theme.colorScheme.surface
+      : theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.5);
+
     return Container(
-      color: theme.colorScheme.surface.withValues(alpha: 0.6),
+      color: bgColor,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.forum_outlined,
-              size: 64,
-              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              size: 56,
+              color: theme.colorScheme.outline.withValues(alpha: 0.35),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               'Сообщений пока нет',
               style: theme.textTheme.bodyLarge?.copyWith(

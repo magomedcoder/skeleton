@@ -88,6 +88,7 @@ func main() {
 	messageRepo := postgres.NewMessageRepository(db)
 	chatRepo := postgres.NewChatRepository(db)
 	chatMessageRepo := postgres.NewChatMessageRepository(db)
+	userDeletedMessageRepo := postgres.NewUserDeletedMessageRepository(db)
 	fileRepo := postgres.NewFileRepository(db)
 	projectRepo := postgres.NewProjectRepository(db)
 	projectMemberRepo := postgres.NewProjectMemberRepository(db)
@@ -119,6 +120,7 @@ func main() {
 	chatUseCase := usecase.NewChatUseCase(
 		chatRepo,
 		chatMessageRepo,
+		userDeletedMessageRepo,
 		userRepo,
 		usecase.WithChatRedis(redisClient),
 		usecase.WithChatServerCache(serverCache),
