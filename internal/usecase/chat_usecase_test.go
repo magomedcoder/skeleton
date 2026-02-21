@@ -28,7 +28,7 @@ func (m *mockChatRepo) GetPrivateChat(ctx context.Context, uid, userId int) (*do
 	if m.getPrivateChat != nil {
 		return m.getPrivateChat(ctx, uid, userId)
 	}
-	
+
 	return nil, errors.New("не найдено")
 }
 
@@ -85,25 +85,55 @@ func (m *mockChatMessageRepo) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-type mockUserDeletedMessageRepo struct {
-	add                 func(context.Context, int, []int64) error
+type mockMessageDeletedRepo struct {
+	add                  func(context.Context, int, []int64) error
 	getDeletedMessageIds func(context.Context, int, []int64) ([]int64, error)
 }
 
-func (m *mockUserDeletedMessageRepo) Add(ctx context.Context, userID int, messageIDs []int64) error {
+func (m *mockMessageDeletedRepo) Add(ctx context.Context, userID int, messageIDs []int64) error {
 	if m.add != nil {
 		return m.add(ctx, userID, messageIDs)
 	}
-	
+
 	return nil
 }
 
-func (m *mockUserDeletedMessageRepo) GetDeletedMessageIds(ctx context.Context, userID int, messageIDs []int64) ([]int64, error) {
+func (m *mockMessageDeletedRepo) GetDeletedMessageIds(ctx context.Context, userID int, messageIDs []int64) ([]int64, error) {
 	if m.getDeletedMessageIds != nil {
 		return m.getDeletedMessageIds(ctx, userID, messageIDs)
 	}
 
 	return nil, nil
+}
+
+type mockMessageReadRepo struct {
+	setLastRead    func(context.Context, int, int, int64) error
+	getLastRead    func(context.Context, int, int) (int64, error)
+	getUnreadCount func(context.Context, int, int) (int, error)
+}
+
+func (m *mockMessageReadRepo) SetLastRead(ctx context.Context, userID, peerID int, messageID int64) error {
+	if m.setLastRead != nil {
+		return m.setLastRead(ctx, userID, peerID, messageID)
+	}
+
+	return nil
+}
+
+func (m *mockMessageReadRepo) GetLastRead(ctx context.Context, userID, peerID int) (int64, error) {
+	if m.getLastRead != nil {
+		return m.getLastRead(ctx, userID, peerID)
+	}
+
+	return 0, nil
+}
+
+func (m *mockMessageReadRepo) GetUnreadCount(ctx context.Context, userID, peerID int) (int, error) {
+	if m.getUnreadCount != nil {
+		return m.getUnreadCount(ctx, userID, peerID)
+	}
+
+	return 0, nil
 }
 
 func (m *mockChatRepo) GetAllUserIds(ctx context.Context, uid int) []int64 {
@@ -171,7 +201,7 @@ func TestChatUseCase_CreateChat_success(t *testing.T) {
 			return user, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, userRepo)
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, userRepo)
 	ctx := context.Background()
 
 	gotChat, gotUser, err := uc.CreateChat(ctx, 1, 2)
@@ -189,7 +219,7 @@ func TestChatUseCase_CreateChat_getOrCreateError(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	_, _, err := uc.CreateChat(ctx, 1, 2)
@@ -205,9 +235,9 @@ func TestChatUseCase_CreateChat_getOrCreateError(t *testing.T) {
 func TestChatUseCase_GetChats_success(t *testing.T) {
 	chats := []*domain.Chat{
 		{
-			Id:        1,
-			UserId:    1,
-			PeerId:    2,
+			Id:     1,
+			UserId: 1,
+			PeerId: 2,
 		},
 	}
 	user := &domain.User{
@@ -225,7 +255,7 @@ func TestChatUseCase_GetChats_success(t *testing.T) {
 			return user, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, userRepo)
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, userRepo)
 	ctx := context.Background()
 
 	gotChats, users, err := uc.GetChats(ctx, 1)
@@ -261,7 +291,7 @@ func TestChatUseCase_SendMessage_success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, msgRepo, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	msg, err := uc.SendMessage(ctx, 1, 2, "hello")
@@ -284,7 +314,7 @@ func TestChatUseCase_SendMessage_noChat_returnsError(t *testing.T) {
 			return nil, errors.New("чат не найден")
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	_, err := uc.SendMessage(ctx, 1, 5, "hello")
@@ -304,7 +334,7 @@ func TestChatUseCase_GetHistory_unauthorized(t *testing.T) {
 			return chat, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockUserDeletedMessageRepo{}, &mockUserRepoForChat{})
+	uc := NewChatUseCase(chatRepo, &mockChatMessageRepo{}, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, &mockUserRepoForChat{})
 	ctx := context.Background()
 
 	_, _, err := uc.GetHistory(ctx, 1, 2, 0, 10)
@@ -321,10 +351,10 @@ func TestChatUseCase_GetHistory_success(t *testing.T) {
 	}
 	msgs := []*domain.Message{
 		{
-			Id:           1,
-			PeerId:       2,
-			FromPeerId:   1,
-			Content:      "hi",
+			Id:         1,
+			PeerId:     2,
+			FromPeerId: 1,
+			Content:    "hi",
 		},
 	}
 	user := &domain.User{Id: 1, Username: "u1"}
@@ -343,7 +373,7 @@ func TestChatUseCase_GetHistory_success(t *testing.T) {
 			return user, nil
 		},
 	}
-	uc := NewChatUseCase(chatRepo, msgRepo, &mockUserDeletedMessageRepo{}, userRepo)
+	uc := NewChatUseCase(chatRepo, msgRepo, &mockMessageReadRepo{}, &mockMessageDeletedRepo{}, userRepo)
 	ctx := context.Background()
 
 	gotMsgs, gotUsers, err := uc.GetHistory(ctx, 1, 2, 0, 10)

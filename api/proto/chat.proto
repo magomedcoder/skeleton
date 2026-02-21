@@ -21,6 +21,7 @@ service ChatService {
 message Chat {
   common.Peer peer = 1;
   int64 updated_at = 2;
+  int32 unread_count = 3;
 }
 
 message Message {
@@ -29,6 +30,7 @@ message Message {
   common.Peer from_peer = 3;
   string content = 4;
   int64 created_at = 5;
+  bool is_read = 6;
 }
 
 message CreateChatRequest {

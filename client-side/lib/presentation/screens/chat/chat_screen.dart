@@ -137,7 +137,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
                     ChatInputBar(
                       controller: _messageController,
                       onSend: _onSend,
-                      isEnabled: selectedChat != null && !state.isSending,
+                      isEnabled: !state.isSending,
                       isSending: state.isSending,
                     ),
                 ],

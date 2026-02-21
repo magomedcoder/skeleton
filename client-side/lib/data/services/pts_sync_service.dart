@@ -9,6 +9,7 @@ import 'package:legion/data/mappers/message_mapper.dart';
 import 'package:legion/data/services/user_online_status_service.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/message_deleted_payload.dart';
+import 'package:legion/domain/entities/message_read_payload.dart';
 import 'package:legion/domain/usecases/chat/get_chats_usecase.dart';
 import 'package:legion/generated/grpc_pb/account.pb.dart';
 import 'package:legion/generated/grpc_pb/account.pbgrpc.dart' as account_pb;
@@ -34,6 +35,7 @@ class PtsSyncService {
 
   final StreamSink<Message>? _newMessageSink;
   final StreamSink<MessageDeletedPayload>? _messageDeletedSink;
+  final StreamSink<MessageReadPayload>? _messageReadSink;
   final StreamSink<String>? _taskUpdateSink;
 
   PtsSyncService(
@@ -45,11 +47,13 @@ class PtsSyncService {
     ReconnectPolicy? reconnectPolicy,
     StreamSink<Message>? newMessageSink,
     StreamSink<MessageDeletedPayload>? messageDeletedSink,
+    StreamSink<MessageReadPayload>? messageReadSink,
     StreamSink<String>? taskUpdateSink,
   })  : _userOnlineStatusService = userOnlineStatusService,
         _reconnectPolicy = reconnectPolicy ?? const ReconnectPolicy.hybrid(),
         _newMessageSink = newMessageSink,
         _messageDeletedSink = messageDeletedSink,
+        _messageReadSink = messageReadSink,
         _taskUpdateSink = taskUpdateSink;
 
   Future<void> startSync() async {
@@ -232,6 +236,10 @@ class PtsSyncService {
       if (update.hasMessageDeleted()) {
         await _processMessageDeleted(update.messageDeleted);
       }
+
+      if (update.hasMessageRead()) {
+        await _processMessageRead(update.messageRead);
+      }
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки обновления', e, stackTrace);
     }
@@ -286,6 +294,20 @@ class PtsSyncService {
       Logs().d('PtsSyncService: удаление сообщений peer=${payload.peerId} from=${payload.fromPeerId} ids=${payload.messageIds}');
     } catch (e, stackTrace) {
       Logs().e('Ошибка обработки удаления сообщений', e, stackTrace);
+    }
+  }
+
+  Future<void> _processMessageRead(UpdateMessageRead update) async {
+    try {
+      final payload = MessageReadPayload(
+        readerUserId: update.readerUserId.toInt(),
+        peerUserId: update.peerUserId.toInt(),
+        lastReadMessageId: update.lastReadMessageId.toInt(),
+      );
+      _messageReadSink?.add(payload);
+      Logs().d('PtsSyncService: сообщения прочитаны reader=${payload.readerUserId} peer=${payload.peerUserId} upTo=${payload.lastReadMessageId}');
+    } catch (e, stackTrace) {
+      Logs().e('Ошибка обработки прочтения сообщений', e, stackTrace);
     }
   }
 

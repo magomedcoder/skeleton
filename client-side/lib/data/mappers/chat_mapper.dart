@@ -14,6 +14,7 @@ class ChatMapper {
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         chat.updatedAt.toInt() * 1000,
       ),
+      unreadCount: chat.unreadCount,
     );
   }
 

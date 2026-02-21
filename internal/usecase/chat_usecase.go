@@ -12,27 +12,30 @@ import (
 )
 
 type ChatUseCase struct {
-	chatRepo               domain.ChatRepository
-	messageRepo            domain.ChatMessageRepository
-	userDeletedMessageRepo domain.UserDeletedMessageRepository
-	userRepository         domain.UserRepository
-	redis                  *redis.Client
-	serverCache            *redisRepo.ServerCacheRepository
-	clientCache            *redisRepo.ClientCacheRepository
+	chatRepo           domain.ChatRepository
+	messageRepo        domain.ChatMessageRepository
+	messageReadRepo    domain.MessageReadRepository
+	messageDeletedRepo domain.MessageDeletedRepository
+	userRepository     domain.UserRepository
+	redis              *redis.Client
+	serverCache        *redisRepo.ServerCacheRepository
+	clientCache        *redisRepo.ClientCacheRepository
 }
 
 func NewChatUseCase(
 	chatRepo domain.ChatRepository,
 	messageRepo domain.ChatMessageRepository,
-	userDeletedMessageRepo domain.UserDeletedMessageRepository,
+	messageReadRepo domain.MessageReadRepository,
+	messageDeletedRepo domain.MessageDeletedRepository,
 	userRepo domain.UserRepository,
 	opts ...ChatUseCaseOption,
 ) *ChatUseCase {
 	c := &ChatUseCase{
-		chatRepo:               chatRepo,
-		messageRepo:            messageRepo,
-		userDeletedMessageRepo: userDeletedMessageRepo,
-		userRepository:         userRepo,
+		chatRepo:           chatRepo,
+		messageRepo:        messageRepo,
+		messageReadRepo:   messageReadRepo,
+		messageDeletedRepo: messageDeletedRepo,
+		userRepository:     userRepo,
 	}
 
 	for _, opt := range opts {
@@ -74,6 +77,13 @@ func (c *ChatUseCase) GetChats(ctx context.Context, uid int) ([]*domain.Chat, []
 	chats, err := c.chatRepo.ListByUser(ctx, uid)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	for _, ch := range chats {
+		count, err := c.messageReadRepo.GetUnreadCount(ctx, uid, ch.PeerId)
+		if err == nil {
+			ch.UnreadCount = count
+		}
 	}
 
 	seen := make(map[int]struct{})
@@ -192,6 +202,40 @@ func (c *ChatUseCase) PublishMessageDeleted(ctx context.Context, peerId, fromPee
 	return err
 }
 
+func (c *ChatUseCase) PublishMessageRead(ctx context.Context, readerUID, peerID int, lastReadMessageID int64) error {
+	if c.redis == nil || c.serverCache == nil || c.clientCache == nil {
+		return nil
+	}
+
+	dataStr := jsonutil.Encode(map[string]any{
+		"readerId":          readerUID,
+		"peerId":            peerID,
+		"lastReadMessageId": lastReadMessageID,
+	})
+	content := jsonutil.Encode(map[string]any{
+		"event": domain.SubEventMessageRead,
+		"data":  dataStr,
+	})
+
+	sids := c.serverCache.All(ctx, 1)
+	if len(sids) == 0 {
+		return nil
+	}
+
+	pipe := c.redis.Pipeline()
+	for _, sid := range sids {
+		readerOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(readerUID))
+		peerOnline := c.clientCache.IsCurrentServerOnline(ctx, sid, domain.ChatChannelName, strconv.Itoa(peerID))
+		if readerOnline || peerOnline {
+			pipe.Publish(ctx, fmt.Sprintf(domain.LegionTopicByServer, sid), content)
+		}
+	}
+
+	_, err := pipe.Exec(ctx)
+
+	return err
+}
+
 func (c *ChatUseCase) GetMessageById(ctx context.Context, messageId int64) (*domain.Message, error) {
 	return c.messageRepo.GetById(ctx, messageId)
 }
@@ -245,7 +289,7 @@ func (c *ChatUseCase) DeleteMessages(ctx context.Context, uid int, messageIds []
 		}
 	}
 
-	return c.userDeletedMessageRepo.Add(ctx, uid, messageIds)
+	return c.messageDeletedRepo.Add(ctx, uid, messageIds)
 }
 
 func (c *ChatUseCase) GetHistory(ctx context.Context, uid int, peerUserId int64, messageId int64, limit int64) ([]*domain.Message, []*domain.User, error) {
@@ -269,12 +313,25 @@ func (c *ChatUseCase) GetHistory(ctx context.Context, uid int, peerUserId int64,
 	}
 
 	if len(msgs) > 0 {
+		maxId := msgs[len(msgs)-1].Id
+		_ = c.messageReadRepo.SetLastRead(ctx, uid, peerId, maxId)
+		_ = c.PublishMessageRead(ctx, uid, peerId, maxId)
+	}
+
+	peerCursor, _ := c.messageReadRepo.GetLastRead(ctx, peerId, uid)
+	for _, m := range msgs {
+		if m.FromPeerId == uid && m.Id <= peerCursor {
+			m.IsRead = true
+		}
+	}
+
+	if len(msgs) > 0 {
 		msgIds := make([]int64, 0, len(msgs))
 		for _, m := range msgs {
 			msgIds = append(msgIds, m.Id)
 		}
 
-		hiddenIds, errHide := c.userDeletedMessageRepo.GetDeletedMessageIds(ctx, uid, msgIds)
+		hiddenIds, errHide := c.messageDeletedRepo.GetDeletedMessageIds(ctx, uid, msgIds)
 		if errHide == nil && len(hiddenIds) > 0 {
 			hiddenSet := make(map[int64]struct{}, len(hiddenIds))
 			for _, id := range hiddenIds {

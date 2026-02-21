@@ -7,31 +7,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type userDeletedMessageModel struct {
+type messageDeletedModel struct {
 	UserId    int   `gorm:"column:user_id;primaryKey"`
 	MessageId int64 `gorm:"column:message_id;primaryKey"`
 }
 
-func (userDeletedMessageModel) TableName() string {
-	return "user_deleted_messages"
+func (messageDeletedModel) TableName() string {
+	return "message_deleted"
 }
 
-type userDeletedMessageRepository struct {
+type messageDeletedRepository struct {
 	db *gorm.DB
 }
 
-func NewUserDeletedMessageRepository(db *gorm.DB) domain.UserDeletedMessageRepository {
-	return &userDeletedMessageRepository{db: db}
+func NewMessageDeletedRepository(db *gorm.DB) domain.MessageDeletedRepository {
+	return &messageDeletedRepository{db: db}
 }
 
-func (r *userDeletedMessageRepository) Add(ctx context.Context, userId int, messageIds []int64) error {
+func (r *messageDeletedRepository) Add(ctx context.Context, userId int, messageIds []int64) error {
 	if len(messageIds) == 0 {
 		return nil
 	}
 
 	for _, id := range messageIds {
 		err := r.db.WithContext(ctx).Exec(`
-			INSERT INTO user_deleted_messages (user_id, message_id) 
+			INSERT INTO message_deleted (user_id, message_id) 
 			VALUES (?, ?) ON CONFLICT (user_id, message_id) DO NOTHING
 		`, userId, id,
 		).Error
@@ -43,13 +43,13 @@ func (r *userDeletedMessageRepository) Add(ctx context.Context, userId int, mess
 	return nil
 }
 
-func (r *userDeletedMessageRepository) GetDeletedMessageIds(ctx context.Context, userId int, messageIds []int64) ([]int64, error) {
+func (r *messageDeletedRepository) GetDeletedMessageIds(ctx context.Context, userId int, messageIds []int64) ([]int64, error) {
 	if len(messageIds) == 0 {
 		return nil, nil
 	}
 
 	var ids []int64
-	err := r.db.WithContext(ctx).Model(&userDeletedMessageModel{}).
+	err := r.db.WithContext(ctx).Model(&messageDeletedModel{}).
 		Where("user_id = ? AND message_id IN ?", userId, messageIds).
 		Pluck("message_id", &ids).Error
 

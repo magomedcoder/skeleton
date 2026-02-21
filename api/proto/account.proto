@@ -68,6 +68,12 @@ message UpdateMessageDeleted {
   repeated int64 message_ids = 3;
 }
 
+message UpdateMessageRead {
+  int64 reader_user_id = 1;
+  int64 peer_user_id = 2;
+  int64 last_read_message_id = 3;
+}
+
 message UpdateNewTask {
   string project_id = 1;
   project.Task task = 2;
@@ -85,6 +91,7 @@ message Update {
     UpdateNewTask new_task = 3;
     UpdateTaskChanged task_changed = 4;
     UpdateMessageDeleted message_deleted = 5;
+    UpdateMessageRead message_read = 6;
   }
 }
 

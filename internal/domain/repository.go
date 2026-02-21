@@ -96,7 +96,15 @@ type ChatMessageRepository interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-type UserDeletedMessageRepository interface {
+type MessageReadRepository interface {
+	SetLastRead(ctx context.Context, userID, peerID int, messageID int64) error
+
+	GetLastRead(ctx context.Context, userID, peerID int) (int64, error)
+
+	GetUnreadCount(ctx context.Context, userID, peerID int) (int, error)
+}
+
+type MessageDeletedRepository interface {
 	Add(ctx context.Context, userID int, messageIDs []int64) error
 
 	GetDeletedMessageIds(ctx context.Context, userID int, messageIDs []int64) ([]int64, error)

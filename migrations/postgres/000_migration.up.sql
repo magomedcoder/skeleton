@@ -60,12 +60,12 @@ CREATE TABLE IF NOT EXISTS chat_session_messages
 
 CREATE TABLE IF NOT EXISTS chats
 (
-    id          SERIAL PRIMARY KEY,
-    peer_type   INTEGER   NOT NULL DEFAULT 1,
-    peer_id     INTEGER   NOT NULL,
-    user_id     INTEGER   NOT NULL REFERENCES users (id),
-    created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+    id         SERIAL PRIMARY KEY,
+    peer_type  INTEGER   NOT NULL DEFAULT 1,
+    peer_id    INTEGER   NOT NULL,
+    user_id    INTEGER   NOT NULL REFERENCES users (id),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS messages
@@ -80,11 +80,20 @@ CREATE TABLE IF NOT EXISTS messages
     deleted_at     TIMESTAMP NULL
 );
 
-CREATE TABLE IF NOT EXISTS user_deleted_messages
+CREATE TABLE IF NOT EXISTS message_deleted
 (
     user_id    INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     message_id BIGINT  NOT NULL,
     PRIMARY KEY (user_id, message_id)
+);
+
+CREATE TABLE IF NOT EXISTS message_read
+(
+    user_id              INTEGER   NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    peer_id              INTEGER   NOT NULL,
+    last_read_message_id BIGINT    NOT NULL DEFAULT 0,
+    updated_at           TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, peer_id)
 );
 
 CREATE TABLE IF NOT EXISTS projects
@@ -169,7 +178,8 @@ CREATE INDEX IF NOT EXISTS idx_chats_user_peer ON chats (user_id, peer_type, pee
 CREATE INDEX IF NOT EXISTS idx_chats_updated_at ON chats (updated_at);
 CREATE INDEX IF NOT EXISTS idx_messages_peer_from_created_at ON messages (peer_type, peer_id, from_peer_type, from_peer_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_deleted_at ON messages (deleted_at);
-CREATE INDEX IF NOT EXISTS idx_user_deleted_messages_user_id ON user_deleted_messages (user_id);
+CREATE INDEX IF NOT EXISTS idx_message_deleted_user_id ON message_deleted (user_id);
+CREATE INDEX IF NOT EXISTS idx_message_read_user_peer ON message_read (user_id, peer_id);
 CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects (created_by);
 CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects (created_at);
 CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members (project_id);

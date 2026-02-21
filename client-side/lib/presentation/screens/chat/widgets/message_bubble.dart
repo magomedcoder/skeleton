@@ -178,30 +178,44 @@ class MessageBubble extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Flexible(
-                        child: Text(
-                          message.content,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: textColor,
-                            height: 1.35,
-                            fontSize: 15,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              message.content,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: textColor,
+                                height: 1.35,
+                                fontSize: 15,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Text(
+                            timeStr,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: timeColor,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        timeStr,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          color: timeColor,
-                          height: 1.2,
+                      if (isFromMe) ...[
+                        const SizedBox(height: 2),
+                        Icon(
+                          message.isRead ? Icons.done_all : Icons.done,
+                          size: 16,
+                          color: timeColor.withValues(alpha: 0.95),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

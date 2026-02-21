@@ -4,6 +4,7 @@ class Message {
   final int fromPeerUserId;
   final String content;
   final DateTime createdAt;
+  final bool isRead;
 
   Message({
     required this.id,
@@ -11,11 +12,23 @@ class Message {
     required this.fromPeerUserId,
     required this.content,
     required this.createdAt,
+    this.isRead = false,
   });
 
   int get senderId => fromPeerUserId;
 
   bool isInDialog(int myUserId, int otherUserId) {
     return (peerUserId == myUserId && fromPeerUserId == otherUserId) || (peerUserId == otherUserId && fromPeerUserId == myUserId);
+  }
+
+  Message copyWith({bool? isRead}) {
+    return Message(
+      id: id,
+      peerUserId: peerUserId,
+      fromPeerUserId: fromPeerUserId,
+      content: content,
+      createdAt: createdAt,
+      isRead: isRead ?? this.isRead,
+    );
   }
 }

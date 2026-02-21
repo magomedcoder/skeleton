@@ -9,6 +9,7 @@ const (
 	SubEventUserStatus     = "sub.user.status"
 	SubEventNewMessage     = "sub.message.new"
 	SubEventMessageDeleted = "sub.message.deleted"
+	SubEventMessageRead    = "sub.message.read"
 	SubEventNewTask        = "sub.task.new"
 	SubEventTaskChanged    = "sub.task.changed"
 )

@@ -117,3 +117,18 @@ class ChatMessagesDeletedFromServer extends ChatEvent {
   @override
   List<Object?> get props => [peerId, fromPeerId, messageIds];
 }
+
+class ChatMessagesRead extends ChatEvent {
+  final int readerUserId;
+  final int peerUserId;
+  final int lastReadMessageId;
+
+  const ChatMessagesRead({
+    required this.readerUserId,
+    required this.peerUserId,
+    required this.lastReadMessageId,
+  });
+
+  @override
+  List<Object?> get props => [readerUserId, peerUserId, lastReadMessageId];
+}

@@ -30,6 +30,7 @@ func (h *Handler) registerHandlers() {
 		domain.SubEventUserStatus:     h.handleUserStatus,
 		domain.SubEventNewMessage:     h.onConsumeMessage,
 		domain.SubEventMessageDeleted: h.onConsumeMessageDeleted,
+		domain.SubEventMessageRead:    h.onConsumeMessageRead,
 		domain.SubEventNewTask:        h.onConsumeNewTask,
 		domain.SubEventTaskChanged:    h.onConsumeTaskChanged,
 	}

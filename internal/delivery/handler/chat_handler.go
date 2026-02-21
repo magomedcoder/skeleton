@@ -6,8 +6,8 @@ import (
 
 	"github.com/magomedcoder/legion/api/pb/chatpb"
 	"github.com/magomedcoder/legion/api/pb/commonpb"
-	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/delivery/middleware"
+	"github.com/magomedcoder/legion/internal/domain"
 	"github.com/magomedcoder/legion/internal/usecase"
 	error2 "github.com/magomedcoder/legion/pkg/error"
 	"google.golang.org/grpc/codes"
@@ -34,6 +34,7 @@ func messageToProto(m *domain.Message) *chatpb.Message {
 		FromPeer:  &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(m.FromPeerId)}},
 		Content:   m.Content,
 		CreatedAt: m.CreatedAt.Unix(),
+		IsRead:    m.IsRead,
 	}
 }
 
@@ -66,8 +67,13 @@ func (h *ChatHandler) CreateChat(ctx context.Context, req *chatpb.CreateChatRequ
 
 func chatToProto(ch *domain.Chat) *chatpb.Chat {
 	return &chatpb.Chat{
-		Peer:      &commonpb.Peer{Peer: &commonpb.Peer_UserId{UserId: int64(ch.PeerId)}},
-		UpdatedAt: ch.UpdatedAt.Unix(),
+		Peer: &commonpb.Peer{
+			Peer: &commonpb.Peer_UserId{
+				UserId: int64(ch.PeerId),
+			},
+		},
+		UpdatedAt:   ch.UpdatedAt.Unix(),
+		UnreadCount: int32(ch.UnreadCount),
 	}
 }
 

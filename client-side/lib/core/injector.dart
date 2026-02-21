@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:legion/core/auth_guard.dart';
 import 'package:legion/domain/entities/message.dart';
 import 'package:legion/domain/entities/message_deleted_payload.dart';
+import 'package:legion/domain/entities/message_read_payload.dart';
 import 'package:legion/core/auth_interceptor.dart';
 import 'package:legion/core/grpc_channel_manager.dart';
 import 'package:legion/core/connection_status.dart';
@@ -141,8 +142,13 @@ Future<void> init() async {
   sl.registerLazySingleton<StreamController<Message>>(
     () => StreamController<Message>.broadcast(),
   );
+
   sl.registerLazySingleton<StreamController<MessageDeletedPayload>>(
     () => StreamController<MessageDeletedPayload>.broadcast(),
+  );
+
+  sl.registerLazySingleton<StreamController<MessageReadPayload>>(
+    () => StreamController<MessageReadPayload>.broadcast(),
   );
 
   sl.registerLazySingleton<StreamController<String>>(
@@ -158,6 +164,7 @@ Future<void> init() async {
       userOnlineStatusService: sl<UserOnlineStatusService>(),
       newMessageSink: sl<StreamController<Message>>().sink,
       messageDeletedSink: sl<StreamController<MessageDeletedPayload>>().sink,
+      messageReadSink: sl<StreamController<MessageReadPayload>>().sink,
       taskUpdateSink: sl<StreamController<String>>().sink,
     ),
   );
@@ -311,6 +318,7 @@ Future<void> init() async {
       authBloc: sl<AuthBloc>(),
       newMessageStream: sl<StreamController<Message>>().stream,
       messageDeletedStream: sl<StreamController<MessageDeletedPayload>>().stream,
+      messageReadStream: sl<StreamController<MessageReadPayload>>().stream,
     ),
   );
 

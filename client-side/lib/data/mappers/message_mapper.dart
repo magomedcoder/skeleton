@@ -11,6 +11,7 @@ class MessageMapper {
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         msg.createdAt.toInt() * 1000,
       ),
+      isRead: msg.isRead,
     );
   }
 
